@@ -3,387 +3,184 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Frau Sarah's Tracking</title>
+  <title>Persönliches Tracking</title>
+  <!-- PWA Manifest & Theme -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Vue.js 3 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<!-- Im <head> ergänzen: -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
+  <!-- Dexie.js (IndexedDB Wrapper) -->
+  <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+  <!-- SheetJS für Excel/CSV Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased min-h-screen">
-
-  <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white dark:bg-slate-900 border-x border-slate-200 dark:border-slate-800 shadow-sm">
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <div id="app" class="max-w-4xl mx-auto p-4 sm:p-6">
     
-    <!-- HEADER -->
-    <header class="text-center py-4 border-b border-slate-200 dark:border-slate-800">
-      <h1 class="text-xl font-bold tracking-wide text-slate-800 dark:text-slate-100">Frau Sarah's Tracking</h1>
-      <p class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-        {{ currentCycleDayText }}
-      </p>
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-4 border-b border-slate-200 gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Tägliches Protokoll</h1>
+        <p class="text-sm text-slate-500">Lokale Datenerfassung & PWA</p>
+      </div>
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <button @click="triggerSync" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm">
+          Sync <span v-if="lastSync" class="text-xs opacity-75">({{ lastSync }})</span>
+        </button>
+        <div class="relative">
+          <select @change="exportData($event.target.value); $event.target.value='';" class="bg-white border border-slate-300 text-slate-700 text-sm rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
+            <option value="" disabled selected>Exportieren...</option>
+            <option value="xlsx">Als Excel (.xlsx)</option>
+            <option value="csv">Als CSV</option>
+          </select>
+        </div>
+      </div>
     </header>
 
-    <!-- DASHBOARD BUTTONS -->
-    <main v-if="viewMode === 'dashboard'" class="my-auto py-6 space-y-3">
-      <div class="grid grid-cols-2 gap-3">
-        <button @click="openModal('SCHLAF')" class="h-24 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">🌙</span>
-          <span class="text-base sm:text-lg tracking-wide">Schlaf</span>
-        </button>
-
-        <button @click="openModal('MAHLZEIT')" class="h-24 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">🍎</span>
-          <span class="text-base sm:text-lg tracking-wide">Mahlzeit</span>
-        </button>
-
-        <button @click="openModal('ADDON')" class="h-24 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">💊</span>
-          <span class="text-base sm:text-lg tracking-wide">AddOns</span>
-        </button>
-
-        <button @click="openModal('AUFFÄLLIGKEIT')" class="h-24 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">⚡</span>
-          <span class="text-base sm:text-lg tracking-wide">Auffälligkeit</span>
-        </button>
-
-        <button @click="openModal('BEWEGUNG')" class="h-24 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">💪</span>
-          <span class="text-base sm:text-lg tracking-wide">Bewegung</span>
-        </button>
-
-        <button @click="openModal('ZYKLUS')" class="h-24 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">🩸</span>
-          <span class="text-base sm:text-lg tracking-wide">Zyklus</span>
-        </button>
-      </div>
-
-      <div class="flex gap-2 pt-1">
-        <button @click="viewMode = 'protocol'" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-base tracking-wide transition flex items-center justify-center">
-          Protokoll
-        </button>
-        <button @click="viewMode = 'settings'" class="px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm text-base transition flex items-center justify-center">
-          ⚙️
-        </button>
-      </div>
-    </main>
-
-    <!-- PROTOKOLL ANSICHT -->
-    <section v-if="viewMode === 'protocol'" class="my-auto py-2 space-y-3">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h2 class="text-base font-bold text-slate-700 dark:text-slate-300">Protokoll</h2>
-        <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg font-semibold text-slate-700 dark:text-slate-300">Zurück</button>
-      </div>
-      
-      <div v-if="entries.length === 0" class="text-slate-400 dark:text-slate-500 text-center py-8 text-sm">Noch keine Einträge vorhanden.</div>
-      
-      <div class="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
-        <div v-for="entry in sortedEntries" :key="entry.id" class="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl flex justify-between items-start">
-          <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
-            <div class="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{{ formatDate(entry.timestamp) }}</div>
-            <div class="font-bold text-sm text-indigo-950 dark:text-indigo-200">{{ entry.type }} — {{ entry.subtype }}</div>
-            
-            <div class="text-xs text-slate-600 dark:text-slate-300 mt-1 space-y-0.5">
-              <div v-if="entry.type === 'SCHLAF'">
-                <span v-if="entry.sleep_rating">Bewertung: <strong>{{ entry.sleep_rating }}</strong></span>
-                <span v-if="entry.sleep_tiredness"> · Müdigkeit: <strong>{{ entry.sleep_tiredness }}</strong></span>
-                <span v-if="entry.alarm_used !== undefined"> · {{ entry.alarm_used ? 'Mit Wecker' : 'Ohne Wecker' }}</span>
-                <span v-if="entry.wake_reasons && entry.wake_reasons.length"> · Gründe: <strong>{{ entry.wake_reasons.join(', ') }}</strong></span>
-              </div>
-
-              <div v-if="entry.type === 'MAHLZEIT'">
-                <span>{{ entry.details }}</span>
-              </div>
-
-              <div v-if="entry.type === 'ADDON'">
-                <span>{{ entry.addon_name }} — <strong>Faktor: {{ entry.addon_factor }}x</strong></span>
-              </div>
-
-              <div v-if="entry.type === 'AUFFÄLLIGKEIT'">
-                <span>Symptome: <strong>{{ entry.symptoms ? entry.symptoms.join(', ') : '' }}</strong></span>
-                <span v-if="entry.severity"> (Stärke: {{ entry.severity }})</span>
-              </div>
-
-              <div v-if="entry.type === 'BEWEGUNG'">
-                <span v-if="entry.activity_duration">Dauer: <strong>{{ entry.activity_duration }} Min.</strong></span>
-                <span v-if="entry.activity_distance"> · <strong>{{ entry.activity_distance }} km</strong></span>
-                <span v-if="entry.activity_intensity"> · Intensität: <strong>{{ entry.activity_intensity }}</strong></span>
-              </div>
-
-              <div v-if="entry.type === 'ZYKLUS'">
-                <span v-if="entry.subtype === 'Start'">Tag 1 des neuen Zyklus</span>
-                <span v-if="entry.subtype === 'Ende der Periode'">Ende der Periode</span>
-                <span v-if="entry.subtype === 'Zyklus-Tagesnotiz'">Tagesnotiz</span>
-              </div>
-            </div>
-
-            <div v-if="entry.note" class="text-xs italic text-slate-500 dark:text-slate-400 mt-1 border-l-2 border-indigo-200 dark:border-indigo-800 pl-1.5">"{{ entry.note }}"</div>
-          </div>
-          
-          <div class="flex gap-1">
-            <button @click="editEntry(entry)" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 text-xs px-1.5 py-1 font-semibold">Edit</button>
-            <button @click="deleteEntry(entry.id)" class="text-rose-400 dark:text-rose-400 hover:text-rose-600 text-xs px-1.5 py-1">Löschen</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- EINSTELLUNGEN ANSICHT -->
-    <section v-if="viewMode === 'settings'" class="my-auto py-2 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-        <h2 class="text-base font-bold text-slate-700 dark:text-slate-300">Optionen & Auswahllisten</h2>
-        <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg font-semibold text-slate-700 dark:text-slate-300">Fertig</button>
-      </div>
-
-      <!-- ADDONS KONFIGURATION -->
-      <div class="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-        <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">💊 Add-ons Verwaltung</h3>
-        <div class="flex gap-2">
-          <input type="text" v-model="newItem.addon" placeholder="Neues Add-on..." class="flex-1 p-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-          <button @click="addSettingItem('addons', newItem.addon); newItem.addon = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
-        </div>
-        <div class="flex flex-wrap gap-1.5 pt-1">
-          <span v-for="item in config.addons" :key="item" class="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border dark:border-slate-700 px-2.5 py-1 rounded-lg text-xs font-medium">
-            {{ item }}
-            <button @click="removeSettingItem('addons', item)" class="text-rose-500 hover:text-rose-700 font-bold ml-1">×</button>
-          </span>
-        </div>
-      </div>
-
-      <!-- SYMPTOME KONFIGURATION -->
-      <div class="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-        <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">⚡ Symptome Verwaltung</h3>
-        <div class="flex gap-2">
-          <input type="text" v-model="newItem.symptom" placeholder="Neues Symptom..." class="flex-1 p-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-          <button @click="addSettingItem('symptoms', newItem.symptom); newItem.symptom = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
-        </div>
-        <div class="flex flex-wrap gap-1.5 pt-1">
-          <span v-for="item in config.symptoms" :key="item" class="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border dark:border-slate-700 px-2.5 py-1 rounded-lg text-xs font-medium">
-            {{ item }}
-            <button @click="removeSettingItem('symptoms', item)" class="text-rose-500 hover:text-rose-700 font-bold ml-1">×</button>
-          </span>
-        </div>
-      </div>
-
-      <!-- BEWEGUNGSARTEN KONFIGURATION -->
-      <div class="space-y-2 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-        <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">💪 Bewegungstypen Verwaltung</h3>
-        <div class="flex gap-2">
-          <input type="text" v-model="newItem.activity" placeholder="Neue Aktivität..." class="flex-1 p-2 border dark:border-slate-700 rounded-lg text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-          <button @click="addSettingItem('activities', newItem.activity); newItem.activity = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
-        </div>
-        <div class="flex flex-wrap gap-1.5 pt-1">
-          <span v-for="item in config.activities" :key="item" class="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border dark:border-slate-700 px-2.5 py-1 rounded-lg text-xs font-medium">
-            {{ item }}
-            <button @click="removeSettingItem('activities', item)" class="text-rose-500 hover:text-rose-700 font-bold ml-1">×</button>
-          </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="pt-3 border-t border-slate-200 dark:border-slate-800 text-center space-y-2.5">
-      <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">Letzter Sync: {{ lastSync }}</div>
-      <button @click="triggerSync" class="w-full py-2.5 bg-slate-600 hover:bg-slate-700 text-white font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm tracking-wide">
-        <span>↻</span> Jetzt synchronisieren
+    <!-- Schnellstart-Buttons für neue Einträge -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      <button @click="openModal('sleep')" class="bg-white hover:bg-indigo-50 border border-slate-200 p-4 rounded-xl text-left transition shadow-sm group">
+        <span class="block text-xl mb-1">🌙</span>
+        <span class="font-semibold text-slate-900 group-hover:text-indigo-600">Schlaf</span>
       </button>
-      <div class="flex gap-2">
-        <button @click="exportData('xlsx')" class="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700">Excel (.xlsx)</button>
-        <button @click="exportData('csv')" class="flex-1 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700">CSV Export</button>
+      <button @click="openModal('nutrition')" class="bg-white hover:bg-amber-50 border border-slate-200 p-4 rounded-xl text-left transition shadow-sm group">
+        <span class="block text-xl mb-1">🥗</span>
+        <span class="font-semibold text-slate-900 group-hover:text-amber-600">Ernährung</span>
+      </button>
+      <button @click="openModal('sport')" class="bg-white hover:bg-blue-50 border border-slate-200 p-4 rounded-xl text-left transition shadow-sm group">
+        <span class="block text-xl mb-1">⚡</span>
+        <span class="font-semibold text-slate-900 group-hover:text-blue-600">Sport / Aktivität</span>
+      </button>
+      <button @click="openModal('symptoms')" class="bg-white hover:bg-rose-50 border border-slate-200 p-4 rounded-xl text-left transition shadow-sm group">
+        <span class="block text-xl mb-1">🩺</span>
+        <span class="font-semibold text-slate-900 group-hover:text-rose-600">Symptome</span>
+      </button>
+    </section>
+
+    <!-- Historie / Letzte Einträge -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+        <h2 class="font-semibold text-slate-900">Einträge-Verlauf</h2>
+        <span class="text-xs text-slate-400">{{ activeEntries.length }} Einträge gesamt</span>
       </div>
-    </footer>
+      
+      <div v-if="activeEntries.length === 0" class="p-8 text-center text-slate-400 text-sm">
+        Noch keine Einträge vorhanden. Klicke oben auf eine Kategorie, um zu starten.
+      </div>
 
-    <!-- MODAL -->
-    <div v-if="activeModal" class="fixed inset-0 bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-      <div class="bg-white dark:bg-slate-900 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto border dark:border-slate-800">
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 border-b dark:border-slate-800 pb-2">
-          {{ editingId ? 'Eintrag bearbeiten' : activeModal }}
-        </h3>
-        
-        <div class="space-y-3.5">
+      <div v-else class="divide-y divide-slate-100">
+        <div v-for="entry in activeEntries" :key="entry.id" class="p-4 flex items-center justify-between hover:bg-slate-50 transition">
           <div>
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Datum & Uhrzeit</label>
-            <input type="datetime-local" v-model="form.datetime" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded uppercase" :class="getTypeBadgeClass(entry.type)">
+                {{ entry.type }}
+              </span>
+              <span class="text-xs text-slate-400">{{ formatDate(entry.timestamp) }}</span>
+            </div>
+            <p class="text-sm font-medium text-slate-800 mt-1">{{ entry.details || entry.note || 'Keine Details angegeben' }}</p>
           </div>
-
-          <!-- SCHLAF MASK -->
-          <template v-if="activeModal === 'SCHLAF'">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Ereignis</label>
-              <select v-model="form.subtype" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                <option value="Einschlafen">Einschlafen</option>
-                <option value="Aufstehen">Aufstehen</option>
-                <option value="In der Nacht aufgewacht">In der Nacht aufgewacht</option>
-              </select>
-            </div>
-            <div v-if="form.subtype === 'Einschlafen'">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Müdigkeit</label>
-              <div class="flex gap-2">
-                <button v-for="m in ['müde', 'sehr müde']" :key="m" @click="form.sleep_tiredness = m"
-                  :class="form.sleep_tiredness === m ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
-                  class="flex-1 py-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700">
-                  {{ m }}
-                </button>
-              </div>
-            </div>
-            <div v-if="form.subtype === 'Aufstehen'" class="space-y-3">
-              <div>
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Bewertung</label>
-                <select v-model="form.sleep_rating" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                  <option value="furchtbar">furchtbar</option>
-                  <option value="geht so">geht so</option>
-                  <option value="ok">ok</option>
-                  <option value="gut">gut</option>
-                  <option value="sehr gut">sehr gut</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Wecker</label>
-                <div class="flex gap-2">
-                  <button @click="form.alarm_used = true" :class="form.alarm_used ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'" class="flex-1 py-2 rounded-lg text-xs font-semibold border dark:border-slate-700">Mit Wecker</button>
-                  <button @click="form.alarm_used = false" :class="!form.alarm_used ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'" class="flex-1 py-2 rounded-lg text-xs font-semibold border dark:border-slate-700">Ohne Wecker</button>
-                </div>
-              </div>
-            </div>
-            <div v-if="form.subtype === 'In der Nacht aufgewacht'">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Grund (Mehrfachauswahl)</label>
-              <div class="flex flex-wrap gap-2">
-                <button v-for="reason in ['WC', 'Essen', 'Rauchen']" :key="reason" @click="toggleWakeReason(reason)"
-                  :class="form.wake_reasons.includes(reason) ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
-                  class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700">
-                  {{ reason }}
-                </button>
-              </div>
-            </div>
-          </template>
-
-          <!-- MAHLZEIT MASK -->
-          <template v-if="activeModal === 'MAHLZEIT'">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Mahlzeittyp</label>
-              <select v-model="form.subtype" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                <option value="Frühstück">Frühstück</option>
-                <option value="Mittagessen">Mittagessen</option>
-                <option value="Abendessen">Abendessen</option>
-                <option value="Snack">Snack</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Lebensmittel & Mengen</label>
-              <textarea v-model="form.details" placeholder="z. B. 2 Scheiben Brot, Butterkäse 40 g, Salami 30 g, Gurke" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 h-20"></textarea>
-            </div>
-          </template>
-
-          <!-- ADD-ONS MASK (DYNAMISCH) -->
-          <template v-if="activeModal === 'ADDON'">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Add-on auswählen</label>
-              <select v-model="form.addon_name" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                <option v-for="addon in config.addons" :key="addon" :value="addon">{{ addon }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Menge (Faktor)</label>
-              <div class="grid grid-cols-5 gap-1.5">
-                <button v-for="f in [0.25, 0.5, 1, 2, 3]" :key="f" @click="form.addon_factor = f"
-                  :class="form.addon_factor === f ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
-                  class="py-2 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">
-                  {{ f }}x
-                </button>
-              </div>
-            </div>
-          </template>
-
-          <!-- AUFFÄLLIGKEITEN MASK (DYNAMISCH) -->
-          <template v-if="activeModal === 'AUFFÄLLIGKEIT'">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Symptome (Mehrfachauswahl)</label>
-              <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                <button v-for="symptom in config.symptoms" :key="symptom" @click="toggleSymptom(symptom)"
-                  :class="form.symptoms.includes(symptom) ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
-                  class="p-2 text-left rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
-                  <span>{{ form.symptoms.includes(symptom) ? '☑' : '☐' }}</span>
-                  <span class="truncate">{{ symptom }}</span>
-                </button>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Stärke</label>
-              <div class="flex gap-2">
-                <button v-for="sev in ['bissi', 'extrem']" :key="sev" @click="form.severity = sev"
-                  :class="form.severity === sev ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
-                  class="flex-1 py-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700">
-                  {{ sev }}
-                </button>
-              </div>
-            </div>
-          </template>
-
-          <!-- BEWEGUNG MASK (DYNAMISCH) -->
-          <template v-if="activeModal === 'BEWEGUNG'">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Aktivität</label>
-              <select v-model="form.subtype" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                <option v-for="act in config.activities" :key="act" :value="act">{{ act }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Dauer (in Minuten)</label>
-              <input type="number" v-model="form.activity_duration" placeholder="z. B. 45" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-            </div>
-            <div v-if="['Spaziergang', 'Radfahren'].includes(form.subtype)">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Distanz (in km, optional)</label>
-              <input type="number" step="0.1" v-model="form.activity_distance" placeholder="z. B. 5.2" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-            </div>
-            <div v-if="['Spaziergang', 'Radfahren', 'Training'].includes(form.subtype)">
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Intensität</label>
-              <div class="flex gap-2">
-                <button v-for="i in ['normal', 'intensiv']" :key="i" @click="form.activity_intensity = i"
-                  :class="form.activity_intensity === i ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
-                  class="flex-1 py-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700">
-                  {{ i }}
-                </button>
-              </div>
-            </div>
-          </template>
-
-          <!-- ZYKLUS MASK -->
-          <template v-if="activeModal === 'ZYKLUS'">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Ereignis</label>
-              <select v-model="form.subtype" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100">
-                <option value="Start">Neuer Zyklusstart (Tag 1)</option>
-                <option value="Ende der Periode">Ende der Periode</option>
-                <option value="Zyklus-Tagesnotiz">Zyklus-Tagesnotiz</option>
-              </select>
-            </div>
-          </template>
-
-          <!-- NOTIZFELD -->
-          <div>
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Notiz (optional)</label>
-            <input type="text" v-model="form.note" class="w-full p-2 border dark:border-slate-700 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100" placeholder="Anmerkungen...">
+          <div class="flex items-center gap-2">
+            <button @click="editEntry(entry)" class="text-slate-400 hover:text-slate-600 text-xs px-2 py-1">Bearbeiten</button>
+            <button @click="deleteEntry(entry.id)" class="text-rose-400 hover:text-rose-600 text-xs px-2 py-1">Löschen</button>
           </div>
         </div>
+      </div>
+    </section>
 
-        <!-- BUTTONS -->
-        <div class="flex gap-2 pt-2">
-          <button @click="closeModal" class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold rounded-xl text-sm">Abbrechen</button>
-          <button @click="saveEntry" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-sm">
-            {{ editingId ? 'Aktualisieren' : 'Speichern' }}
-          </button>
+    <!-- Universal Modal für Erfassung -->
+    <div v-if="activeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-slate-900 capitalize">Eintrag: {{ activeModal }}</h3>
+          <button @click="closeModal" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
         </div>
+
+        <form @submit.prevent="saveEntry" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Datum & Uhrzeit</label>
+            <input type="datetime-local" v-model="form.datetime" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+          </div>
+
+          <!-- Modalspezifische Felder -->
+          <div v-if="activeModal === 'sleep'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Schlafqualität (1-10)</label>
+              <input type="number" min="1" max="10" v-model.number="form.sleep_rating" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Müdigkeit beim Aufwachen</label>
+              <input type="text" v-model="form.sleep_tiredness" placeholder="z.B. Erholt, müde..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+            </div>
+          </div>
+
+          <div v-if="activeModal === 'nutrition'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Beschreibung / Mahlzeit</label>
+              <input type="text" v-model="form.details" placeholder="Was gabs zu essen?" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+            </div>
+          </div>
+
+          <div v-if="activeModal === 'sport'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Aktivität / Dauer (Min)</label>
+              <input type="number" v-model.number="form.activity_duration" placeholder="z.B. 45" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Intensität</label>
+              <select v-model="form.activity_intensity" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white">
+                <option value="leicht">Leicht</option>
+                <option value="normal">Normal</option>
+                <option value="intensiv">Intensiv</option>
+              </select>
+            </div>
+          </div>
+
+          <div v-if="activeModal === 'symptoms'" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Symptom-Beschreibung</label>
+              <input type="text" v-model="form.details" placeholder="Welches Symptom?" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Schweregrad (1-5)</label>
+              <input type="number" min="1" max="5" v-model.number="form.severity" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Notiz (optional)</label>
+            <textarea v-model="form.note" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500"></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button type="button" @click="closeModal" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Abbrechen</button>
+            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm">Speichern</button>
+          </div>
+        </form>
       </div>
     </div>
 
   </div>
 
-  <!-- VUE LOGIC -->
+  <!-- App Script Logic & Service Worker Registration -->
   <script>
-    const db = new Dexie('TrackingDB');
-    db.version(2).stores({
-      entries: 'id, type, subtype, timestamp, updated_at, created_at, is_deleted',
-      settings: 'key'
+    // Service Worker Registrierung für PWA-Offline-Funktionalität
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registriert:', reg.scope))
+          .catch(err => console.log('Service Worker Registrierung fehlgeschlagen:', err));
+      });
+    }
+
+    // Dexie Datenbank Initialisierung
+    const db = new Dexie('TrackingDatabase');
+    db.version(1).stores({
+      entries: 'id, type, timestamp, is_deleted'
     });
 
     const { createApp } = Vue;
@@ -391,147 +188,67 @@
     createApp({
       data() {
         return {
-          viewMode: 'dashboard',
+          entries: [],
           activeModal: null,
           editingId: null,
-          lastSync: 'Noch nie',
-          entries: [],
-          config: {
-            addons: ['Vitamin C 1000 mg', 'Vitamin D 1000 IE', 'Magnesium 400 mg', 'Zink 15 mg'],
-            symptoms: ['müde', 'extrem müde', 'Kopfschmerzen', 'Blähbauch', 'Übelkeit', 'Rückenschmerzen'],
-            activities: ['Spaziergang', 'Radfahren', 'Training', 'Entspannung']
-          },
-          newItem: { addon: '', symptom: '', activity: '' },
+          lastSync: null,
           form: {
             datetime: '',
-            subtype: '',
             details: '',
             note: '',
-            sleep_tiredness: 'müde',
-            sleep_rating: 'gut',
-            alarm_used: false,
-            wake_reasons: [],
-            addon_name: '',
-            addon_factor: 1,
-            symptoms: [],
-            severity: 'bissi',
+            sleep_rating: 5,
+            sleep_tiredness: '',
             activity_duration: '',
-            activity_distance: '',
-            activity_intensity: 'normal'
+            activity_intensity: 'normal',
+            severity: 1
           }
         };
       },
       computed: {
-        sortedEntries() {
-          return [...this.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        },
-        currentCycleDayText() {
-          const cycleStarts = this.entries
-            .filter(e => e.type === 'ZYKLUS' && e.subtype === 'Start')
+        activeEntries() {
+          return this.entries
+            .filter(e => !e.is_deleted)
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-          if (cycleStarts.length === 0) return "Kein Zyklusstart erfasst";
-          
-          const lastStart = new Date(cycleStarts[0].timestamp);
-          const today = new Date();
-          
-          lastStart.setHours(0, 0, 0, 0);
-          today.setHours(0, 0, 0, 0);
-          
-          const diffTime = Math.abs(today - lastStart);
-          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-          
-          return `Zyklustag ${diffDays}`;
         }
       },
       async mounted() {
-        await this.loadSettings();
         await this.loadEntries();
       },
       methods: {
-        async loadSettings() {
-          const stored = await db.settings.toArray();
-          stored.forEach(item => {
-            if (this.config[item.key]) {
-              this.config[item.key] = item.value;
-            }
-          });
-        },
-        async saveSettingKey(key) {
-          await db.settings.put({ key: key, value: [...this.config[key]] });
-        },
-        async addSettingItem(key, val) {
-          const cleanVal = val ? val.trim() : '';
-          if (cleanVal && !this.config[key].includes(cleanVal)) {
-            this.config[key].push(cleanVal);
-            await this.saveSettingKey(key);
-          }
-        },
-        async removeSettingItem(key, val) {
-          this.config[key] = this.config[key].filter(i => i !== val);
-          await this.saveSettingKey(key);
-        },
         async loadEntries() {
-          this.entries = await db.entries.where('is_deleted').equals(0).toArray();
+          this.entries = await db.entries.toArray();
         },
         openModal(type) {
-          this.editingId = null;
           this.activeModal = type;
-          
+          this.editingId = null;
           const now = new Date();
           now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-          
           this.form = {
             datetime: now.toISOString().slice(0, 16),
-            subtype: type === 'MAHLZEIT' ? 'Mittagessen' : type === 'SCHLAF' ? 'Einschlafen' : type === 'BEWEGUNG' ? (this.config.activities[0] || 'Spaziergang') : type === 'ZYKLUS' ? 'Start' : 'Standard',
             details: '',
             note: '',
-            sleep_tiredness: 'müde',
-            sleep_rating: 'gut',
-            alarm_used: false,
-            wake_reasons: [],
-            addon_name: this.config.addons[0] || '',
-            addon_factor: 1,
-            symptoms: [],
-            severity: 'bissi',
+            sleep_rating: 5,
+            sleep_tiredness: '',
             activity_duration: '',
-            activity_distance: '',
-            activity_intensity: 'normal'
+            activity_intensity: 'normal',
+            severity: 1
           };
         },
-        toggleWakeReason(reason) {
-          const idx = this.form.wake_reasons.indexOf(reason);
-          if (idx > -1) this.form.wake_reasons.splice(idx, 1);
-          else this.form.wake_reasons.push(reason);
-        },
-        toggleSymptom(symptom) {
-          const idx = this.form.symptoms.indexOf(symptom);
-          if (idx > -1) this.form.symptoms.splice(idx, 1);
-          else this.form.symptoms.push(symptom);
-        },
         editEntry(entry) {
-          this.editingId = entry.id;
           this.activeModal = entry.type;
-          
-          const d = new Date(entry.timestamp);
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+          this.editingId = entry.id;
+          const dt = entry.timestamp ? new Date(entry.timestamp) : new Date();
+          dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
           
           this.form = {
-            datetime: d.toISOString().slice(0, 16),
-            subtype: entry.subtype || '',
+            datetime: dt.toISOString().slice(0, 16),
             details: entry.details || '',
             note: entry.note || '',
-            sleep_tiredness: entry.sleep_tiredness || 'müde',
-            sleep_rating: entry.sleep_rating || 'gut',
-            alarm_used: entry.alarm_used || false,
-            wake_reasons: entry.wake_reasons ? [...entry.wake_reasons] : [],
-            addon_name: entry.addon_name || (this.config.addons[0] || ''),
-            addon_factor: entry.addon_factor || 1,
-            symptoms: entry.symptoms ? [...entry.symptoms] : [],
-            severity: entry.severity || 'bissi',
+            sleep_rating: entry.sleep_rating || 5,
+            sleep_tiredness: entry.sleep_tiredness || '',
             activity_duration: entry.activity_duration || '',
-            activity_distance: entry.activity_distance || '',
-            activity_intensity: entry.activity_intensity || 'normal'
+            activity_intensity: entry.activity_intensity || 'normal',
+            severity: entry.severity || 1
           };
         },
         closeModal() {
@@ -539,97 +256,82 @@
           this.editingId = null;
         },
         async saveEntry() {
+          const timestamp = new Date(this.form.datetime).toISOString();
           const nowIso = new Date().toISOString();
           
-          const payload = {
+          const entryData = {
+            id: this.editingId || 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             type: this.activeModal,
-            subtype: this.form.subtype,
+            timestamp: timestamp,
+            updated_at: nowIso,
+            created_at: this.editingId ? undefined : nowIso,
+            is_deleted: 0,
             details: this.form.details,
             note: this.form.note,
-            timestamp: new Date(this.form.datetime).toISOString(),
-            updated_at: nowIso,
-            
-            sleep_tiredness: this.form.sleep_tiredness,
             sleep_rating: this.form.sleep_rating,
-            alarm_used: this.form.alarm_used,
-            wake_reasons: this.form.wake_reasons,
-            addon_name: this.form.addon_name,
-            addon_factor: this.form.addon_factor,
-            symptoms: this.form.symptoms,
-            severity: this.form.severity,
-            activity_duration: this.form.activity_duration,
-            activity_distance: this.form.activity_distance,
-            activity_intensity: this.form.activity_intensity
+            sleep_tiredness: this.form.sleep_tiredness,
+            activity_duration: this.form.activity_duration ? Number(this.form.activity_duration) : '',
+            activity_intensity: this.form.activity_intensity,
+            severity: this.form.severity
           };
 
           if (this.editingId) {
-            await db.entries.update(this.editingId, payload);
+            delete entryData.created_at;
+            await db.entries.update(this.editingId, entryData);
           } else {
-            payload.id = crypto.randomUUID();
-            payload.created_at = nowIso;
-            payload.is_deleted = 0;
-            await db.entries.add(payload);
+            await db.entries.add(entryData);
           }
-          
-          this.closeModal();
+
           await this.loadEntries();
+          this.closeModal();
         },
         async deleteEntry(id) {
-          await db.entries.update(id, {
-            is_deleted: 1,
-            updated_at: new Date().toISOString()
-          });
-          await this.loadEntries();
+          if (confirm('Eintrag wirklich löschen?')) {
+            await db.entries.update(id, { is_deleted: 1, updated_at: new Date().toISOString() });
+            await this.loadEntries();
+          }
         },
-        formatDate(isoStr) {
-          const d = new Date(isoStr);
-          return d.toLocaleDateString('de-DE') + ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        formatDate(ts) {
+          if (!ts) return '';
+          const d = new Date(ts);
+          return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        },
+        getTypeBadgeClass(type) {
+          switch(type) {
+            case 'sleep': return 'bg-indigo-100 text-indigo-700';
+            case 'nutrition': return 'bg-amber-100 text-amber-700';
+            case 'sport': return 'bg-blue-100 text-blue-700';
+            case 'symptoms': return 'bg-rose-100 text-rose-700';
+            default: return 'bg-slate-100 text-slate-700';
+          }
         },
         triggerSync() {
-          const d = new Date();
-          this.lastSync = d.toLocaleDateString('de-DE') + ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-          alert('Sync simuliert: Lokaler Datenstand aktualisiert.');
+          this.lastSync = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         },
         exportData(format) {
-          const exportData = this.entries.map(e => ({
-            ID: e.id,
-            Datum_Zeit: this.formatDate(e.timestamp),
-            Kategorie: e.type,
-            Untertyp: e.subtype,
-            Details: e.details,
-            Schlaf_Bewertung: e.sleep_rating,
-            Schlaf_Muedigkeit: e.sleep_tiredness,
-            Wecker: e.alarm_used ? 'Ja' : 'Nein',
-            Aufwach_Gruende: e.wake_reasons ? e.wake_reasons.join(', ') : '',
-            Addon: e.addon_name,
-            Addon_Faktor: e.addon_factor,
-            Symptome: e.symptoms ? e.symptoms.join(', ') : '',
-            Staerke: e.severity,
-            Aktivitaet_Dauer_Min: e.activity_duration,
-            Aktivitaet_KM: e.activity_distance,
-            Aktivitaet_Intensitaet: e.activity_intensity,
-            Notiz: e.note
-          }));
-          const worksheet = XLSX.utils.json_to_sheet(exportData);
-          const workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(workbook, worksheet, "Tracking");
+          if (this.entries.length === 0) {
+            alert('Keine Daten zum Exportieren vorhanden.');
+            return;
+          }
           if (format === 'xlsx') {
-            XLSX.writeFile(workbook, `Tracking_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
-          } else {
-            XLSX.writeFile(workbook, `Tracking_Export_${new Date().toISOString().slice(0,10)}.csv`, { bookType: 'csv' });
+            const worksheet = XLSX.utils.json_to_sheet(this.entries);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Protokoll");
+            XLSX.writeFile(workbook, "Tracking_Export.xlsx");
+          } else if (format === 'csv') {
+            const worksheet = XLSX.utils.json_to_sheet(this.entries);
+            const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+            const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'Tracking_Export.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
           }
         }
       }
     }).mount('#app');
   </script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker erfolgreich registriert!'))
-        .catch(err => console.error('Service Worker Fehler:', err));
-    });
-  }
-</script>
 </body>
 </html>

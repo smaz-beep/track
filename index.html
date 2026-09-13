@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Frau Sarah's Tracking</title>
+  <!-- App Manifest für die Handy-Installation eingebettet -->
+  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Frau%20Sarah%27s%20Tracking%22%2C%22short_name%22%3A%22Tracking%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%231e293b%22%7D'>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -274,7 +276,7 @@
             <div>
               <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Mahlzeittyp</label>
               <div class="grid grid-cols-2 gap-1.5">
-                <button v-for="mType in ['Frühstück', 'Mittagessen', 'Abendessen', 'Snack']" :key="mType" @click="form.subtype = mType"
+                <button v-for="mType in ['Frühstück', 'Mittagessen', 'Abendessen', 'Snack']" :key="mType" @click="form.subtype = (form.subtype === mType ? '' : mType)"
                   :class="form.subtype === mType ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
                   class="py-2.5 px-2 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-center">
                   {{ mType }}
@@ -309,7 +311,7 @@
             </div>
           </template>
 
-          <!-- BODY & SOUL MASK (KOMPAKT OHNE SCROLLBALKEN) -->
+          <!-- BODY & SOUL MASK -->
           <template v-if="activeModal === 'BODYSOUL'">
             <div class="space-y-2">
               <div>
@@ -370,12 +372,12 @@
             </div>
           </template>
 
-          <!-- ZYKLUS MASK (KLICKBAR) -->
+          <!-- ZYKLUS MASK -->
           <template v-if="activeModal === 'ZYKLUS'">
             <div>
               <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Ereignis</label>
               <div class="grid grid-cols-1 gap-1.5">
-                <button v-for="zOpt in [{val: 'Start', label: 'Neuer Zyklusstart (Tag 1)'}, {val: 'Ende der Periode', label: 'Ende der Periode'}, {val: 'Zyklus-Tagesnotiz', label: 'Zyklus-Tagesnotiz'}]" :key="zOpt.val" @click="form.subtype = zOpt.val"
+                <button v-for="zOpt in [{val: 'Start', label: 'Neuer Zyklusstart (Tag 1)'}, {val: 'Ende der Periode', label: 'Ende der Periode'}, {val: 'Zyklus-Tagesnotiz', label: 'Zyklus-Tagesnotiz'}]" :key="zOpt.val" @click="form.subtype = (form.subtype === zOpt.val ? '' : zOpt.val)"
                   :class="form.subtype === zOpt.val ? 'bg-slate-800 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
                   class="p-2.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-left">
                   {{ zOpt.label }}
@@ -564,7 +566,7 @@
             const settings = await db.settings.toArray();
             
             const backupData = {
-              version: 9,
+              version: 10,
               exportDate: new Date().toISOString(),
               entries: entries,
               settings: settings
@@ -698,7 +700,7 @@
             this.editingId = null;
             this.form = {
               datetime: new Date().toISOString().substring(0, 16),
-              subtype: type === 'SCHLAF' ? 'Einschlafen' : type === 'MAHLZEIT' ? 'Frühstück' : type === 'BEWEGUNG' ? '' : type === 'ZYKLUS' ? 'Start' : '',
+              subtype: type === 'SCHLAF' ? 'Einschlafen' : type === 'MAHLZEIT' ? '' : type === 'BEWEGUNG' ? '' : type === 'ZYKLUS' ? '' : '',
               details: '',
               note: '',
               sleep_tiredness: '',

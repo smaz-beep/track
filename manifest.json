@@ -9,8 +9,8 @@
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f4d3.png",
-      "sizes": "72x72",
+      "src": "/track/icon.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }

@@ -1,46 +1,29 @@
-const CACHE_NAME = 'tracking-cache-v1';
-const assetsToCache = [
+const CACHE_NAME = 'tracking-app-v1';
+const ASSETS_TO_CACHE = [
+  './',
   './index.html',
   './manifest.json',
-  './icon.png'
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com/dexie/dist/dexie.js',
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+  'https://unpkg.com/vue@3/dist/vue.global.js'
 ];
 
-// Installation & Caching
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(assetsToCache);
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
-// Aktivierung & alte Caches aufräumen
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-// Fetch-Anfragen abfangen (Offline-First)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request).catch(() => {
-        // Fallback für HTML falls komplett offline und nicht im Cache
-        if (event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('./index.html');
-        }
-      });
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request);
     })
   );
 });

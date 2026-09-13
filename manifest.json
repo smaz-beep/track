@@ -9,7 +9,7 @@
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/track/icon.png",
+      "src": "./icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

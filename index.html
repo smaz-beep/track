@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="de" class="light">
+<html lang="de">
 <head>
-  <meta name="color-scheme" content="light only">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Frau Sarah's Tracking</title>
@@ -11,10 +10,6 @@
   <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-  <style>
-    /* Erzwingt kompromisslos das helle Design unabhängig vom Handy-System */
-    :root { color-scheme: light; }
-  </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
   <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white border-x border-slate-200 shadow-sm">
@@ -214,9 +209,16 @@
         </h3>
         
         <div class="space-y-3.5">
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Datum & Uhrzeit</label>
-            <input type="datetime-local" v-model="form.datetime" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800">
+          <!-- Getrennte Eingabe für Datum & Uhrzeit -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Datum</label>
+              <input type="date" v-model="form.date" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Uhrzeit</label>
+              <input type="time" v-model="form.time" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800">
+            </div>
           </div>
 
           <!-- SCHLAF MASK -->
@@ -464,7 +466,8 @@
           },
           newItem: { addon: '', activity: '' },
           form: {
-            datetime: '',
+            date: '',
+            time: '',
             subtype: '',
             details: '',
             note: '',
@@ -521,9 +524,13 @@
         await this.loadEntries();
       },
       methods: {
-        toLocalDateTimeString(dateObj) {
+        toLocalDateString(dateObj) {
           const pad = (n) => String(n).padStart(2, '0');
-          return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}T${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+          return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`;
+        },
+        toLocalTimeString(dateObj) {
+          const pad = (n) => String(n).padStart(2, '0');
+          return `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
         },
         async exportCsvAktuell() {
           await this.executeCsvExport('Tracking_Aktuell.csv');
@@ -571,7 +578,7 @@
             const entries = await db.entries.toArray();
             const settings = await db.settings.toArray();
             const backupData = {
-              version: 12,
+              version: 14,
               exportDate: new Date().toISOString(),
               entries: entries,
               settings: settings
@@ -635,7 +642,9 @@
         async saveEntry() {
           try {
             const nowIso = new Date().toISOString();
-            const localDateObj = new Date(this.form.datetime);
+            const combinedString = `${this.form.date}T${this.form.time}:00`;
+            const localDateObj = new Date(combinedString);
+            
             const rawPayload = {
               type: this.activeModal,
               subtype: this.form.subtype || '',
@@ -674,11 +683,13 @@
         },
         openModal(type, entry = null) {
           this.activeModal = type;
+          const now = new Date();
           if (entry) {
             this.editingId = entry.id;
-            const entryDate = entry.timestamp ? new Date(entry.timestamp) : new Date();
+            const entryDate = entry.timestamp ? new Date(entry.timestamp) : now;
             this.form = {
-              datetime: this.toLocalDateTimeString(entryDate),
+              date: this.toLocalDateString(entryDate),
+              time: this.toLocalTimeString(entryDate),
               subtype: entry.subtype || '',
               details: entry.details || '',
               note: entry.note || '',
@@ -697,7 +708,8 @@
           } else {
             this.editingId = null;
             this.form = {
-              datetime: this.toLocalDateTimeString(new Date()),
+              date: this.toLocalDateString(now),
+              time: this.toLocalTimeString(now),
               subtype: type === 'SCHLAF' ? 'Einschlafen' : type === 'MAHLZEIT' ? '' : type === 'BEWEGUNG' ? '' : type === 'ZYKLUS' ? '' : '',
               details: '',
               note: '',

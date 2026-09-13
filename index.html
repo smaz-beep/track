@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Frau Sarah's Tracking</title>
-  <!-- App Manifest für die Handy-Installation eingebettet -->
-  <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Frau%20Sarah%27s%20Tracking%22%2C%22short_name%22%3A%22Tracking%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%231e293b%22%7D'>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -271,7 +271,7 @@
             </div>
           </template>
 
-          <!-- MAHLZEIT MASK (KLICKBAR) -->
+          <!-- MAHLZEIT MASK -->
           <template v-if="activeModal === 'MAHLZEIT'">
             <div>
               <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Mahlzeittyp</label>
@@ -508,6 +508,11 @@
         }
       },
       async mounted() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Offline-Modus aktiv'))
+            .catch((err) => console.log('SW Fehler:', err));
+        }
         await this.loadSettings();
         await this.loadEntries();
       },
@@ -566,7 +571,7 @@
             const settings = await db.settings.toArray();
             
             const backupData = {
-              version: 10,
+              version: 11,
               exportDate: new Date().toISOString(),
               entries: entries,
               settings: settings

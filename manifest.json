@@ -4,8 +4,8 @@
   "description": "Persönliches Tracking für Schlaf, Mahlzeiten, Add-ons & Bewegung",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",

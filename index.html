@@ -168,7 +168,6 @@
 
   <!-- App Script Logic & Service Worker Registration -->
   <script>
-    // Service Worker Registrierung für PWA-Offline-Funktionalität
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -177,7 +176,6 @@
       });
     }
 
-    // Dexie Datenbank Initialisierung
     const db = new Dexie('TrackingDatabase');
     db.version(1).stores({
       entries: 'id, type, timestamp, is_deleted'

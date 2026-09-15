@@ -5,13 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Frau Sarah's Tracking</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff">
-  <!-- Tailwind CSS, Dexie DB & SheetJS Export -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Vue 3 -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
@@ -28,85 +25,111 @@
     <!-- DASHBOARD BUTTONS -->
     <main v-if="viewMode === 'dashboard'" class="my-auto py-6 space-y-3">
       <div class="grid grid-cols-2 gap-3">
-        
-        <!-- Schlaf -->
         <button @click="openModal('SCHLAF')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">🌙</span>
+          <span class="text-2xl text-blue-500">🌙</span>
           <span class="text-base sm:text-lg tracking-wide">Schlaf</span>
         </button>
 
-        <!-- Mahlzeit -->
         <button @click="openModal('MAHLZEIT')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
           <span class="text-2xl">🍎</span>
           <span class="text-base sm:text-lg tracking-wide">Mahlzeit</span>
         </button>
 
-        <!-- AddOns -->
         <button @click="openModal('ADDON')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
           <span class="text-2xl">💊</span>
           <span class="text-base sm:text-lg tracking-wide">AddOns</span>
         </button>
 
-        <!-- Body & Soul (früher Auffälligkeit) -->
-        <button @click="openModal('BODY_SOUL')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">💚</span>
+        <button @click="openModal('BODYSOUL')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
+          <span class="text-2xl text-emerald-600">💚</span>
           <span class="text-base sm:text-lg tracking-wide">Body & Soul</span>
         </button>
 
-        <!-- Bewegung -->
         <button @click="openModal('BEWEGUNG')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
           <span class="text-2xl">💪</span>
           <span class="text-base sm:text-lg tracking-wide">Bewegung</span>
         </button>
 
-        <!-- Zyklus -->
         <button @click="openModal('ZYKLUS')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
           <span class="text-2xl">🩸</span>
           <span class="text-base sm:text-lg tracking-wide">Zyklus</span>
         </button>
       </div>
 
-      <!-- PROTOKOLL BUTTON -->
-      <button @click="viewMode = 'log'" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm transition text-center text-base tracking-wide mt-2">
-        Protokoll
-      </button>
+      <div class="flex gap-2 pt-1">
+        <button @click="viewMode = 'protocol'" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm text-base tracking-wide transition flex items-center justify-center">
+          Protokoll
+        </button>
+        <button @click="viewMode = 'settings'" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm text-base transition flex items-center justify-center">
+          ⚙️
+        </button>
+      </div>
     </main>
 
     <!-- PROTOKOLL ANSICHT -->
-    <section v-if="viewMode === 'log'" class="my-auto py-2 space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+    <section v-if="viewMode === 'protocol'" class="my-auto py-2 space-y-3">
       <div class="flex justify-between items-center border-b border-slate-200 pb-2">
-        <h2 class="text-base font-bold text-slate-700">Erfasste Einträge</h2>
+        <h2 class="text-base font-bold text-slate-700">Protokoll</h2>
         <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
       </div>
+      
+      <div v-if="entries.length === 0" class="text-slate-400 text-center py-8 text-sm">Noch keine Einträge vorhanden.</div>
+      
+      <div class="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+        <div v-for="entry in sortedEntries" :key="entry.id" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-start">
+          <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
+            <div class="text-[11px] text-slate-400 font-mono">{{ formatDate(entry.timestamp) }}</div>
+            <div class="font-bold text-sm text-indigo-950">{{ entry.type === 'BODYSOUL' ? 'Body & Soul' : entry.type }} — {{ entry.subtype }}</div>
+            
+            <div class="text-xs text-slate-600 mt-1 space-y-0.5">
+              <div v-if="entry.type === 'SCHLAF'">
+                <span v-if="entry.sleep_rating">Bewertung: <strong>{{ entry.sleep_rating }}</strong></span>
+                <span v-if="entry.sleep_tiredness"> · Zustand: <strong>{{ entry.sleep_tiredness }}</strong></span>
+                <span v-if="entry.alarm_used !== null && entry.alarm_used !== undefined"> · {{ entry.alarm_used ? 'Mit Wecker' : 'Ohne Wecker' }}</span>
+                <span v-if="entry.wake_reasons && entry.wake_reasons.length"> · Gründe: <strong>{{ entry.wake_reasons.join(', ') }}</strong></span>
+              </div>
 
-      <div v-if="entries.length === 0" class="text-center py-8 text-xs text-slate-400">
-        Noch keine Einträge erfasst.
-      </div>
+              <div v-if="entry.type === 'MAHLZEIT'">
+                <span>{{ entry.details }}</span>
+              </div>
 
-      <div v-for="entry in sortedEntries" :key="entry.id" class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs">
-        <div class="flex justify-between items-start">
-          <div class="font-bold text-slate-700 flex items-center gap-1.5">
-            <span>{{ getIcon(entry.type) }}</span>
-            <span>{{ entry.type === 'BODY_SOUL' ? 'Body & Soul' : entry.type }}</span>
-            <span v-if="entry.subtype" class="font-normal text-slate-500">· {{ entry.subtype }}</span>
+              <div v-if="entry.type === 'ADDON'">
+                <span v-if="entry.addon_quantities && Object.keys(entry.addon_quantities).length">
+                  <strong v-for="(factor, name, idx) in entry.addon_quantities" :key="name">
+                    {{ name }} ({{ factor }}x)<span v-if="idx < Object.keys(entry.addon_quantities).length - 1">, </span>
+                  </strong>
+                </span>
+                <span v-else>
+                  {{ entry.selected_addons ? entry.selected_addons.join(', ') : entry.addon_name }} — <strong>Faktor: {{ entry.addon_factor }}x</strong>
+                </span>
+              </div>
+
+              <div v-if="entry.type === 'BODYSOUL'">
+                <span v-if="entry.body_symptoms && entry.body_symptoms.length">Body: <strong>{{ entry.body_symptoms.join(', ') }}</strong></span>
+                <span v-if="entry.body_symptoms && entry.body_symptoms.length && entry.soul_symptoms && entry.soul_symptoms.length"> · </span>
+                <span v-if="entry.soul_symptoms && entry.soul_symptoms.length">Soul: <strong>{{ entry.soul_symptoms.join(', ') }}</strong></span>
+              </div>
+
+              <div v-if="entry.type === 'BEWEGUNG'">
+                <span v-if="entry.activity_duration">Dauer: <strong>{{ entry.activity_duration }} Min.</strong></span>
+                <span v-if="entry.activity_distance"> · <strong>{{ entry.activity_distance }} km</strong></span>
+                <span v-if="entry.activity_intensity"> · Intensität: <strong>{{ entry.activity_intensity }}</strong></span>
+              </div>
+
+              <div v-if="entry.type === 'ZYKLUS'">
+                <span v-if="entry.subtype === 'Start'">Tag 1 des neuen Zyklus</span>
+                <span v-if="entry.subtype === 'Ende der Periode'">Ende der Periode</span>
+                <span v-if="entry.subtype === 'Zyklus-Tagesnotiz'">Tagesnotiz</span>
+              </div>
+            </div>
+
+            <div v-if="entry.note" class="text-xs italic text-slate-500 mt-1 border-l-2 border-indigo-200 pl-1.5">"{{ entry.note }}"</div>
           </div>
-          <div class="text-[10px] text-slate-400 font-mono">{{ formatDate(entry.timestamp) }}</div>
-        </div>
-
-        <div class="text-slate-600 pl-5">
-          <div v-if="entry.details">{{ entry.details }}</div>
-          <div v-if="entry.sleep_tiredness">Zustand: {{ entry.sleep_tiredness }}</div>
-          <div v-if="entry.sleep_rating">Bewertung: {{ entry.sleep_rating }} <span v-if="entry.alarm_used">(mit Wecker)</span></div>
-          <div v-if="entry.wake_reasons && entry.wake_reasons.length">Aufgewacht wegen: {{ entry.wake_reasons.join(', ') }}</div>
-          <div v-if="entry.addon_name">Add-on: {{ entry.addon_name }} ({{ entry.addon_factor }}x)</div>
-          <div v-if="entry.symptoms && entry.symptoms.length">Ausgewählt: {{ entry.symptoms.join(', ') }}</div>
-          <div v-if="entry.activity_duration">Dauer: {{ entry.activity_duration }} Min. <span v-if="entry.activity_distance">({{ entry.activity_distance }} km)</span></div>
-          <div v-if="entry.note" class="italic text-slate-500 mt-1 border-l-2 border-indigo-200 pl-1.5 font-serif">"{{ entry.note }}"</div>
-        </div>
-
-        <div class="flex justify-end gap-2 pt-1">
-          <button @click="editEntry(entry)" class="text-indigo-600 hover:text-indigo-800 text-xs font-semibold">Edit</button>
-          <button @click="deleteEntry(entry.id)" class="text-rose-500 hover:text-rose-700 text-xs">Löschen</button>
+          
+          <div class="flex gap-1">
+            <button @click="editEntry(entry)" class="text-indigo-600 hover:text-indigo-800 text-xs px-1.5 py-1 font-semibold">Edit</button>
+            <button @click="deleteEntry(entry.id)" class="text-rose-400 hover:text-rose-600 text-xs px-1.5 py-1">Löschen</button>
+          </div>
         </div>
       </div>
     </section>
@@ -120,8 +143,10 @@
 
       <!-- DATEN & SICHERUNG -->
       <div class="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">💾 Datensicherung</h3>
-        <p class="text-xs text-slate-500">Sichern Sie Ihre Datenbank als JSON-Datei oder stellen Sie ein Backup wieder her.</p>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">💾 Datensicherung & Sync</h3>
+        <p class="text-xs text-slate-500">
+          Sichern Sie Ihre Datenbank als JSON-Datei (inkl. aller Einstellungen) oder stellen Sie ein Backup wieder her.
+        </p>
         <div class="flex gap-2 pt-1">
           <button @click="exportJsonBackup" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
             <span>⬇️</span> Backup exportieren
@@ -132,61 +157,87 @@
           </label>
         </div>
       </div>
+
+      <!-- ADDONS KONFIGURATION -->
+      <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">💊 Add-ons Verwaltung</h3>
+        <div class="flex gap-2">
+          <input type="text" v-model="newItem.addon" placeholder="Neues Add-on..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
+          <button @click="addSettingItem('addons', newItem.addon); newItem.addon = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
+        </div>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span v-for="item in config.addons" :key="item" class="inline-flex items-center gap-1.5 bg-white border px-2.5 py-1 rounded-lg text-xs font-medium">
+            {{ item }}
+            <button @click="removeSettingItem('addons', item)" class="text-rose-500 hover:text-rose-700 font-bold ml-1">×</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- BEWEGUNGSARTEN KONFIGURATION -->
+      <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">💪 Bewegungstypen Verwaltung</h3>
+        <div class="flex gap-2">
+          <input type="text" v-model="newItem.activity" placeholder="Neue Aktivität..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
+          <button @click="addSettingItem('activities', newItem.activity); newItem.activity = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
+        </div>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span v-for="item in config.activities" :key="item" class="inline-flex items-center gap-1.5 bg-white border px-2.5 py-1 rounded-lg text-xs font-medium">
+            {{ item }}
+            <button @click="removeSettingItem('activities', item)" class="text-rose-500 hover:text-rose-700 font-bold ml-1">×</button>
+          </span>
+        </div>
+      </div>
     </section>
 
     <!-- FOOTER -->
     <footer class="pt-3 border-t border-slate-200 text-center space-y-2.5">
-      <div class="flex justify-between items-center px-1">
-        <button @click="viewMode = 'settings'" class="text-xs text-slate-500 hover:text-slate-800 font-medium">⚙️ Optionen</button>
-        <div class="text-[10px] text-slate-400 font-mono">Frau Sarah's Tracking</div>
-      </div>
-      
       <div class="flex gap-2">
-        <button @click="exportData('xlsx')" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg shadow-sm transition">
-          📊 Excel (.xlsx) Export
+        <button @click="exportCsvAktuell" class="flex-1 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
+          📥 Aktuelle CSV
         </button>
-        <button @click="exportData('csv')" class="flex-1 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-sm transition">
-          📥 CSV Export
+        <button @click="exportCsvHistorie" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
+          📂 Historie (Datum)
         </button>
       </div>
     </footer>
 
-    <!-- MODAL (EINGABE-MASKEN) -->
+    <!-- MODAL -->
     <div v-if="activeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-      <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto border border-slate-100">
-        
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="text-base font-bold text-slate-800">
-            {{ editingId ? 'Eintrag bearbeiten' : activeModal === 'BODY_SOUL' ? 'Body & Soul' : activeModal }}
-          </h3>
-          <button @click="closeModal" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
-        </div>
+      <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto border">
+        <h3 class="text-base font-bold text-slate-800 border-b pb-2">
+          {{ editingId ? 'Eintrag bearbeiten' : (activeModal === 'BODYSOUL' ? 'Body & Soul' : activeModal) }}
+        </h3>
         
         <div class="space-y-3.5">
-          <!-- Zeitstempel -->
-          <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Datum & Uhrzeit</label>
-            <input type="datetime-local" v-model="form.datetime" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800">
+          <!-- Getrennte Eingabe für Datum & Uhrzeit -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Datum</label>
+              <input type="date" v-model="form.date" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Uhrzeit</label>
+              <input type="time" v-model="form.time" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800">
+            </div>
           </div>
 
-          <!-- SCHLAF -->
-          <div v-if="activeModal === 'SCHLAF'" class="space-y-3">
+          <!-- SCHLAF MASK -->
+          <template v-if="activeModal === 'SCHLAF'">
             <div>
               <label class="block text-xs font-medium text-slate-500 mb-1">Ereignis</label>
               <div class="grid grid-cols-3 gap-1.5">
-                <button v-for="st in ['Einschlafen', 'Aufstehen', 'Nachts aufgewacht']" :key="st" @click="form.subtype = st"
-                  :class="form.subtype === st ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
-                  {{ st }}
+                <button v-for="sub in ['Einschlafen', 'Aufstehen', 'In der Nacht aufgewacht']" :key="sub" @click="form.subtype = sub"
+                  :class="form.subtype === sub ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
+                  class="py-2 px-1 rounded-lg text-[11px] font-semibold border border-slate-200 text-center leading-tight">
+                  {{ sub }}
                 </button>
               </div>
             </div>
 
-            <!-- Einschlafen -->
             <div v-if="form.subtype === 'Einschlafen'">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Einschlaf-Zustand</label>
-              <div class="grid grid-cols-2 gap-2">
-                <button v-for="m in ['müde', 'sehr müde', 'aufgekratzt', 'feini', 'unruhig']" :key="m" @click="form.sleep_tiredness = m"
+              <label class="block text-xs font-medium text-slate-500 mb-1">Zustand</label>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button v-for="m in ['sehr müde', 'aufgekratzt', 'feini', 'unruhig']" :key="m" @click="form.sleep_tiredness = (form.sleep_tiredness === m ? '' : m)"
                   :class="form.sleep_tiredness === m ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
                   class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
                   {{ m }}
@@ -194,156 +245,177 @@
               </div>
             </div>
 
-            <!-- Aufstehen -->
             <div v-if="form.subtype === 'Aufstehen'" class="space-y-3">
               <div>
-                <label class="block text-xs font-medium text-slate-500 mb-1">Schlafbewertung</label>
+                <label class="block text-xs font-medium text-slate-500 mb-1">Bewertung</label>
                 <div class="grid grid-cols-5 gap-1">
-                  <button v-for="r in ['furchtbar', 'geht so', 'ok', 'gut', 'sehr gut']" :key="r" @click="form.sleep_rating = r"
+                  <button v-for="r in ['furchtbar', 'geht so', 'ok', 'gut', 'sehr gut']" :key="r" @click="form.sleep_rating = (form.sleep_rating === r ? '' : r)"
                     :class="form.sleep_rating === r ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                    class="py-2 rounded-lg text-[10px] font-semibold border border-slate-200">
+                    class="py-2 rounded-lg text-[10px] font-semibold border border-slate-200 text-center truncate px-0.5">
                     {{ r }}
                   </button>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="alarm" v-model="form.alarm_used" class="rounded text-slate-800 focus:ring-0">
-                <label for="alarm" class="text-xs font-medium text-slate-700">Mit Wecker aufgewacht</label>
+              <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1">Wecker</label>
+                <div class="flex gap-2">
+                  <button @click="form.alarm_used = (form.alarm_used === true ? null : true)" :class="form.alarm_used === true ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'" class="flex-1 py-2 rounded-lg text-xs font-semibold border">Mit Wecker</button>
+                  <button @click="form.alarm_used = (form.alarm_used === false ? null : false)" :class="form.alarm_used === false ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'" class="flex-1 py-2 rounded-lg text-xs font-semibold border">Ohne Wecker</button>
+                </div>
               </div>
             </div>
 
-            <!-- Nachts aufgewacht -->
-            <div v-if="form.subtype === 'Nachts aufgewacht'">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Aufwachgrund (Mehrfachauswahl)</label>
+            <div v-if="form.subtype === 'In der Nacht aufgewacht'">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Grund (Mehrfachauswahl)</label>
               <div class="flex flex-wrap gap-2">
-                <button v-for="reason in ['WC', 'Essen', 'Rauchen', 'Unruhe', 'Durst']" :key="reason" @click="toggleWakeReason(reason)"
+                <button v-for="reason in ['WC', 'Essen', 'Rauchen']" :key="reason" @click="toggleWakeReason(reason)"
                   :class="form.wake_reasons.includes(reason) ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
                   class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200">
                   {{ reason }}
                 </button>
               </div>
             </div>
-          </div>
+          </template>
 
-          <!-- MAHLZEIT -->
-          <div v-if="activeModal === 'MAHLZEIT'" class="space-y-3">
+          <!-- MAHLZEIT MASK -->
+          <template v-if="activeModal === 'MAHLZEIT'">
             <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Mahlzeit-Typ</label>
-              <div class="grid grid-cols-4 gap-1.5">
-                <button v-for="m in ['Frühstück', 'Mittagessen', 'Abendessen', 'Snack']" :key="m" @click="form.subtype = m"
-                  :class="form.subtype === m ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
-                  {{ m }}
+              <label class="block text-xs font-medium text-slate-500 mb-1">Mahlzeittyp</label>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button v-for="mType in ['Frühstück', 'Mittagessen', 'Abendessen', 'Snack']" :key="mType" @click="form.subtype = (form.subtype === mType ? '' : mType)"
+                  :class="form.subtype === mType ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
+                  class="py-2.5 px-2 rounded-lg text-xs font-semibold border border-slate-200 text-center">
+                  {{ mType }}
                 </button>
               </div>
             </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Lebensmittel / Details</label>
-              <textarea v-model="form.details" rows="2" placeholder="Was hast du gegessen?" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800"></textarea>
+            <div class="pt-1">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Lebensmittel & Mengen</label>
+              <textarea v-model="form.details" placeholder="z. B. 2 Scheiben Brot, Butterkäse 40 g, Salami 30 g, Gurke" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800 h-20"></textarea>
             </div>
-          </div>
+          </template>
 
-          <!-- ADDONS -->
-          <div v-if="activeModal === 'ADDON'" class="space-y-3">
-            <label class="block text-xs font-medium text-slate-500 mb-1">Add-on wählen & Multiplikator</label>
-            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-              <div v-for="addon in config.addons" :key="addon" class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200">
-                <span class="text-xs font-semibold text-slate-700">{{ addon }}</span>
-                <div class="flex items-center gap-1">
-                  <button v-for="f in [0.25, 0.5, 1, 2]" :key="f" @click="selectAddon(addon, f)"
-                    :class="form.addon_name === addon && form.addon_factor === f ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700'"
-                    class="px-2 py-1 rounded text-[10px] font-bold">
-                    {{ f }}x
+          <!-- ADD-ONS MASK -->
+          <template v-if="activeModal === 'ADDON'">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Add-ons & Multiplikatoren</label>
+              <div class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                <div v-for="addon in config.addons" :key="addon" class="flex items-center justify-between p-2 rounded-lg border border-slate-200 bg-slate-50">
+                  <label @click.prevent="toggleAddonSelection(addon)" class="flex items-center gap-2 flex-1 cursor-pointer select-none">
+                    <span class="text-sm font-semibold">{{ form.selected_addons.includes(addon) ? '☑' : '☐' }}</span>
+                    <span class="text-xs font-medium truncate">{{ addon }}</span>
+                  </label>
+                  <div v-if="form.selected_addons.includes(addon)" class="flex gap-1 ml-2">
+                    <button v-for="f in [0.5, 1, 2]" :key="f" @click="setAddonFactor(addon, f)"
+                      :class="getAddonFactor(addon) === f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
+                      class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300">
+                      {{ f }}x
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- BODY & SOUL MASK -->
+          <template v-if="activeModal === 'BODYSOUL'">
+            <div class="space-y-2">
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-900 mb-1 uppercase tracking-wide">Body</label>
+                <div class="grid grid-cols-2 gap-1">
+                  <button v-for="symptom in bodySymptomsList" :key="symptom" @click="toggleBodySymptom(symptom)"
+                    :class="form.body_symptoms.includes(symptom) ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-700'"
+                    class="p-1.5 text-left rounded-lg text-[11px] font-semibold border border-slate-200 flex items-center gap-1 transition">
+                    <span>{{ form.body_symptoms.includes(symptom) ? '☑' : '☐' }}</span>
+                    <span class="truncate">{{ symptom }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-900 mb-1 uppercase tracking-wide">Soul</label>
+                <div class="grid grid-cols-2 gap-1">
+                  <button v-for="symptom in soulSymptomsList" :key="symptom" @click="toggleSoulSymptom(symptom)"
+                    :class="form.soul_symptoms.includes(symptom) ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-700'"
+                    class="p-1.5 text-left rounded-lg text-[11px] font-semibold border border-slate-200 flex items-center gap-1 transition">
+                    <span>{{ form.soul_symptoms.includes(symptom) ? '☑' : '☐' }}</span>
+                    <span class="truncate">{{ symptom }}</span>
                   </button>
                 </div>
               </div>
             </div>
-          </div>
+          </template>
 
-          <!-- BODY & SOUL -->
-          <div v-if="activeModal === 'BODY_SOUL'" class="space-y-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Body (Alphabetisch)</label>
-              <div class="flex flex-wrap gap-1.5">
-                <button v-for="s in bodyItems" :key="s" @click="toggleSymptom(s)"
-                  :class="form.symptoms.includes(s) ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-200">
-                  {{ s }}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Soul (Alphabetisch)</label>
-              <div class="flex flex-wrap gap-1.5">
-                <button v-for="s in soulItems" :key="s" @click="toggleSymptom(s)"
-                  :class="form.symptoms.includes(s) ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-200">
-                  {{ s }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- BEWEGUNG -->
-          <div v-if="activeModal === 'BEWEGUNG'" class="space-y-3">
+          <!-- BEWEGUNG MASK -->
+          <template v-if="activeModal === 'BEWEGUNG'">
             <div>
               <label class="block text-xs font-medium text-slate-500 mb-1">Aktivität</label>
               <div class="grid grid-cols-2 gap-1.5">
-                <button v-for="act in ['Spaziergang', 'Radfahren', 'Training', 'Meditation', 'Dehnen']" :key="act" @click="form.subtype = act"
+                <button v-for="act in config.activities" :key="act" @click="form.subtype = (form.subtype === act ? '' : act)"
                   :class="form.subtype === act ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
+                  class="p-2 text-left rounded-lg text-xs font-semibold border border-slate-200 truncate">
                   {{ act }}
                 </button>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-xs font-medium text-slate-500 mb-1">Dauer (Minuten)</label>
-                <input type="number" v-model="form.activity_duration" placeholder="z. B. 30" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-500 mb-1">Distanz (km)</label>
-                <input type="number" step="0.1" v-model="form.activity_distance" placeholder="z. B. 5.2" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800">
-              </div>
-            </div>
-          </div>
-
-          <!-- ZYKLUS -->
-          <div v-if="activeModal === 'ZYKLUS'" class="space-y-3">
             <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Zyklus-Ereignis</label>
-              <div class="grid grid-cols-3 gap-1.5">
-                <button v-for="zy in ['Start', 'Ende der Periode', 'Tagesnotiz']" :key="zy" @click="form.subtype = zy"
-                  :class="form.subtype === zy ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
-                  {{ zy }}
+              <label class="block text-xs font-medium text-slate-500 mb-1">Dauer (in Minuten)</label>
+              <input type="number" v-model="form.activity_duration" placeholder="z. B. 45" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800">
+            </div>
+            <div v-if="['Spaziergang', 'Radfahren'].includes(form.subtype)">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Distanz (in km, optional)</label>
+              <input type="number" step="0.1" v-model="form.activity_distance" placeholder="z. B. 5.2" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800">
+            </div>
+            <div v-if="['Spaziergang', 'Radfahren', 'Training'].includes(form.subtype)">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Intensität</label>
+              <div class="flex gap-2">
+                <button v-for="i in ['normal', 'intensiv']" :key="i" @click="form.activity_intensity = (form.activity_intensity === i ? '' : i)"
+                  :class="form.activity_intensity === i ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
+                  class="flex-1 py-2 rounded-lg text-xs font-semibold border border-slate-200">
+                  {{ i }}
                 </button>
               </div>
             </div>
-          </div>
+          </template>
 
-          <!-- NOTIZ (Für alle Masken) -->
+          <!-- ZYKLUS MASK -->
+          <template v-if="activeModal === 'ZYKLUS'">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Ereignis</label>
+              <div class="grid grid-cols-1 gap-1.5">
+                <button v-for="zOpt in [{val: 'Start', label: 'Neuer Zyklusstart (Tag 1)'}, {val: 'Ende der Periode', label: 'Ende der Periode'}, {val: 'Zyklus-Tagesnotiz', label: 'Zyklus-Tagesnotiz'}]" :key="zOpt.val" @click="form.subtype = (form.subtype === zOpt.val ? '' : zOpt.val)"
+                  :class="form.subtype === zOpt.val ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
+                  class="p-2.5 rounded-lg text-xs font-semibold border border-slate-200 text-left">
+                  {{ zOpt.label }}
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <!-- NOTIZFELD -->
           <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1">Allgemeine Notiz</label>
-            <input type="text" v-model="form.note" placeholder="Optional..." class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Notiz (optional)</label>
+            <input type="text" v-model="form.note" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800" placeholder="Anmerkungen...">
           </div>
         </div>
 
+        <!-- BUTTONS -->
         <div class="flex gap-2 pt-2">
-          <button @click="closeModal" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs">Abbrechen</button>
-          <button @click="saveEntry" class="flex-1 py-2.5 bg-slate-800 text-white font-semibold rounded-xl text-xs shadow-md">Speichern</button>
+          <button @click="closeModal" class="flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl text-sm">Abbrechen</button>
+          <button @click="saveEntry" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-sm">
+            {{ editingId ? 'Aktualisieren' : 'Speichern' }}
+          </button>
         </div>
-
       </div>
     </div>
 
   </div>
 
+  <!-- VUE LOGIC -->
   <script>
-    // DEXIE DATENBANK INITIALISIEREN
-    const db = new Dexie('SarahTrackingDB');
+    const db = new Dexie('TrackingDB');
     db.version(3).stores({
-      entries: 'id, timestamp, type, subtype, is_deleted',
+      entries: 'id, type, subtype, timestamp, updated_at, created_at, is_deleted',
       settings: 'key'
     });
 
@@ -357,37 +429,79 @@
           editingId: null,
           entries: [],
           config: {
-            addons: ['Vitamin C 1000 mg', 'Vitamin D 1000 IE', 'Magnesium 400 mg', 'Zink 15 mg'],
+            addons: [
+              'Vitamin C 1000 mg',
+              'Vitamin D 1000 EH + Vitamin K 50 µg',
+              'Vitamin B12 1000µg + Folsäure 400 µg',
+              'Vitamin B12 1000µg + Folsäure 800 µg',
+              'Sertralin 25 mg',
+              'Ovoderm 300 mg',
+              'Magnesium 225 mg',
+              'Queti 25mg',
+              'Desloratadin',
+              'Ibu',
+              'Diclofenac',
+              'Aspirin'
+            ],
+            bodySymptoms: [
+              'Blähbauch',
+              'Kopfschmerzen',
+              'Mir ist heiß',
+              'Mir ist kalt',
+              'Müde',
+              'Müde extrem',
+              'Puffy Eyes',
+              'Puls',
+              'Tinnitus gefühlt laut'
+            ],
+            soulSymptoms: [
+              'Ausgeglichen',
+              'Grantig',
+              'Glücklich',
+              'Leer',
+              'On fire',
+              'Weinerlich'
+            ],
             activities: ['Spaziergang', 'Radfahren', 'Training', 'Meditation', 'Dehnen']
           },
-          bodyItems: ['Blähbauch', 'Fieberblase', 'Kopfschmerzen', 'Mir ist heiß', 'Mir ist kalt', 'Müde', 'Extrem müde', 'Puffy Eyes', 'Puls', 'Tinnitus gefühlt laut'].sort(),
-          soulItems: ['Ausgeglichen', 'Grantig', 'Glücklich', 'Leer', 'On fire', 'Weinerlich'].sort(),
+          newItem: { addon: '', activity: '' },
           form: {
-            datetime: '',
+            date: '',
+            time: '',
             subtype: '',
             details: '',
             note: '',
-            sleep_tiredness: 'müde',
-            sleep_rating: 'gut',
-            alarm_used: false,
+            sleep_tiredness: '',
+            sleep_rating: '',
+            alarm_used: null,
             wake_reasons: [],
-            addon_name: '',
-            addon_factor: 1,
-            symptoms: [],
+            selected_addons: [],
+            addon_quantities: {},
+            body_symptoms: [],
+            soul_symptoms: [],
             activity_duration: '',
-            activity_distance: ''
+            activity_distance: '',
+            activity_intensity: ''
           }
         };
       },
       computed: {
+        bodySymptomsList() {
+          return [...this.config.bodySymptoms].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
+        },
+        soulSymptomsList() {
+          return [...this.config.soulSymptoms].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
+        },
         sortedEntries() {
           return [...this.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         },
         currentCycleDayText() {
-          const cycleStarts = this.entries.filter(e => e.type === 'ZYKLUS' && e.subtype === 'Start');
-          if (!cycleStarts.length) return "Kein Zyklusstart erfasst";
+          const cycleStarts = this.entries
+            .filter(e => e.type === 'ZYKLUS' && e.subtype === 'Start')
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+          if (cycleStarts.length === 0) return "Kein Zyklusstart erfasst";
           
-          cycleStarts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
           const lastStart = new Date(cycleStarts[0].timestamp);
           const today = new Date();
           
@@ -396,176 +510,96 @@
           
           const diffTime = Math.abs(today - lastStart);
           const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+          
           return `Zyklustag ${diffDays}`;
         }
       },
       async mounted() {
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Fehler:', err));
+          navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Offline-Modus aktiv'))
+            .catch((err) => console.log('SW Fehler:', err));
         }
+        await this.loadSettings();
         await this.loadEntries();
       },
       methods: {
-        async loadEntries() {
-          this.entries = await db.entries.where('is_deleted').equals(0).toArray();
+        toLocalDateString(dateObj) {
+          const pad = (n) => String(n).padStart(2, '0');
+          return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`;
         },
-        openModal(type) {
-          this.editingId = null;
-          this.activeModal = type;
-          
-          // LOKALE ZEIT OHNE UTC VERSCHIEBUNG ANZEIGEN
-          const d = new Date();
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-          
-          this.form = {
-            datetime: d.toISOString().slice(0, 16),
-            subtype: type === 'MAHLZEIT' ? 'Mittagessen' : type === 'SCHLAF' ? 'Einschlafen' : type === 'BEWEGUNG' ? 'Spaziergang' : type === 'ZYKLUS' ? 'Start' : '',
-            details: '',
-            note: '',
-            sleep_tiredness: 'müde',
-            sleep_rating: 'gut',
-            alarm_used: false,
-            wake_reasons: [],
-            addon_name: '',
-            addon_factor: 1,
-            symptoms: [],
-            activity_duration: '',
-            activity_distance: ''
-          };
+        toLocalTimeString(dateObj) {
+          const pad = (n) => String(n).padStart(2, '0');
+          return `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
         },
-        closeModal() {
-          this.activeModal = null;
-          this.editingId = null;
+        async exportCsvAktuell() {
+          await this.executeCsvExport('Tracking_Aktuell.csv');
         },
-        selectAddon(name, factor) {
-          this.form.addon_name = name;
-          this.form.addon_factor = factor;
+        async exportCsvHistorie() {
+          const now = new Date();
+          const dateString = now.toISOString().slice(0, 10);
+          const timeString = now.toTimeString().slice(0, 5).replace(':', '-');
+          await this.executeCsvExport(`Tracking_Export_${dateString}_${timeString}.csv`);
         },
-        toggleWakeReason(reason) {
-          const idx = this.form.wake_reasons.indexOf(reason);
-          if (idx > -1) this.form.wake_reasons.splice(idx, 1);
-          else this.form.wake_reasons.push(reason);
-        },
-        toggleSymptom(symptom) {
-          const idx = this.form.symptoms.indexOf(symptom);
-          if (idx > -1) this.form.symptoms.splice(idx, 1);
-          else this.form.symptoms.push(symptom);
-        },
-        editEntry(entry) {
-          this.editingId = entry.id;
-          this.activeModal = entry.type;
-          
-          const d = new Date(entry.timestamp);
-          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-          
-          this.form = {
-            datetime: d.toISOString().slice(0, 16),
-            subtype: entry.subtype || '',
-            details: entry.details || '',
-            note: entry.note || '',
-            sleep_tiredness: entry.sleep_tiredness || 'müde',
-            sleep_rating: entry.sleep_rating || 'gut',
-            alarm_used: !!entry.alarm_used,
-            wake_reasons: entry.wake_reasons ? [...entry.wake_reasons] : [],
-            addon_name: entry.addon_name || '',
-            addon_factor: entry.addon_factor || 1,
-            symptoms: entry.symptoms ? [...entry.symptoms] : [],
-            activity_duration: entry.activity_duration || '',
-            activity_distance: entry.activity_distance || ''
-          };
-        },
-        async saveEntry() {
+        async executeCsvExport(filename) {
           try {
-            const nowIso = new Date().toISOString();
-            
-            const rawPayload = {
-              type: this.activeModal,
-              subtype: this.form.subtype || '',
-              details: this.form.details || '',
-              note: this.form.note || '',
-              timestamp: new Date(this.form.datetime).toISOString(),
-              updated_at: nowIso,
-              sleep_tiredness: this.form.sleep_tiredness || '',
-              sleep_rating: this.form.sleep_rating || '',
-              alarm_used: !!this.form.alarm_used,
-              wake_reasons: Array.from(this.form.wake_reasons || []),
-              addon_name: this.form.addon_name || '',
-              addon_factor: Number(this.form.addon_factor) || 1,
-              symptoms: Array.from(this.form.symptoms || []),
-              activity_duration: this.form.activity_duration || '',
-              activity_distance: this.form.activity_distance || ''
-            };
-
-            const cleanPayload = JSON.parse(JSON.stringify(rawPayload));
-
-            if (this.editingId) {
-              await db.entries.update(this.editingId, cleanPayload);
-            } else {
-              cleanPayload.id = 'id_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-              cleanPayload.created_at = nowIso;
-              cleanPayload.is_deleted = 0;
-              await db.entries.add(cleanPayload);
+            const entries = await db.entries.toArray();
+            if (!entries || !entries.length) {
+              alert("Keine Einträge zum Exportieren vorhanden.");
+              return;
             }
-            
-            this.closeModal();
-            await this.loadEntries();
+            const headers = Object.keys(entries[0]);
+            const csvRows = [headers.join(';')];
+            for (const row of entries) {
+              const values = headers.map(header => {
+                const val = row[header] ?? '';
+                const stringVal = Array.isArray(val) ? val.join(', ') : (typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val));
+                return `"${stringVal.replace(/"/g, '""')}"`;
+              });
+              csvRows.push(values.join(';'));
+            }
+            const csvContent = "\uFEFF" + csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
           } catch (error) {
-            console.error("Fehler beim Speichern:", error);
-            alert("Speichern fehlgeschlagen: " + error.message);
-          }
-        },
-        async deleteEntry(id) {
-          await db.entries.update(id, { is_deleted: 1, updated_at: new Date().toISOString() });
-          await this.loadEntries();
-        },
-        getIcon(type) {
-          const map = { SCHLAF: '🌙', MAHLZEIT: '🍎', ADDON: '💊', BODY_SOUL: '💚', BEWEGUNG: '💪', ZYKLUS: '🩸' };
-          return map[type] || '📝';
-        },
-        formatDate(isoStr) {
-          const d = new Date(isoStr);
-          return d.toLocaleDateString('de-DE') + ' · ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        },
-        exportData(format) {
-          const exportData = this.entries.map(e => ({
-            ID: e.id,
-            Datum_Zeit: this.formatDate(e.timestamp),
-            Kategorie: e.type,
-            Untertyp: e.subtype,
-            Details: e.details,
-            Schlaf_Bewertung: e.sleep_rating,
-            Schlaf_Muedigkeit: e.sleep_tiredness,
-            Wecker: e.alarm_used ? 'Ja' : 'Nein',
-            Aufwach_Gruende: e.wake_reasons ? e.wake_reasons.join(', ') : '',
-            Addon: e.addon_name,
-            Addon_Faktor: e.addon_factor,
-            Body_Soul_Auswahl: e.symptoms ? e.symptoms.join(', ') : '',
-            Dauer_Min: e.activity_duration,
-            Distanz_KM: e.activity_distance,
-            Notiz: e.note
-          }));
-
-          const worksheet = XLSX.utils.json_to_sheet(exportData);
-          const workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(workbook, worksheet, "Tracking");
-
-          if (format === 'xlsx') {
-            XLSX.writeFile(workbook, `Tracking_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
-          } else {
-            XLSX.writeFile(workbook, `Tracking_Export_${new Date().toISOString().slice(0,10)}.csv`, { bookType: 'csv' });
+            console.error("Export-Fehler:", error);
+            alert("Export fehlgeschlagen: " + error.message);
           }
         },
         async exportJsonBackup() {
-          const entries = await db.entries.toArray();
-          const backupData = { version: 3, exportDate: new Date().toISOString(), entries: entries };
-          const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.setAttribute('download', `Tracking_Backup_${new Date().toISOString().slice(0,10)}.json`);
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          try {
+            const entries = await db.entries.toArray();
+            const settings = await db.settings.toArray();
+            const backupData = {
+              version: 14,
+              exportDate: new Date().toISOString(),
+              entries: entries,
+              settings: settings
+            };
+            const jsonString = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const now = new Date();
+            const dateString = now.toISOString().slice(0, 10);
+            const timeString = now.toTimeString().slice(0, 5).replace(':', '-');
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Tracking_Backup_${dateString}_${timeString}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          } catch (error) {
+            console.error("Backup-Fehler:", error);
+            alert("Backup fehlgeschlagen: " + error.message);
+          }
         },
         async importJsonBackup(event) {
           const file = event.target.files[0];
@@ -573,17 +607,197 @@
           const reader = new FileReader();
           reader.onload = async (e) => {
             try {
-              const data = JSON.parse(e.target.result);
-              if (data.entries && Array.isArray(data.entries)) {
-                await db.entries.bulkPut(data.entries);
+              const backup = JSON.parse(e.target.result);
+              if (!backup.entries || !backup.settings) {
+                alert("Ungültige Backup-Datei.");
+                return;
+              }
+              if (confirm("Möchten Sie dieses Backup wirklich einspielen? Bestehende Daten werden aktualisiert.")) {
+                await db.entries.clear();
+                await db.settings.clear();
+                if (backup.entries.length) await db.entries.bulkAdd(backup.entries);
+                if (backup.settings.length) await db.settings.bulkAdd(backup.settings);
+                await this.loadSettings();
                 await this.loadEntries();
-                alert('Backup erfolgreich eingespielt!');
+                alert("Backup erfolgreich eingespielt!");
               }
             } catch (err) {
-              alert('Fehler beim Einlesen der Backup-Datei.');
+              console.error("Import-Fehler:", err);
+              alert("Fehler beim Lesen der Backup-Datei.");
             }
           };
           reader.readAsText(file);
+        },
+        async loadSettings() {
+          const stored = await db.settings.toArray();
+          stored.forEach(item => {
+            if (this.config[item.key]) {
+              this.config[item.key] = item.value;
+            }
+          });
+        },
+        async loadEntries() {
+          this.entries = await db.entries.where('is_deleted').equals(0).toArray();
+        },
+        async saveEntry() {
+          try {
+            const nowIso = new Date().toISOString();
+            const combinedString = `${this.form.date}T${this.form.time}:00`;
+            const localDateObj = new Date(combinedString);
+            
+            const rawPayload = {
+              type: this.activeModal,
+              subtype: this.form.subtype || '',
+              details: this.form.details || '',
+              note: this.form.note || '',
+              timestamp: localDateObj.toISOString(),
+              updated_at: nowIso,
+              sleep_tiredness: this.form.sleep_tiredness || '',
+              sleep_rating: this.form.sleep_rating || '',
+              alarm_used: this.form.alarm_used !== null ? this.form.alarm_used : null,
+              wake_reasons: Array.from(this.form.wake_reasons || []),
+              selected_addons: Array.from(this.form.selected_addons || []),
+              addon_quantities: JSON.parse(JSON.stringify(this.form.addon_quantities || {})),
+              body_symptoms: Array.from(this.form.body_symptoms || []),
+              soul_symptoms: Array.from(this.form.soul_symptoms || []),
+              activity_duration: this.form.activity_duration || '',
+              activity_distance: this.form.activity_distance || '',
+              activity_intensity: this.form.activity_intensity || ''
+            };
+            const cleanPayload = JSON.parse(JSON.stringify(rawPayload));
+
+            if (this.editingId) {
+              await db.entries.update(this.editingId, cleanPayload);
+            } else {
+              cleanPayload.id = 'id_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+              cleanPayload.created_at = nowIso;
+              cleanPayload.is_deleted = 0;
+              await db.entries.add(cleanPayload);
+            }
+            this.closeModal();
+            await this.loadEntries();
+          } catch (error) {
+            console.error("Fehler beim Speichern:", error);
+            alert("Das Speichern ist fehlgeschlagen. Grund: " + error.message);
+          }
+        },
+        openModal(type, entry = null) {
+          this.activeModal = type;
+          const now = new Date();
+          if (entry) {
+            this.editingId = entry.id;
+            const entryDate = entry.timestamp ? new Date(entry.timestamp) : now;
+            this.form = {
+              date: this.toLocalDateString(entryDate),
+              time: this.toLocalTimeString(entryDate),
+              subtype: entry.subtype || '',
+              details: entry.details || '',
+              note: entry.note || '',
+              sleep_tiredness: entry.sleep_tiredness || '',
+              sleep_rating: entry.sleep_rating || '',
+              alarm_used: entry.alarm_used !== undefined ? entry.alarm_used : null,
+              wake_reasons: entry.wake_reasons ? [...entry.wake_reasons] : [],
+              selected_addons: entry.selected_addons ? [...entry.selected_addons] : (entry.addon_name ? [entry.addon_name] : []),
+              addon_quantities: entry.addon_quantities ? {...entry.addon_quantities} : (entry.addon_name ? {[entry.addon_name]: entry.addon_factor || 1} : {}),
+              body_symptoms: entry.body_symptoms ? [...entry.body_symptoms] : (entry.symptoms ? [...entry.symptoms] : []),
+              soul_symptoms: entry.soul_symptoms ? [...entry.soul_symptoms] : [],
+              activity_duration: entry.activity_duration || '',
+              activity_distance: entry.activity_distance || '',
+              activity_intensity: entry.activity_intensity || ''
+            };
+          } else {
+            this.editingId = null;
+            this.form = {
+              date: this.toLocalDateString(now),
+              time: this.toLocalTimeString(now),
+              subtype: type === 'SCHLAF' ? 'Einschlafen' : type === 'MAHLZEIT' ? '' : type === 'BEWEGUNG' ? '' : type === 'ZYKLUS' ? '' : '',
+              details: '',
+              note: '',
+              sleep_tiredness: '',
+              sleep_rating: '',
+              alarm_used: null,
+              wake_reasons: [],
+              selected_addons: [],
+              addon_quantities: {},
+              body_symptoms: [],
+              soul_symptoms: [],
+              activity_duration: '',
+              activity_distance: '',
+              activity_intensity: ''
+            };
+          }
+        },
+        closeModal() {
+          this.activeModal = null;
+          this.editingId = null;
+        },
+        editEntry(entry) {
+          this.openModal(entry.type, entry);
+        },
+        async deleteEntry(id) {
+          if (confirm("Eintrag wirklich löschen?")) {
+            await db.entries.update(id, { is_deleted: 1, updated_at: new Date().toISOString() });
+            await this.loadEntries();
+          }
+        },
+        toggleAddonSelection(addon) {
+          const idx = this.form.selected_addons.indexOf(addon);
+          if (idx > -1) {
+            this.form.selected_addons.splice(idx, 1);
+            delete this.form.addon_quantities[addon];
+          } else {
+            this.form.selected_addons.push(addon);
+            this.form.addon_quantities[addon] = 1;
+          }
+        },
+        getAddonFactor(addon) {
+          return this.form.addon_quantities[addon] !== undefined ? this.form.addon_quantities[addon] : 1;
+        },
+        setAddonFactor(addon, factor) {
+          if (!this.form.selected_addons.includes(addon)) {
+            this.form.selected_addons.push(addon);
+          }
+          this.form.addon_quantities[addon] = factor;
+        },
+        toggleWakeReason(reason) {
+          const idx = this.form.wake_reasons.indexOf(reason);
+          if (idx > -1) {
+            this.form.wake_reasons.splice(idx, 1);
+          } else {
+            this.form.wake_reasons.push(reason);
+          }
+        },
+        toggleBodySymptom(symptom) {
+          const idx = this.form.body_symptoms.indexOf(symptom);
+          if (idx > -1) {
+            this.form.body_symptoms.splice(idx, 1);
+          } else {
+            this.form.body_symptoms.push(symptom);
+          }
+        },
+        toggleSoulSymptom(symptom) {
+          const idx = this.form.soul_symptoms.indexOf(symptom);
+          if (idx > -1) {
+            this.form.soul_symptoms.splice(idx, 1);
+          } else {
+            this.form.soul_symptoms.push(symptom);
+          }
+        },
+        async addSettingItem(key, val) {
+          const clean = val ? val.trim() : '';
+          if (clean && !this.config[key].includes(clean)) {
+            this.config[key].push(clean);
+            await db.settings.put({ key: key, value: [...this.config[key]] });
+          }
+        },
+        async removeSettingItem(key, val) {
+          this.config[key] = this.config[key].filter(i => i !== val);
+          await db.settings.put({ key: key, value: [...this.config[key]] });
+        },
+        formatDate(iso) {
+          if (!iso) return '';
+          const d = new Date(iso);
+          return d.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
       }
     }).mount('#app');

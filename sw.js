@@ -1,9 +1,16 @@
-const CACHE_NAME = 'tracking-app-v2';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'tracking-app-v012';
+
+// Ohne diese Dateien laeuft die App nicht - fehlt eine, soll die Installation scheitern
+const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.png',
+  './icon.png'
+];
+
+// Hilfreich, aber nicht lebenswichtig: faellt eine CDN-Datei aus,
+// wird der Rest trotzdem gecacht (kein Alles-oder-nichts mehr)
+const OPTIONAL_ASSETS = [
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/dexie/dist/dexie.js',
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -11,46 +18,60 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(CORE_ASSETS);
+    await Promise.allSettled(OPTIONAL_ASSETS.map((url) => cache.add(url)));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
-  );
-  self.clientsClaim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    );
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
+  // Nur GET darf in den Cache - ein POST wirft bei cache.put() eine Exception
+  if (event.request.method !== 'GET') return;
+
+  // Seitenaufruf: immer zuerst das Netz fragen.
+  // Dadurch kommt eine neue index.html sofort an, ohne Cache-Namen hochzuzaehlen.
+  if (event.request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(event.request);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put('./index.html', fresh.clone());
+        return fresh;
+      } catch (err) {
+        // Offline: die zuletzt erfolgreich geladene Fassung ausliefern
+        const cached = await caches.match('./index.html');
+        return cached || Response.error();
       }
-      return fetch(event.request).then((networkResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        });
-      }).catch(() => {
-        // Fallback für reine Navigation wenn offline
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
-  );
+    })());
+    return;
+  }
+
+  // Alles andere (Skripte, Icon): erst Cache, dann Netz
+  event.respondWith((async () => {
+    const cached = await caches.match(event.request);
+    if (cached) return cached;
+    try {
+      const response = await fetch(event.request);
+      if (response && (response.ok || response.type === 'opaque')) {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(event.request, response.clone());
+      }
+      return response;
+    } catch (err) {
+      // Immer eine echte Antwort zurueckgeben - nie undefined
+      return Response.error();
+    }
+  })());
 });

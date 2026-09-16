@@ -16,7 +16,7 @@
     
     <!-- HEADER -->
     <header class="text-center py-4 border-b border-slate-200">
-      <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking</h1>
+      <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking <span class="text-xs font-semibold text-slate-400 align-middle">{{ appVersion }}</span></h1>
       <p class="mt-1 text-xs font-medium text-slate-500">
         {{ currentCycleDayText }}
       </p>
@@ -309,49 +309,44 @@
               </div>
             </div>
 
+            <div class="pt-1">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Lebensmittel</label>
+              <div class="flex flex-wrap gap-1.5">
+                <button v-for="food in config.foods" :key="food.name" @click="toggleFood(food)"
+                  :class="form.selected_foods.includes(food.name) ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-700 border-slate-200'"
+                  class="px-3 py-2 rounded-lg text-xs font-semibold border transition">
+                  {{ food.name }}
+                </button>
+              </div>
+            </div>
+
             <div v-if="config.foodCombos.length" class="pt-1">
               <label class="block text-xs font-medium text-slate-500 mb-1">Kombinationen</label>
               <div class="flex flex-wrap gap-1.5">
                 <button v-for="combo in config.foodCombos" :key="combo.name" @click="applyFoodCombo(combo)"
-                  class="px-3 py-2 rounded-lg text-[11px] font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition">
+                  class="px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 transition">
                   + {{ combo.name }}
                 </button>
               </div>
             </div>
 
-            <div class="pt-1">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Schnellwahl</label>
-              <div class="space-y-3 max-h-64 overflow-y-auto pr-1">
-                <div v-for="group in groupedFoods" :key="group.name">
-                  <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 sticky top-0 bg-white py-1">{{ group.name }}</div>
-                  <div class="space-y-1.5">
-                    <div v-for="food in group.items" :key="food.name" class="p-2 rounded-lg border border-slate-200 bg-slate-50">
-                      <div class="flex items-center justify-between gap-2">
-                        <label @click.prevent="toggleFood(food)" class="flex items-center gap-2 flex-1 cursor-pointer select-none">
-                          <span class="text-sm font-semibold">{{ form.selected_foods.includes(food.name) ? '☑' : '☐' }}</span>
-                          <span class="text-xs font-medium truncate">{{ food.name }}</span>
-                        </label>
-                        <div v-if="form.selected_foods.includes(food.name)" class="flex gap-1 flex-wrap justify-end">
-                          <button v-for="portion in food.portions" :key="portion.label" @click="setFoodPortion(food, portion.f)"
-                            :class="getFoodFactor(food.name) === portion.f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
-                            class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">
-                            {{ portion.label }}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            <div v-if="selectedFoodList.length" class="space-y-1.5 pt-1">
+              <label class="block text-xs font-medium text-slate-500">Portionen</label>
+              <div v-for="food in selectedFoodList" :key="food.name" class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50">
+                <span class="text-xs font-semibold truncate">{{ food.name }}</span>
+                <div class="flex gap-1 flex-wrap justify-end">
+                  <button v-for="portion in food.portions" :key="portion.label" @click="setFoodPortion(food, portion.f)"
+                    :class="getFoodFactor(food.name) === portion.f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
+                    class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">
+                    {{ portion.label }}
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div v-if="foodSummary" class="text-[11px] text-slate-600 bg-slate-100 border border-slate-200 rounded-lg p-2">
-              <span class="font-bold">Gewählt:</span> {{ foodSummary }}
-            </div>
-
             <div class="pt-1">
               <label class="block text-xs font-medium text-slate-500 mb-1">Weitere Lebensmittel &amp; Mengen (frei)</label>
-              <textarea v-model="form.details" placeholder="z. B. 2 Scheiben Brot, Butterkäse 40 g, Salami 30 g, Gurke" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800 h-20"></textarea>
+              <textarea v-model="form.details" placeholder="z. B. Butterkäse 40 g, Salami 30 g, Gurke" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800 h-20"></textarea>
             </div>
           </template>
 
@@ -489,6 +484,7 @@
     createApp({
       data() {
         return {
+          appVersion: 'v012',
           viewMode: 'dashboard',
           quickNote: '',
           quickNoteSaved: false,
@@ -551,30 +547,28 @@
               'Retinal A-Game10': 'Beauty',
               'EnzymPeel': 'Beauty'
             },
-            foodGroupOrder: ['Getränke', 'Brot & Getreide', 'Milchprodukte', 'Obst', 'Nüsse & Snacks', 'Sonstiges'],
-            // Basisportion = Faktor 1. Makros spaeter je Basisportion hier ergaenzen
-            // (z. B. macros: { kcal: 0, kh: 0, eiweiss: 0, fett: 0 })
+            // Reihenfolge = Reihenfolge der Buttons. Basisportion = Faktor 1.
+            // Makros spaeter je Basisportion erganzen (z. B. macros: { kcal: 0, kh: 0, eiweiss: 0, fett: 0 })
             foods: [
-              { name: 'Kaffee', group: 'Getränke', base: '200 ml',
+              { name: 'Kaffee', base: '200 ml',
                 portions: [{ label: '200 ml', f: 1 }, { label: '80 ml', f: 0.4 }] },
-              { name: 'Zucker', group: 'Sonstiges', base: '5 g (1 TL)',
+              { name: 'Zucker', base: '5 g (1 TL)',
                 portions: [{ label: '2,5 g', f: 0.5 }, { label: '5 g', f: 1 }, { label: '10 g', f: 2 }] },
-              { name: 'Vollmilch 3,5 %', group: 'Milchprodukte', base: '50 ml',
-                portions: [{ label: '50 ml', f: 1 }, { label: '100 ml', f: 2 }, { label: '25 ml', f: 0.5 }] },
-              { name: 'Buttermilch', group: 'Milchprodukte', base: '500 ml',
-                portions: [{ label: '500 ml', f: 1 }, { label: '250 ml', f: 0.5 }, { label: '165 ml', f: 0.33 }] },
-              { name: 'Mischbrot', group: 'Brot & Getreide', base: '1 Scheibe',
-                portions: [{ label: '1 Scheibe', f: 1 }, { label: '½ Scheibe', f: 0.5 }, { label: '2 Scheiben', f: 2 }] },
-              { name: 'Vollkornbrot', group: 'Brot & Getreide', base: '1 Scheibe',
-                portions: [{ label: '1 Scheibe', f: 1 }, { label: '½ Scheibe', f: 0.5 }, { label: '2 Scheiben', f: 2 }] },
-              { name: 'Banane', group: 'Obst', base: '1 Stück',
-                portions: [{ label: '1 Stück', f: 1 }, { label: '½ Stück', f: 0.5 }] },
-              { name: 'Nüsse', group: 'Nüsse & Snacks', base: '1 Stück',
-                portions: [{ label: '3 Stück', f: 3 }, { label: '5 Stück', f: 5 }, { label: '10 Stück', f: 10 }] }
+              { name: 'Milch', base: '50 ml',
+                portions: [{ label: '25 ml', f: 0.5 }, { label: '50 ml', f: 1 }, { label: '100 ml', f: 2 }] },
+              { name: 'Buttermilch', base: '500 ml',
+                portions: [{ label: '165 ml', f: 0.33 }, { label: '250 ml', f: 0.5 }, { label: '500 ml', f: 1 }] },
+              { name: 'Banane', base: '1 Stück',
+                portions: [{ label: '½ Stück', f: 0.5 }, { label: '1 Stück', f: 1 }] },
+              { name: 'Nüsse', base: '1 Stück',
+                portions: [{ label: '3 Stück', f: 3 }, { label: '5 Stück', f: 5 }, { label: '10 Stück', f: 10 }] },
+              { name: 'Mischbrot', base: '1 Scheibe',
+                portions: [{ label: '½ Scheibe', f: 0.5 }, { label: '1 Scheibe', f: 1 }, { label: '2 Scheiben', f: 2 }] },
+              { name: 'Vollkornbrot', base: '1 Scheibe',
+                portions: [{ label: '½ Scheibe', f: 0.5 }, { label: '1 Scheibe', f: 1 }, { label: '2 Scheiben', f: 2 }] }
             ],
             foodCombos: [
-              { name: 'Kaffee mit Zucker & Milch', items: { 'Kaffee': 1, 'Zucker': 1, 'Vollmilch 3,5 %': 1 } },
-              { name: 'Kleiner Kaffee schwarz', items: { 'Kaffee': 0.4 } }
+              { name: 'Kaffee mit Zucker & Milch', items: { 'Kaffee': 1, 'Zucker': 1, 'Milch': 1 } }
             ],
             addonFactors: { 'Sertralin 25 mg': [0.33, 0.5, 1] },
             defaultFactors: [0.5, 1, 2]
@@ -616,21 +610,8 @@
               items: groups[g].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }))
             }));
         },
-        groupedFoods() {
-          const groups = {};
-          this.config.foods.forEach(f => {
-            const g = f.group || 'Sonstiges';
-            (groups[g] = groups[g] || []).push(f);
-          });
-          return this.config.foodGroupOrder
-            .filter(g => groups[g] && groups[g].length)
-            .map(g => ({
-              name: g,
-              items: groups[g].sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }))
-            }));
-        },
-        foodSummary() {
-          return this.describeFoods(this.form.food_quantities);
+        selectedFoodList() {
+          return this.config.foods.filter(f => this.form.selected_foods.includes(f.name));
         },
         bodySymptomsList() {
           return [...this.config.bodySymptoms].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
@@ -734,7 +715,8 @@
             delete this.form.food_quantities[food.name];
           } else {
             this.form.selected_foods.push(food.name);
-            this.form.food_quantities[food.name] = food.portions[0].f;
+            const standard = food.portions.find(p => p.f === 1) || food.portions[0];
+            this.form.food_quantities[food.name] = standard.f;
           }
         },
         setFoodPortion(food, factor) {

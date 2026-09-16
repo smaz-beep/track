@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Frau Sarah's Tracking v012</title>
+  <title>Frau Sarah's Tracking v013</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -39,34 +39,10 @@
       <hr class="border-t border-slate-200 my-1">
 
       <div class="grid grid-cols-2 gap-3">
-        <button @click="openModal('SCHLAF')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl text-blue-500">🌙</span>
-          <span class="text-base sm:text-lg tracking-wide">Schlaf</span>
-        </button>
-
-        <button @click="openModal('MAHLZEIT')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">🍎</span>
-          <span class="text-base sm:text-lg tracking-wide">Mahlzeit</span>
-        </button>
-
-        <button @click="openModal('ADDON')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">💊</span>
-          <span class="text-base sm:text-lg tracking-wide">AddOns</span>
-        </button>
-
-        <button @click="openModal('BODYSOUL')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl text-emerald-600">💚</span>
-          <span class="text-base sm:text-lg tracking-wide">Body & Soul</span>
-        </button>
-
-        <button @click="openModal('BEWEGUNG')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">💪</span>
-          <span class="text-base sm:text-lg tracking-wide">Bewegung</span>
-        </button>
-
-        <button @click="openModal('ZYKLUS')" class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <span class="text-2xl">🩸</span>
-          <span class="text-base sm:text-lg tracking-wide">Zyklus</span>
+        <button v-for="btn in dashboardButtons" :key="btn.type" @click="openModal(btn.type)"
+          class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
+          <svg class="w-7 h-7" :class="btn.color" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" v-html="btn.icon"></svg>
+          <span class="text-base sm:text-lg tracking-wide">{{ btn.label }}</span>
         </button>
       </div>
 
@@ -77,7 +53,7 @@
           Protokoll
         </button>
         <button @click="viewMode = 'settings'" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm text-base transition flex items-center justify-center">
-          ⚙️
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
         </button>
       </div>
     </main>
@@ -88,66 +64,88 @@
         <h2 class="text-base font-bold text-slate-700">Protokoll</h2>
         <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
       </div>
-      
-      <div v-if="entries.length === 0" class="text-slate-400 text-center py-8 text-sm">Noch keine Einträge vorhanden.</div>
-      
-      <div class="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
-        <div v-for="entry in sortedEntries" :key="entry.id" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-start">
-          <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
-            <div class="text-[11px] text-slate-400 font-mono">{{ formatDate(entry.timestamp) }}</div>
-            <div class="font-bold text-sm text-indigo-950">{{ entry.type === 'BODYSOUL' ? 'Body & Soul' : (entry.type === 'NOTIZ' ? 'Notiz' : entry.type) }}<span v-if="entry.subtype"> — {{ entry.subtype }}</span></div>
-            
-            <div class="text-xs text-slate-600 mt-1 space-y-0.5">
-              <div v-if="entry.type === 'SCHLAF'">
-                <span v-if="entry.sleep_rating">Bewertung: <strong>{{ entry.sleep_rating }}</strong></span>
-                <span v-if="entry.sleep_tiredness"> · Zustand: <strong>{{ entry.sleep_tiredness }}</strong></span>
-                <span v-if="entry.alarm_used !== null && entry.alarm_used !== undefined"> · {{ entry.alarm_used ? 'Mit Wecker' : 'Ohne Wecker' }}</span>
-                <span v-if="entry.wake_reasons && entry.wake_reasons.length"> · Gründe: <strong>{{ entry.wake_reasons.join(', ') }}</strong></span>
+
+      <!-- FILTER -->
+      <div class="flex flex-wrap gap-1.5">
+        <button v-for="f in protocolFilters" :key="f.value" @click="protocolFilter = f.value"
+          :class="protocolFilter === f.value ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-600 border-slate-200'"
+          class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition">
+          {{ f.label }}<span v-if="f.count" class="opacity-60"> {{ f.count }}</span>
+        </button>
+      </div>
+
+      <div v-if="groupedEntries.length === 0" class="text-slate-400 text-center py-8 text-sm">
+        {{ entries.length === 0 ? 'Noch keine Einträge vorhanden.' : 'Keine Einträge für diesen Filter.' }}
+      </div>
+
+      <div class="space-y-3 max-h-[58vh] overflow-y-auto pr-1">
+        <div v-for="day in groupedEntries" :key="day.key" class="space-y-2">
+
+          <!-- TAGESTRENNER -->
+          <div class="flex items-center gap-2 sticky top-0 bg-white py-1 z-10">
+            <div class="h-px flex-1 bg-slate-200"></div>
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{{ day.label }}</span>
+            <span class="text-[10px] text-slate-400">{{ day.items.length }}</span>
+            <div class="h-px flex-1 bg-slate-200"></div>
+          </div>
+
+          <div v-for="entry in day.items" :key="entry.id" class="p-3 bg-slate-50 border border-slate-200 border-l-4 rounded-xl flex justify-between items-start" :class="typeBorder(entry.type)">
+            <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
+              <div class="text-[11px] text-slate-400 font-mono">{{ formatTime(entry.timestamp) }}</div>
+              <div class="font-bold text-sm text-indigo-950">{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> — {{ entry.subtype }}</span></div>
+
+              <div class="text-xs text-slate-600 mt-1 space-y-0.5">
+                <div v-if="entry.type === 'SCHLAF'">
+                  <span v-if="entry.sleep_rating">Bewertung: <strong>{{ entry.sleep_rating }}</strong></span>
+                  <span v-if="entry.sleep_tiredness"> · Zustand: <strong>{{ entry.sleep_tiredness }}</strong></span>
+                  <span v-if="entry.alarm_used !== null && entry.alarm_used !== undefined"> · {{ entry.alarm_used ? 'Mit Wecker' : 'Ohne Wecker' }}</span>
+                  <span v-if="entry.wake_reasons && entry.wake_reasons.length"> · Gründe: <strong>{{ entry.wake_reasons.join(', ') }}</strong></span>
+                </div>
+
+                <div v-if="entry.type === 'MAHLZEIT'">
+                  <span v-if="entry.food_quantities && Object.keys(entry.food_quantities).length">
+                    <strong>{{ describeFoods(entry.food_quantities) }}</strong>
+                  </span>
+                  <span v-if="entry.details"><span v-if="entry.food_quantities && Object.keys(entry.food_quantities).length"> · </span>{{ entry.details }}</span>
+                </div>
+
+                <div v-if="entry.type === 'ADDON'">
+                  <span v-if="entry.addon_quantities && Object.keys(entry.addon_quantities).length">
+                    <strong v-for="(factor, name, idx) in entry.addon_quantities" :key="name">
+                      {{ name }} ({{ formatFactor(factor) }}x)<span v-if="idx < Object.keys(entry.addon_quantities).length - 1">, </span>
+                    </strong>
+                  </span>
+                  <span v-else>
+                    {{ entry.selected_addons ? entry.selected_addons.join(', ') : entry.addon_name }} — <strong>Faktor: {{ entry.addon_factor }}x</strong>
+                  </span>
+                </div>
+
+                <div v-if="entry.type === 'BODYSOUL'">
+                  <span v-if="entry.body_symptoms && entry.body_symptoms.length">Body: <strong>{{ entry.body_symptoms.join(', ') }}</strong></span>
+                  <span v-if="entry.body_symptoms && entry.body_symptoms.length && entry.soul_symptoms && entry.soul_symptoms.length"> · </span>
+                  <span v-if="entry.soul_symptoms && entry.soul_symptoms.length">Soul: <strong>{{ entry.soul_symptoms.join(', ') }}</strong></span>
+                </div>
+
+                <div v-if="entry.type === 'BEWEGUNG'">
+                  <span v-if="entry.activity_duration">Dauer: <strong>{{ entry.activity_duration }} Min.</strong></span>
+                  <span v-if="entry.activity_distance"> · <strong>{{ entry.activity_distance }} km</strong></span>
+                  <span v-if="entry.activity_intensity"> · Intensität: <strong>{{ entry.activity_intensity }}</strong></span>
+                </div>
+
+                <div v-if="entry.type === 'ZYKLUS'">
+                  <span v-if="entry.subtype === 'Start'">Tag 1 des neuen Zyklus</span>
+                  <span v-if="entry.subtype === 'Ende der Periode'">Ende der Periode</span>
+                  <span v-if="entry.subtype === 'Zyklus-Tagesnotiz'">Tagesnotiz</span>
+                </div>
               </div>
 
-              <div v-if="entry.type === 'MAHLZEIT'">
-                <span v-if="entry.food_quantities && Object.keys(entry.food_quantities).length">
-                  <strong>{{ describeFoods(entry.food_quantities) }}</strong>
-                </span>
-                <span v-if="entry.details"><span v-if="entry.food_quantities && Object.keys(entry.food_quantities).length"> · </span>{{ entry.details }}</span>
-              </div>
-
-              <div v-if="entry.type === 'ADDON'">
-                <span v-if="entry.addon_quantities && Object.keys(entry.addon_quantities).length">
-                  <strong v-for="(factor, name, idx) in entry.addon_quantities" :key="name">
-                    {{ name }} ({{ factor }}x)<span v-if="idx < Object.keys(entry.addon_quantities).length - 1">, </span>
-                  </strong>
-                </span>
-                <span v-else>
-                  {{ entry.selected_addons ? entry.selected_addons.join(', ') : entry.addon_name }} — <strong>Faktor: {{ entry.addon_factor }}x</strong>
-                </span>
-              </div>
-
-              <div v-if="entry.type === 'BODYSOUL'">
-                <span v-if="entry.body_symptoms && entry.body_symptoms.length">Body: <strong>{{ entry.body_symptoms.join(', ') }}</strong></span>
-                <span v-if="entry.body_symptoms && entry.body_symptoms.length && entry.soul_symptoms && entry.soul_symptoms.length"> · </span>
-                <span v-if="entry.soul_symptoms && entry.soul_symptoms.length">Soul: <strong>{{ entry.soul_symptoms.join(', ') }}</strong></span>
-              </div>
-
-              <div v-if="entry.type === 'BEWEGUNG'">
-                <span v-if="entry.activity_duration">Dauer: <strong>{{ entry.activity_duration }} Min.</strong></span>
-                <span v-if="entry.activity_distance"> · <strong>{{ entry.activity_distance }} km</strong></span>
-                <span v-if="entry.activity_intensity"> · Intensität: <strong>{{ entry.activity_intensity }}</strong></span>
-              </div>
-
-              <div v-if="entry.type === 'ZYKLUS'">
-                <span v-if="entry.subtype === 'Start'">Tag 1 des neuen Zyklus</span>
-                <span v-if="entry.subtype === 'Ende der Periode'">Ende der Periode</span>
-                <span v-if="entry.subtype === 'Zyklus-Tagesnotiz'">Tagesnotiz</span>
-              </div>
+              <div v-if="entry.note" class="text-xs italic text-slate-500 mt-1 border-l-2 border-indigo-200 pl-1.5">"{{ entry.note }}"</div>
             </div>
 
-            <div v-if="entry.note" class="text-xs italic text-slate-500 mt-1 border-l-2 border-indigo-200 pl-1.5">"{{ entry.note }}"</div>
-          </div>
-          
-          <div class="flex gap-1">
-            <button @click="editEntry(entry)" class="text-indigo-600 hover:text-indigo-800 text-xs px-1.5 py-1 font-semibold">Edit</button>
-            <button @click="deleteEntry(entry.id)" class="text-rose-400 hover:text-rose-600 text-xs px-1.5 py-1">Löschen</button>
+            <div class="flex gap-1">
+              <button @click="editEntry(entry)" class="text-indigo-600 hover:text-indigo-800 text-xs px-1.5 py-1 font-semibold">Edit</button>
+              <button @click="deleteEntry(entry.id)" class="text-rose-400 hover:text-rose-600 text-xs px-1.5 py-1">Löschen</button>
+            </div>
           </div>
         </div>
       </div>
@@ -162,16 +160,16 @@
 
       <!-- DATEN & SICHERUNG -->
       <div class="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">💾 Datensicherung & Sync</h3>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Datensicherung & Sync</h3>
         <p class="text-xs text-slate-500">
           Sichern Sie Ihre Datenbank als JSON-Datei (inkl. aller Einstellungen) oder stellen Sie ein Backup wieder her.
         </p>
         <div class="flex gap-2 pt-1">
           <button @click="exportJsonBackup" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
-            <span>⬇️</span> Backup exportieren
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> Backup exportieren
           </button>
           <label class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5 cursor-pointer">
-            <span>⬆️</span> Backup einspielen
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21V9.8l-4.6 4.6L6 13l7-7 7 7-1.4 1.4L14 9.8V21h-2zM4 3h16v2H4V3z"/></svg> Backup einspielen
             <input type="file" accept=".json" @change="importJsonBackup" class="hidden">
           </label>
         </div>
@@ -179,7 +177,7 @@
 
       <!-- ADDONS KONFIGURATION -->
       <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">💊 Add-ons Verwaltung</h3>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Add-ons Verwaltung</h3>
         <div class="flex gap-2">
           <input type="text" v-model="newItem.addon" placeholder="Neues Add-on..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
           <button @click="addSettingItem('addons', newItem.addon); newItem.addon = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
@@ -194,7 +192,7 @@
 
       <!-- BEWEGUNGSARTEN KONFIGURATION -->
       <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">💪 Bewegungstypen Verwaltung</h3>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Bewegungstypen Verwaltung</h3>
         <div class="flex gap-2">
           <input type="text" v-model="newItem.activity" placeholder="Neue Aktivität..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
           <button @click="addSettingItem('activities', newItem.activity); newItem.activity = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
@@ -212,10 +210,10 @@
     <footer class="pt-3 border-t border-slate-200 text-center space-y-2.5">
       <div class="flex gap-2">
         <button @click="exportCsvAktuell" class="flex-1 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
-          📥 Aktuelle CSV
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> Aktuelle CSV
         </button>
         <button @click="exportCsvHistorie" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
-          📂 Historie (Datum)
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> Historie (Datum)
         </button>
       </div>
     </footer>
@@ -484,8 +482,25 @@
     createApp({
       data() {
         return {
-          appVersion: 'v012',
+          appVersion: 'v013',
+          // Startseiten-Buttons: Farbe und Symbol stehen NUR hier.
+          // Farbe = Tailwind-Klasse (z. B. text-blue-500, text-red-600, text-[#ff8800]).
+          dashboardButtons: [
+            { type: 'SCHLAF', label: 'Schlaf', color: 'text-blue-500',
+              icon: '<path d="M21.2 13.2A9.2 9.2 0 1 1 10.8 2.8a7.2 7.2 0 0 0 10.4 10.4z"/>' },
+            { type: 'MAHLZEIT', label: 'Mahlzeit', color: 'text-red-500',
+              icon: '<path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7z"/><path d="M16 6v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>' },
+            { type: 'ADDON', label: 'AddOns', color: 'text-yellow-400',
+              icon: '<rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-45 12 12)"/><path d="M8.3 15.7l7.4-7.4" stroke="#ffffff" stroke-width="1.6" fill="none"/>' },
+            { type: 'BODYSOUL', label: 'Body & Soul', color: 'text-purple-500',
+              icon: '<path d="M12 4c1.8 2.5 2.8 5 2.8 7.2 0 1.8-1.2 3.4-2.8 4.6-1.6-1.2-2.8-2.8-2.8-4.6C9.2 9 10.2 6.5 12 4z"/><path d="M16.5 7.8c.9 2.4.8 4.6 0 6.4-.7 1.6-2.1 2.8-3.8 3.4-.3-2 0-4 .9-5.7.8-1.6 1.8-3 2.9-4.1z"/><path d="M7.5 7.8c-.9 2.4-.8 4.6 0 6.4.7 1.6 2.1 2.8 3.8 3.4.3-2 0-4-.9-5.7-.8-1.6-1.8-3-2.9-4.1z"/><path d="M21 12.5c-.4 2.5-1.8 4.5-3.8 5.8-1.6 1-3.4 1.5-5.2 1.5 1-1.8 2.4-3.3 4.2-4.5 1.5-1 3.1-2 4.8-2.8z"/><path d="M3 12.5c.4 2.5 1.8 4.5 3.8 5.8 1.6 1 3.4 1.5 5.2 1.5-1-1.8-2.4-3.3-4.2-4.5-1.5-1-3.1-2-4.8-2.8z"/>' },
+            { type: 'BEWEGUNG', label: 'Bewegung', color: 'text-green-500',
+              icon: '<circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/>' },
+            { type: 'ZYKLUS', label: 'Zyklus', color: 'text-rose-500',
+              icon: '<path d="M12 2.7l5.7 5.7a8 8 0 1 1-11.4 0L12 2.7z"/>' }
+          ],
           viewMode: 'dashboard',
+          protocolFilter: 'ALLE',
           quickNote: '',
           quickNoteSaved: false,
           activeModal: null,
@@ -609,6 +624,32 @@
               name: g,
               items: groups[g].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }))
             }));
+        },
+        protocolFilters() {
+          const counts = {};
+          this.entries.forEach(e => { counts[e.type] = (counts[e.type] || 0) + 1; });
+          const list = [{ value: 'ALLE', label: 'Alle', count: this.entries.length }];
+          ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'].forEach(t => {
+            if (counts[t]) list.push({ value: t, label: this.typeLabel(t), count: counts[t] });
+          });
+          return list;
+        },
+        groupedEntries() {
+          const filtered = this.protocolFilter === 'ALLE'
+            ? this.entries
+            : this.entries.filter(e => e.type === this.protocolFilter);
+          const sorted = [...filtered].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+          const days = [];
+          let current = null;
+          sorted.forEach(entry => {
+            const key = this.toLocalDateString(new Date(entry.timestamp));
+            if (!current || current.key !== key) {
+              current = { key: key, label: this.dayLabel(entry.timestamp), items: [] };
+              days.push(current);
+            }
+            current.items.push(entry);
+          });
+          return days;
         },
         selectedFoodList() {
           return this.config.foods.filter(f => this.form.selected_foods.includes(f.name));
@@ -1033,6 +1074,36 @@
         async removeSettingItem(key, val) {
           this.config[key] = this.config[key].filter(i => i !== val);
           await db.settings.put({ key: key, value: [...this.config[key]] });
+        },
+        typeLabel(type) {
+          const labels = {
+            SCHLAF: 'Schlaf', MAHLZEIT: 'Mahlzeit', ADDON: 'AddOns',
+            BODYSOUL: 'Body & Soul', BEWEGUNG: 'Bewegung', ZYKLUS: 'Zyklus', NOTIZ: 'Notiz'
+          };
+          return labels[type] || type;
+        },
+        typeBorder(type) {
+          const colors = {
+            SCHLAF: 'border-l-blue-500', MAHLZEIT: 'border-l-red-500', ADDON: 'border-l-yellow-400',
+            BODYSOUL: 'border-l-purple-500', BEWEGUNG: 'border-l-green-500',
+            ZYKLUS: 'border-l-rose-400', NOTIZ: 'border-l-slate-400'
+          };
+          return colors[type] || 'border-l-slate-300';
+        },
+        dayLabel(iso) {
+          if (!iso) return '';
+          const d = new Date(iso);
+          const heute = new Date();
+          const gestern = new Date();
+          gestern.setDate(gestern.getDate() - 1);
+          const key = this.toLocalDateString(d);
+          if (key === this.toLocalDateString(heute)) return 'Heute';
+          if (key === this.toLocalDateString(gestern)) return 'Gestern';
+          return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+        },
+        formatTime(iso) {
+          if (!iso) return '';
+          return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
         },
         formatDate(iso) {
           if (!iso) return '';

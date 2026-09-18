@@ -30,10 +30,31 @@
     .macro-input { appearance: textfield; -moz-appearance: textfield; }
     .macro-input::-webkit-outer-spin-button,
     .macro-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    #app.dark-mode { background: #111827; border-color: #334155; color: #e5e7eb; }
+    body.dark-mode { background: #0f172a; }
+    #app.dark-mode .bg-white { background-color: #111827 !important; }
+    #app.dark-mode .bg-slate-50 { background-color: #1f2937 !important; }
+    #app.dark-mode .bg-slate-100 { background-color: #263244 !important; }
+    #app.dark-mode .bg-slate-200 { background-color: #334155 !important; }
+    #app.dark-mode .bg-blue-50 { background-color: #172554 !important; }
+    #app.dark-mode .bg-rose-50 { background-color: #3b1d2a !important; }
+    #app.dark-mode .bg-amber-50 { background-color: #3d2e10 !important; }
+    #app.dark-mode .border-slate-200,
+    #app.dark-mode .border-slate-300 { border-color: #475569 !important; }
+    #app.dark-mode .text-slate-800,
+    #app.dark-mode .text-slate-700 { color: #f1f5f9 !important; }
+    #app.dark-mode .text-slate-600 { color: #cbd5e1 !important; }
+    #app.dark-mode .text-slate-500,
+    #app.dark-mode .text-slate-400 { color: #94a3b8 !important; }
+    #app.dark-mode .text-slate-300 { color: #64748b !important; }
+    #app.dark-mode .bg-green-50 { background-color: #163126 !important; }
+    #app.dark-mode input,
+    #app.dark-mode textarea,
+    #app.dark-mode select { color-scheme: dark; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
-  <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white border-x border-slate-200 shadow-sm">
+  <div id="app" :class="{ 'dark-mode': darkMode }" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white border-x border-slate-200 shadow-sm">
     
     <!-- HEADER -->
     <header class="py-4 border-b border-slate-200">
@@ -50,36 +71,34 @@
 
     <!-- DASHBOARD BUTTONS -->
     <main v-if="viewMode === 'dashboard'" class="py-5 space-y-3">
-      <h2 class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Daten eintragen</h2>
+      <h2 class="section-title text-sm font-semibold tracking-[0.12em] text-slate-700">DATEN EINTRAGEN</h2>
       <!-- SCHNELLNOTIZ -->
-      <div class="flex items-center gap-2">
+      <div class="relative">
         <input type="text" v-model="quickNote" @keyup.enter="saveQuickNote"
           :placeholder="quickNoteSaved ? '✓ Notiz gespeichert' : 'Schnellnotiz …'"
           :class="quickNoteSaved ? 'placeholder:text-emerald-600 placeholder:font-semibold' : 'placeholder:text-slate-400'"
-          class="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800">
+          class="w-full px-3 py-2.5 pr-10 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800">
         <button @click="saveQuickNote" :disabled="!quickNote.trim()"
           aria-label="Schnellnotiz speichern"
-          class="w-8 py-2 text-base leading-none text-slate-700 hover:text-slate-950 disabled:text-slate-300 transition">
-          ✓
+          class="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-700 hover:text-slate-950 disabled:text-slate-300 transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h12l3 3v15H4V3h1zm2 2v5h8V5H7zm0 14h10v-7H7v7zm2-5h6v3H9v-3z"/></svg>
         </button>
       </div>
 
-      <hr class="border-t border-slate-200 my-3">
-
-      <div class="grid grid-cols-2 gap-2.5">
+      <div class="grid grid-cols-3 gap-2">
         <button v-for="btn in dashboardButtons" :key="btn.type" @click="openModal(btn.type)"
-          class="h-20 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl border border-slate-200 flex flex-col items-center justify-center transition gap-0.5">
-          <svg class="w-6 h-6" :class="btn.color" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" v-html="btn.icon"></svg>
-          <span class="text-sm tracking-wide">{{ btn.label }}</span>
+          class="h-[4.5rem] bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl border border-slate-200 flex flex-col items-center justify-center transition gap-0.5">
+          <svg class="w-5 h-5" :class="btn.color" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" v-html="btn.icon"></svg>
+          <span class="text-[11px] leading-tight tracking-wide text-center">{{ btn.label }}</span>
         </button>
       </div>
 
     </main>
 
     <!-- PROTOKOLL ANSICHT -->
-    <section v-if="viewMode === 'dashboard' || viewMode === 'protocol'" class="py-3 space-y-3 border-t border-slate-200">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-2">
-        <h2 class="protocol-title text-base font-bold text-slate-700">Protokoll</h2>
+    <section v-if="viewMode === 'dashboard' || viewMode === 'protocol'" class="py-3 space-y-3">
+      <div class="flex justify-between items-center">
+        <h2 class="section-title protocol-title text-sm font-semibold tracking-[0.12em] text-slate-700">PROTOKOLL</h2>
         <button v-if="viewMode === 'protocol'" @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
       </div>
 
@@ -100,8 +119,8 @@
           <div v-for="day in groupedEntries" :key="day.key" class="space-y-1">
 
           <!-- TAGESTRENNER -->
-          <div v-if="day.label" class="flex items-center gap-2 sticky top-0 bg-white py-1 z-10">
-            <div class="h-px flex-1 bg-slate-200"></div>
+          <div v-if="day.label" class="sticky top-0 bg-white py-1 z-10">
+            <div class="flex flex-wrap items-center gap-x-1 gap-y-0.5">
             <span class="protocol-day-title text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{{ day.label }}</span>
             <span class="text-[10px] whitespace-nowrap">
               <span v-if="day.kcalText" class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ day.kcalText }}</span>
@@ -111,7 +130,7 @@
               <span v-if="day.sleepText" class="inline-flex items-center gap-0.5 text-blue-500"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.2 13.2A9.2 9.2 0 1 1 10.8 2.8a7.2 7.2 0 0 0 10.4 10.4z"/></svg>{{ day.sleepText }}</span>
               <span v-if="!day.kcalText && !day.movementText && !day.sleepText" class="text-slate-400">{{ day.durationText || day.items.length }}</span>
             </span>
-            <div class="h-px flex-1 bg-slate-200"></div>
+            </div>
           </div>
 
           <div v-for="entry in day.items" :key="entry.id" class="px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-start" :class="typeCardStyle(entry.type)">
@@ -192,6 +211,18 @@
       <div class="flex justify-between items-center border-b border-slate-200 pb-2">
         <h2 class="text-base font-bold text-slate-700">Optionen & Daten</h2>
         <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Fertig</button>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <div>
+          <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Darstellung</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Dark Mode</p>
+        </div>
+        <button @click="setDarkMode(!darkMode)" :aria-pressed="darkMode"
+          :class="darkMode ? 'bg-slate-800 text-white' : 'bg-white text-slate-600'"
+          class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold transition">
+          {{ darkMode ? 'An' : 'Aus' }}
+        </button>
       </div>
 
       <!-- DATEN & SICHERUNG -->
@@ -565,6 +596,7 @@
               icon: '<path d="M12 2.7l5.7 5.7a8 8 0 1 1-11.4 0L12 2.7z"/>' }
           ],
           viewMode: 'dashboard',
+          darkMode: false,
           protocolFilter: 'ALLE',
           protocolSelected: [],
           quickNote: '',
@@ -987,7 +1019,7 @@
           const yesterday = new Date(today);
           yesterday.setDate(today.getDate() - 1);
           if (this.toLocalDateString(date) === this.toLocalDateString(yesterday)) return 'GESTERN';
-          return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long' });
+          return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
         },
         sleepMinutesForDay(anchor, dayEntries) {
           let minutes = 0;
@@ -1185,6 +1217,14 @@
               this.config[item.key] = item.value;
             }
           });
+          const darkModeSetting = stored.find(item => item.key === 'darkMode');
+          this.darkMode = !!(darkModeSetting && darkModeSetting.value);
+          document.body.classList.toggle('dark-mode', this.darkMode);
+        },
+        async setDarkMode(enabled) {
+          this.darkMode = !!enabled;
+          document.body.classList.toggle('dark-mode', this.darkMode);
+          await db.settings.put({ key: 'darkMode', value: this.darkMode });
         },
         async loadEntries() {
           this.entries = await db.entries.where('is_deleted').equals(0).toArray();
@@ -1412,8 +1452,8 @@
                 : 'Ohne Nachtruhe Ende',
               durationText: '',
               kcalText: `${this.displayMacro(kcal, 0)} kcal (${macroCoverage} % erfasst)`,
-              movementText: movementMinutes ? `${this.formatDurationShort(movementMinutes)} Bewegung` : '',
-              sleepText: sleepMinutes ? `${this.formatDurationShort(sleepMinutes)} Schlaf` : '',
+              movementText: movementMinutes ? this.formatDurationShort(movementMinutes) : '',
+              sleepText: sleepMinutes ? this.formatDurationShort(sleepMinutes) : '',
               missingNightEnd: index === 0 && nightStart,
               items: group.items
                 .filter(entry => visibleIds.has(entry.id))

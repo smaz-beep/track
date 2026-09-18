@@ -1,17 +1,24 @@
 # Frau Sarahs Tracking – Version 015
 
-Dies ist die Arbeitsversion 015 für Lebensmittelkatalog und Makro-Auswertung.
+Dies ist die Arbeitsversion 015 für das Tagesprotokoll, den Lebensmittelkatalog und die Makro-Auswertung.
 
 ## Neu in Version 015
 
 - Lebensmittel stehen ohne zusätzlichen Kategorien-Klick in einer gemeinsamen Liste.
+- In der oberen Lebensmittelliste stehen nur Namen; Mengen und Portionswahl erscheinen erst nach der Auswahl.
 - Lebensmittel mit Varianten öffnen erst nach ihrer Auswahl die passende Variantenliste, etwa Gouda, Tomate oder Kartoffel.
-- Für jede ausgewählte Portion werden kcal, Kohlenhydrate, Protein, Fett und Ballaststoffe sofort für die Mahlzeit berechnet.
+- Nährwerte gelten eindeutig pro `100 g`, `100 ml` oder `10 cm`. Eine Portion hat zusätzlich eine Beschriftung, eine konkrete Menge und eigene Multiplikatoren. Beispiel: `1 Packung` = `125 g`, danach `0,5×`, `1×` oder `2×`.
+- Ein Lebensmittel kann mehrere Portionen mit jeweils eigenen Multiplikatoren besitzen.
+- Freie Lebensmittel können direkt bei einer Mahlzeit eingegeben und bei Bedarf als häufiges oder seltenes Lebensmittel in die Liste übernommen werden.
+- Für jede ausgewählte Portion werden kcal, Kohlenhydrate, Protein, Fett und Ballaststoffe sofort für die Mahlzeit berechnet. Fehlende kcal werden als `Makros fehlen` markiert.
 - Mahlzeiten stehen in einer gemeinsamen, platzsparenden Liste. Das Protokoll zeigt kompakte, weiterhin farbcodierte Zeilen.
+- Im Protokoll ist `Alle` eine echte Auswahl aller Kategorien; einzelne Kategorien können danach wieder abgewählt werden.
 - Der Header zeigt nur die kcal seit dem letzten Ende einer Nachtruhe.
 - Schlaf wird über Nachtruhe, Nickerchen oder Aufgewacht erfasst; bei den ersten beiden gibt es Start und Ende.
 - Beim Schlaf-Filter erscheinen alle Schlaf-Einträge direkt in ihrer zeitlichen Reihenfolge, ohne Sonderblöcke.
 - `Body & Soul` enthält zusätzlich `total k.o.`; die Soul-Liste ist um die vereinbarten Gefühle ergänzt.
+- Dark Mode kann in den Einstellungen manuell, nach Uhrzeit oder anhand von Sonnenauf- und -untergang aktiviert werden.
+- Das Erscheinungsbild, die Lebensmittelverwaltung sowie JSON-/CSV-Datenexport und -import liegen in den Einstellungen.
 - Die Stammliste mit Referenzwerten und Standardportionen liegt in `../LM.xlsx`.
 
 ## Starten

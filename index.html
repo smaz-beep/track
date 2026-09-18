@@ -13,45 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* Ruhige, gut lesbare Grundtypografie. */
-    body, button, input, select, textarea {
-      font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
-      letter-spacing: 0;
-    }
-    #app h1 { font-weight: 600; letter-spacing: .018em; }
-    #app .protocol-title { font-weight: 600; letter-spacing: .01em; }
-    #app .protocol-filter { font-weight: 500; }
-    #app .protocol-day-title { font-weight: 600; letter-spacing: .06em; }
-    #app .protocol-card-heading { font-weight: 500; }
-    #app .protocol-card-detail { font-weight: 400; }
-    #app .protocol-card-heading strong,
-    #app .protocol-card-detail strong { font-weight: 500; }
-    .macro-input { appearance: textfield; -moz-appearance: textfield; }
-    .macro-input::-webkit-outer-spin-button,
-    .macro-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    #app.dark-mode { background: #111827; border-color: #334155; color: #e5e7eb; }
-    body.dark-mode { background: #0f172a; }
-    #app.dark-mode .bg-white { background-color: #111827 !important; }
-    #app.dark-mode .bg-slate-50 { background-color: #1f2937 !important; }
-    #app.dark-mode .bg-slate-100 { background-color: #263244 !important; }
-    #app.dark-mode .bg-slate-200 { background-color: #334155 !important; }
-    #app.dark-mode .bg-blue-50 { background-color: #172554 !important; }
-    #app.dark-mode .bg-rose-50 { background-color: #3b1d2a !important; }
-    #app.dark-mode .bg-amber-50 { background-color: #3d2e10 !important; }
-    #app.dark-mode .border-slate-200,
-    #app.dark-mode .border-slate-300 { border-color: #475569 !important; }
-    #app.dark-mode .text-slate-800,
-    #app.dark-mode .text-slate-700 { color: #f1f5f9 !important; }
-    #app.dark-mode .text-slate-600 { color: #cbd5e1 !important; }
-    #app.dark-mode .text-slate-500,
-    #app.dark-mode .text-slate-400 { color: #94a3b8 !important; }
-    #app.dark-mode .text-slate-300 { color: #64748b !important; }
-    #app.dark-mode .bg-green-50 { background-color: #163126 !important; }
-    #app.dark-mode input,
-    #app.dark-mode textarea,
-    #app.dark-mode select { color-scheme: dark; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
   <div id="app" :class="{ 'dark-mode': darkMode }" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white border-x border-slate-200 shadow-sm">
@@ -60,9 +22,10 @@
     <header class="py-4 border-b border-slate-200">
       <div class="flex items-center justify-between gap-3">
         <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking <span class="text-xs font-semibold text-slate-400 align-middle">{{ appVersion }}</span></h1>
-        <button @click="viewMode = 'settings'" class="shrink-0 p-1.5 text-slate-500 hover:text-slate-800 transition" aria-label="Einstellungen">
+        <button v-if="viewMode !== 'settings'" @click="viewMode = 'settings'" class="shrink-0 p-1.5 text-teal-600 hover:text-teal-700 transition" aria-label="Einstellungen">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
         </button>
+        <button v-else @click="viewMode = 'dashboard'" class="main-nav-button shrink-0 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold transition">← Fertig</button>
       </div>
       <p class="mt-1 text-left text-xs font-medium text-slate-500 tabular-nums">
         {{ currentCycleDayText }} <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-green-600"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg>{{ currentDayMovementText }}</span> <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ displayMacro(todayKcal, 0) }} kcal<span class="ml-0.5 text-red-400 font-medium">({{ todayMacroCoverage }} % erfasst)</span></span>
@@ -96,18 +59,18 @@
     </main>
 
     <!-- PROTOKOLL ANSICHT -->
-    <section v-if="viewMode === 'dashboard' || viewMode === 'protocol'" class="py-3 space-y-3">
+    <section v-if="viewMode === 'dashboard' || viewMode === 'protocol'" class="mt-6 pt-5 space-y-3 border-t border-slate-200">
       <div class="flex justify-between items-center">
         <h2 class="section-title protocol-title text-sm font-semibold tracking-[0.12em] text-slate-700">PROTOKOLL</h2>
-        <button v-if="viewMode === 'protocol'" @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
+        <button v-if="viewMode === 'protocol'" @click="viewMode = 'dashboard'" class="text-xs text-slate-500 hover:text-slate-800 underline underline-offset-4">← Fertig</button>
       </div>
 
       <!-- FILTER -->
       <div class="flex flex-wrap gap-1.5">
         <button v-for="f in protocolFilters" :key="f.value" @click="toggleProtocolFilter(f.value)"
-          :class="isProtocolFilterActive(f.value) ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-600 border-slate-200'"
+          :class="isProtocolFilterActive(f.value) ? 'bg-transparent text-slate-700 border-slate-300 border-2' : 'bg-slate-100 text-slate-600 border-slate-200'"
           class="protocol-filter px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition">
-          {{ f.label }}<span v-if="f.count" class="opacity-60"> {{ f.count }}</span>
+          {{ f.label }}
         </button>
       </div>
 
@@ -123,13 +86,14 @@
             <div class="flex flex-wrap items-center gap-x-1 gap-y-0.5">
             <span class="protocol-day-title text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{{ day.label }}</span>
             <span class="text-[10px] whitespace-nowrap">
-              <span v-if="day.kcalText" class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ day.kcalText }}</span>
+              <span v-if="day.kcalText" class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-2.5 h-2.5 opacity-70" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ day.kcalText }}</span>
               <span v-if="day.movementText" class="px-1 text-slate-300">//</span>
               <span v-if="day.movementText" class="inline-flex items-center gap-0.5 text-green-600"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg>{{ day.movementText }}</span>
               <span v-if="day.sleepText" class="px-1 text-slate-300">//</span>
               <span v-if="day.sleepText" class="inline-flex items-center gap-0.5 text-blue-500"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.2 13.2A9.2 9.2 0 1 1 10.8 2.8a7.2 7.2 0 0 0 10.4 10.4z"/></svg>{{ day.sleepText }}</span>
               <span v-if="!day.kcalText && !day.movementText && !day.sleepText" class="text-slate-400">{{ day.durationText || day.items.length }}</span>
             </span>
+            <div class="h-px flex-1 min-w-[28px] bg-slate-200"></div>
             </div>
           </div>
 
@@ -138,10 +102,12 @@
               <div class="protocol-card-heading text-xs leading-5">
                 <span class="text-slate-400">{{ formatTime(entry.timestamp) }}</span>
                 <span class="ml-1.5 text-slate-600">
-                  <template v-if="entry.type === 'MAHLZEIT'"><svg class="w-3 h-3 inline-block align-[-2px] text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg> {{ entryKcal(entry) }} kcal</template>
-                  <template v-else-if="entry.type === 'SCHLAF'">{{ entry.subtype || 'Schlaf' }}</template>
+                  <template v-if="entry.type === 'MAHLZEIT'"><svg class="w-2.5 h-2.5 opacity-70 inline-block align-[-2px] text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg> <span :class="mealHasKcal(entry) ? '' : 'text-red-400'">{{ mealHasKcal(entry) ? `${entryKcal(entry)} kcal` : 'Makros fehlen' }}</span></template>
+                  <template v-else-if="entry.type === 'SCHLAF'"><svg class="w-2.5 h-2.5 opacity-70 inline-block align-[-2px] text-blue-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.2 13.2A9.2 9.2 0 1 1 10.8 2.8a7.2 7.2 0 0 0 10.4 10.4z"/></svg> {{ entry.subtype || 'Schlaf' }}</template>
                   <template v-else-if="entry.type === 'BEWEGUNG'"><svg class="w-3 h-3 inline-block align-[-2px] text-green-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg> {{ entry.subtype || 'Bewegung' }}</template>
-                  <template v-else-if="entry.type === 'BODYSOUL'"><span class="text-purple-500 font-normal">Body <svg class="w-3 h-3 inline-block align-[-2px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3 15.2 3 8.8C3 5.8 5.3 4 8 4c1.8 0 3.4 1 4 2.5C12.6 5 14.2 4 16 4c2.7 0 5 1.8 5 4.8 0 6.4-9 11.7-9 11.7z"/></svg> Soul</span></template>
+                  <template v-else-if="entry.type === 'ADDON'"><span class="text-amber-500 opacity-70">＋</span> AddOns</template>
+                  <template v-else-if="entry.type === 'NOTIZ'"><span class="text-blue-400 opacity-70">▧</span> Notiz</template>
+                  <template v-else-if="entry.type === 'BODYSOUL'"><span class="text-purple-500 font-normal">Body <svg class="w-2.5 h-2.5 inline-block align-[-2px] opacity-70" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3 15.2 3 8.8C3 5.8 5.3 4 8 4c1.8 0 3.4 1 4 2.5C12.6 5 14.2 4 16 4c2.7 0 5 1.8 5 4.8 0 6.4-9 11.7-9 11.7z"/></svg> Soul</span></template>
                   <template v-else-if="entry.type === 'ZYKLUS'"><span class="text-pink-500">{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> · {{ entry.subtype }}</span></span></template>
                   <template v-else>{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> · {{ entry.subtype }}</span></template>
                 </span>
@@ -207,51 +173,76 @@
     </section>
 
     <!-- EINSTELLUNGEN ANSICHT -->
-    <section v-if="viewMode === 'settings'" class="my-auto py-2 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-2">
-        <h2 class="text-base font-bold text-slate-700">Optionen & Daten</h2>
-        <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Fertig</button>
-      </div>
+    <section v-if="viewMode === 'settings'" class="my-auto py-2 flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1">
+      <div class="border-b border-slate-200 pb-2"><h2 class="text-base font-bold text-slate-700">Optionen & Daten</h2></div>
 
-      <div class="flex items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+      <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+      <div class="flex items-center justify-between gap-3">
         <div>
           <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Darstellung</h3>
           <p class="text-xs text-slate-500 mt-0.5">Dark Mode</p>
         </div>
-        <button @click="setDarkMode(!darkMode)" :aria-pressed="darkMode"
-          :class="darkMode ? 'bg-slate-800 text-white' : 'bg-white text-slate-600'"
-          class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold transition">
-          {{ darkMode ? 'An' : 'Aus' }}
-        </button>
+        <span class="text-xs" :class="darkMode ? 'text-slate-700' : 'text-slate-500'">{{ darkMode ? 'aktiv' : 'hell' }}</span>
+      </div>
+      <div class="flex gap-1.5">
+        <button v-for="mode in [{value:'manual', label:'Manuell'}, {value:'schedule', label:'Uhrzeit'}, {value:'sun', label:'Sonne'}]" :key="mode.value" @click="setAppearanceMode(mode.value)"
+          :class="appearanceMode === mode.value ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-600 border-slate-200'"
+          class="flex-1 py-1.5 border rounded-lg text-xs font-semibold">{{ mode.label }}</button>
+      </div>
+      <div v-if="appearanceMode === 'manual'" class="flex gap-2">
+        <button @click="setManualDarkMode(true)" :class="darkManual ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'" class="flex-1 py-1.5 rounded-lg text-xs font-semibold">Dark Mode an</button>
+        <button @click="setManualDarkMode(false)" :class="!darkManual ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'" class="flex-1 py-1.5 rounded-lg text-xs font-semibold">Hell an</button>
+      </div>
+      <div v-if="appearanceMode === 'schedule'" class="grid grid-cols-2 gap-2">
+        <label class="text-xs text-slate-500">Start<input type="time" v-model="darkScheduleStart" @change="saveAppearanceSettings" class="mt-1 w-full p-1.5 border rounded-lg bg-white text-slate-800"></label>
+        <label class="text-xs text-slate-500">Ende<input type="time" v-model="darkScheduleEnd" @change="saveAppearanceSettings" class="mt-1 w-full p-1.5 border rounded-lg bg-white text-slate-800"></label>
+      </div>
+      <div v-if="appearanceMode === 'sun'" class="flex items-center justify-between gap-2">
+        <span class="text-xs text-slate-500">{{ darkLocation ? 'Standort gespeichert' : 'Standort für Sonnenzeiten nötig' }}</span>
+        <button @click="useLocationForDarkMode" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold">Standort nutzen</button>
+      </div>
+      </div>
+
+      <div class="order-2 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <div class="flex items-center justify-between gap-2"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Lebensmittel verwalten</h3><button @click="newFoodEditor" class="text-xs text-slate-700 underline underline-offset-2">+ Neu</button></div>
+          <div v-if="foodEditor" class="space-y-2 pt-1">
+          <div class="grid grid-cols-2 gap-2"><input v-model="foodEditor.baseName" placeholder="Lebensmittel" class="p-2 border rounded-lg text-xs bg-white text-slate-800"><input v-model="foodEditor.variant" placeholder="Variante (optional)" class="p-2 border rounded-lg text-xs bg-white text-slate-800"></div>
+          <div><div class="text-[11px] text-slate-500 mb-1">Nährwerte gelten pro</div><div class="grid grid-cols-2 gap-2"><select v-model="foodEditor.reference" class="p-2 border rounded-lg text-xs bg-white text-slate-800"><option>100 g</option><option>100 ml</option><option>10 cm</option></select><select v-model="foodEditor.frequency" class="p-2 border rounded-lg text-xs bg-white text-slate-800"><option>Häufig</option><option>Selten</option></select></div></div>
+          <div class="grid grid-cols-4 gap-1"><input v-model="foodEditor.macros.kcal" type="number" placeholder="kcal" class="macro-input p-1.5 border rounded text-[11px] bg-white"><input v-model="foodEditor.macros.kh" type="number" placeholder="KH" class="macro-input p-1.5 border rounded text-[11px] bg-white"><input v-model="foodEditor.macros.protein" type="number" placeholder="Protein" class="macro-input p-1.5 border rounded text-[11px] bg-white"><input v-model="foodEditor.macros.fett" type="number" placeholder="Fett" class="macro-input p-1.5 border rounded text-[11px] bg-white"></div>
+          <div v-for="(serving, servingIndex) in foodEditor.servings" :key="servingIndex" class="space-y-1.5 border-t border-slate-200 pt-2"><div class="flex items-center gap-2"><input v-model="serving.label" placeholder="Beschriftung, z. B. 1 Packung" class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800"><input v-model="serving.amount" type="number" min="0" step="0.1" placeholder="Menge" class="w-24 p-2 border rounded-lg text-xs bg-white text-slate-800"><span class="text-xs text-slate-500 w-8">{{ referenceUnit(foodEditor.reference) }}</span><button v-if="foodEditor.servings.length > 1" @click="foodEditor.servings.splice(servingIndex,1)" class="text-rose-400 px-1">×</button></div><div class="text-[11px] text-slate-500">Multiplikatoren zu dieser Portion</div><div v-for="(portion, idx) in serving.multipliers" :key="idx" class="flex gap-1"><input v-model="portion.label" placeholder="z. B. ½ oder 2×" class="flex-1 p-1.5 border rounded text-[11px] bg-white"><input v-model="portion.f" type="number" step="0.1" placeholder="1" class="macro-input w-16 p-1.5 border rounded text-[11px] bg-white"><button @click="serving.multipliers.splice(idx,1)" class="text-rose-400 px-1">×</button></div><button @click="serving.multipliers.push({label:'', f:1})" class="text-[11px] text-slate-500 underline">+ Multiplikator</button></div>
+          <button @click="foodEditor.servings.push(newServing(foodEditor.reference))" class="text-[11px] text-slate-500 underline">+ Portion</button>
+          <div class="flex gap-2"><button @click="saveFoodEditor" class="flex-1 py-1.5 bg-slate-700 text-white rounded-lg text-xs font-semibold">Speichern</button><button v-if="foodEditor.originalName" @click="deleteFoodEditor" class="px-3 py-1.5 text-rose-500 text-xs">Löschen</button><button @click="foodEditor=null" class="px-3 py-1.5 text-slate-500 text-xs">Abbrechen</button></div>
+        </div>
+        <div class="flex flex-wrap gap-1.5"><button v-for="group in managementFoodGroups" :key="group.name" @click="editFoodEditor(group.variants[0])" class="px-2 py-1 bg-white border border-slate-200 rounded text-[11px] text-slate-600">{{ group.name }}</button></div>
       </div>
 
       <!-- DATEN & SICHERUNG -->
-      <div class="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+      <div class="order-1 space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Datensicherung & Sync</h3>
         <p class="text-xs text-slate-500">
           Sichern Sie Ihre Datenbank als JSON-Datei (inkl. aller Einstellungen) oder stellen Sie ein Backup wieder her.
         </p>
         <div class="flex gap-2 pt-1">
-          <button @click="exportJsonBackup" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
+          <button @click="exportJsonBackup" class="flex-1 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> JSON sichern
           </button>
-          <label class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+          <label class="flex-1 py-2 bg-teal-100 hover:bg-teal-200 text-teal-900 font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5 cursor-pointer">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21V9.8l-4.6 4.6L6 13l7-7 7 7-1.4 1.4L14 9.8V21h-2zM4 3h16v2H4V3z"/></svg> JSON einspielen
             <input type="file" accept=".json" @change="importJsonBackup" class="hidden">
           </label>
         </div>
         <div class="flex gap-2">
-          <button @click="exportCsvAktuell" class="flex-1 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
+          <button @click="exportCsvAktuell" class="flex-1 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> CSV aktueller Zeitraum
           </button>
-          <button @click="exportCsvHistorie" class="flex-1 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
+          <button @click="exportCsvHistorie" class="flex-1 py-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> CSV gesamte Historie
           </button>
         </div>
       </div>
 
       <!-- ADDONS KONFIGURATION -->
-      <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+      <div class="order-3 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Add-ons Verwaltung</h3>
         <div class="flex gap-2">
           <input type="text" v-model="newItem.addon" placeholder="Neues Add-on..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
@@ -266,7 +257,7 @@
       </div>
 
       <!-- BEWEGUNGSARTEN KONFIGURATION -->
-      <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+      <div class="order-4 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Bewegungstypen Verwaltung</h3>
         <div class="flex gap-2">
           <input type="text" v-model="newItem.activity" placeholder="Neue Aktivität..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
@@ -377,15 +368,24 @@
             <div class="pt-1">
               <label class="block text-xs font-medium text-slate-500 mb-1">Lebensmittel</label>
               <div class="flex flex-wrap gap-1">
-                <button v-for="group in foodGroups" :key="group.name" @click="group.variants.length > 1 ? toggleFoodGroup(group.name) : toggleFood(group.variants[0])"
+                <button v-for="group in frequentFoodGroups" :key="group.name" @click="group.variants.length > 1 ? toggleFoodGroup(group.name) : toggleFood(group.variants[0])"
                   :class="hasSelectedFoodGroup(group) ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200'"
                   class="px-2 py-1 text-[11px] font-semibold border transition">
                   {{ group.name }}<span v-if="group.variants.length > 1" class="ml-1 opacity-60">{{ form.open_food_group === group.name ? '−' : '+' }}</span>
                 </button>
               </div>
-              <div v-for="group in foodGroups.filter(g => g.variants.length > 1 && form.open_food_group === g.name)" :key="`${group.name}-varianten`" class="mt-1.5 flex flex-wrap gap-1 border-l-2 border-slate-300 pl-2">
+              <button @click="form.show_rare_foods = !form.show_rare_foods" class="mt-2 text-[11px] text-slate-500 hover:text-slate-700">{{ form.show_rare_foods ? 'weniger' : '… mehr' }}</button>
+              <div v-if="form.show_rare_foods" class="mt-1.5 flex flex-wrap gap-1">
+                <button v-for="group in rareFoodGroups" :key="group.name" @click="group.variants.length > 1 ? toggleFoodGroup(group.name) : toggleFood(group.variants[0])"
+                  :class="hasSelectedFoodGroup(group) ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200'"
+                  class="px-2 py-1 text-[11px] font-semibold border transition">
+                  {{ group.name }}<span v-if="group.variants.length > 1" class="ml-1 opacity-60">{{ form.open_food_group === group.name ? '−' : '+' }}</span>
+                </button>
+              </div>
+              <p v-if="form.show_rare_foods && !rareFoodGroups.length" class="mt-1 text-[11px] text-slate-400">Noch keine seltenen Lebensmittel angelegt.</p>
+              <div v-for="group in foodGroups.filter(g => g.variants.length > 1 && form.open_food_group === g.name)" :key="`${group.name}-varianten`" class="mt-3 flex flex-wrap gap-1.5 border-l-2 border-slate-400 pl-2.5">
                 <button v-for="food in group.variants" :key="food.name" @click="toggleFood(food)"
-                  :class="form.selected_foods.includes(food.name) ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 text-slate-700 border-slate-200'"
+                  :class="form.selected_foods.includes(food.name) ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-300'"
                   class="px-2 py-1 text-[11px] font-semibold border transition">
                   {{ food.variant }}
                 </button>
@@ -404,18 +404,9 @@
 
             <div v-if="selectedFoodList.length" class="space-y-1.5 pt-1">
               <label class="block text-xs font-medium text-slate-500">Portionen</label>
-              <div v-for="food in selectedFoodList" :key="food.name" class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50">
-                <span class="text-xs font-semibold truncate">{{ food.name }}</span>
-                <div class="flex gap-1 flex-wrap justify-end">
-                  <button v-for="portion in food.portions" :key="portion.label" @click="setFoodPortion(food, portion.f)"
-                    :class="getFoodFactor(food.name) === portion.f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
-                    class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">
-                    {{ portion.label }}
-                  </button>
-                  <button @click="toggleFood(food)" class="px-1.5 py-1 text-[10px] font-bold text-rose-500 hover:text-rose-700" aria-label="Lebensmittel entfernen">
-                    ×
-                  </button>
-                </div>
+              <div v-for="food in selectedFoodList" :key="food.name" class="p-2 rounded-lg border border-slate-200 bg-slate-50">
+                <div class="flex items-center justify-between gap-2"><span class="text-xs font-semibold truncate">{{ food.name }}</span><button @click="toggleFood(food)" class="px-1.5 py-1 text-[10px] font-bold text-rose-500 hover:text-rose-700" aria-label="Lebensmittel entfernen">×</button></div>
+                <div v-for="(serving, servingIndex) in foodPortionGroups(food)" :key="servingIndex" class="flex items-center justify-between gap-2 mt-1"><span class="text-[11px] text-slate-500">{{ servingDisplay(food.reference, serving) }}</span><div class="flex gap-1 flex-wrap justify-end"><button v-for="portion in serving.multipliers" :key="portion.label" @click="setFoodPortion(food, servingFactor(food, serving, portion.f))" :class="getFoodFactor(food.name) === servingFactor(food, serving, portion.f) ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'" class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">{{ portion.label }}</button></div></div>
               </div>
             </div>
 
@@ -429,12 +420,16 @@
                   <input v-model="food.name" type="text" placeholder="z. B. Big Mac" class="min-w-0 flex-1 px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-800">
                   <button @click="removeCustomFood(index)" class="px-1 text-xs text-rose-400 hover:text-rose-600" aria-label="Freies Lebensmittel entfernen">×</button>
                 </div>
+                <div><div class="text-[11px] text-slate-500 mb-1">Nährwerte gelten pro</div><div class="grid grid-cols-2 gap-1.5"><select v-model="food.reference" class="px-2 py-1 border rounded text-[11px] bg-white"><option>100 g</option><option>100 ml</option><option>10 cm</option></select><select v-model="food.frequency" class="px-2 py-1 border rounded text-[11px] bg-white"><option>Häufig</option><option>Selten</option></select></div></div>
                 <div class="grid grid-cols-4 gap-1.5">
                   <input v-model="food.kcal" type="number" min="0" step="0.1" inputmode="decimal" placeholder="kcal" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
                   <input v-model="food.kh" type="number" min="0" step="0.1" inputmode="decimal" placeholder="KH g" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
                   <input v-model="food.protein" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Protein" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
                   <input v-model="food.fett" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Fett g" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
                 </div>
+                <div v-for="(serving, servingIndex) in food.servings" :key="servingIndex" class="space-y-1.5 border-t border-slate-200 pt-2"><div class="flex gap-1"><input v-model="serving.label" placeholder="Beschriftung, z. B. 1 Packung" class="flex-1 px-2 py-1 border rounded text-[11px] bg-white"><input v-model="serving.amount" type="number" min="0" step="0.1" placeholder="Menge" class="w-20 px-2 py-1 border rounded text-[11px] bg-white"><span class="text-[11px] text-slate-500 self-center w-6">{{ referenceUnit(food.reference) }}</span><button v-if="food.servings.length > 1" @click="food.servings.splice(servingIndex,1)" class="text-rose-400 px-1">×</button></div><div class="text-[11px] text-slate-500">Multiplikatoren zu dieser Portion</div><div v-for="(portion, portionIndex) in serving.multipliers" :key="portionIndex" class="flex gap-1"><input v-model="portion.label" placeholder="z. B. ½ oder 2×" class="flex-1 px-2 py-1 border rounded text-[11px] bg-white"><input v-model="portion.f" type="number" step="0.1" placeholder="Faktor" class="w-20 px-2 py-1 border rounded text-[11px] bg-white"><button @click="serving.multipliers.splice(portionIndex, 1)" class="text-rose-400 px-1">×</button></div><button @click="serving.multipliers.push({label:'', f:1})" class="text-[11px] text-slate-500 underline">+ Multiplikator</button><div class="flex items-center gap-1 flex-wrap"><span class="text-[11px] text-slate-500 mr-1">Jetzt:</span><button v-for="portion in serving.multipliers.filter(p => p.label)" :key="portion.label" @click="food.factor=customServingFactor(food, serving, portion.f)" :class="Number(food.factor) === customServingFactor(food, serving, portion.f) ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'" class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300">{{ portion.label }}</button></div></div>
+                <button @click="food.servings.push(newServing(food.reference))" class="text-[11px] text-slate-500 underline">+ Portion</button>
+                <label class="inline-flex items-center gap-1 text-[11px] text-slate-500"><input v-model="food.save_to_list" type="checkbox"> In Lebensmittelliste speichern</label>
               </div>
               <p v-if="mealMacroCoverage < 100" class="text-[11px] text-amber-700">Bei {{ mealMacroCoverage }} % der eingetragenen Lebensmittel sind kcal hinterlegt – die Tagessumme ist daher noch unvollständig.</p>
             </div>
@@ -571,9 +566,34 @@
 
     const { createApp } = Vue;
 
-    // Makros gelten jeweils für die Basisportion (bei Faktor 1). Die Werte
-    // stammen aus LM.xlsx; dort bleibt die Liste für spätere Anpassungen lesbar.
-    const macroFood = (name, category, base, macros, portions) => ({ name, category, base, macros, portions });
+    // Neue Lebensmittel speichern Nährwerte immer pro Referenzwert. Die Portion
+    // darunter ist nur die praktische Menge beim Eintragen.
+    const referenceMeta = {
+      'Wasser': ['100 ml', 1], 'Kaffee': ['100 ml', 2], 'Milch': ['100 ml', .5], 'Mozzarella': ['100 g', 1.25], 'Buttermilch': ['100 ml', 5],
+      'Shake · 12k vegan': ['100 g', .3], 'Shake · Vanilla vegan': ['100 g', .3], 'Zucker': ['100 g', .05], 'Cottage Cheese': ['100 g', 1], 'Frischkäse': ['100 g', 1],
+      'Gouda · dünnes Blatt': ['100 g', .15], 'Gouda · dickes Blatt': ['100 g', .3], 'Mischbrot': ['100 g', .5], 'Vollkornbrot': ['100 g', .5],
+      'Schinken · dünnes Blatt': ['100 g', .1], 'Schinken · dickes Blatt': ['100 g', .2], 'Thunfisch · im Saft': ['100 g', 1.4], 'Thunfisch · in Öl': ['100 g', 1.4],
+      'Ei': ['100 g', .6], 'Gurke': ['10 cm', 1], 'Tomate · Kirsche': ['100 g', .15], 'Tomate · Ei': ['100 g', .5], 'Tomate · normal': ['100 g', 1],
+      'Essiggurkerl': ['100 g', .25], 'Zwiebel · klein': ['100 g', .6], 'Zwiebel · normal': ['100 g', 1], 'Zwiebel · groß': ['100 g', 1.6],
+      'Bohnen Dose': ['100 g', 2.4], 'Kartoffel · klein': ['100 g', .8], 'Kartoffel · normal': ['100 g', 1.5], 'Kartoffel · groß': ['100 g', 2.5],
+      'Vollkornnudeln': ['100 g', .8], 'Nudeln': ['100 g', .8], 'Banane': ['100 g', 1.2], 'Nüsse': ['100 g', .3], 'Butter': ['100 g', .1],
+      'Öl': ['100 ml', .1], 'Essig': ['100 ml', .1]
+    };
+    const referenceFactorFromText = (reference, portion) => {
+      const ref = String(reference || '100 g').replace(/\s/g, '').match(/([\d.,]+)(g|ml|cm)/i);
+      const amount = String(portion || '').replace(/\s/g, '').match(/([\d.,]+)(g|ml|cm)/i);
+      if (!ref || !amount || ref[2].toLowerCase() !== amount[2].toLowerCase()) return 1;
+      return (Number(amount[1].replace(',', '.')) || 1) / (Number(ref[1].replace(',', '.')) || 1);
+    };
+    const normalizeFoodNutrition = food => {
+      if (!food || food.nutritionModel === 'reference-v1') return food;
+      const [reference, fallbackFactor] = referenceMeta[food.name] || ['100 g', 1];
+      const portionFactor = Number(food.portionFactor) || fallbackFactor || referenceFactorFromText(reference, food.base);
+      const macros = {};
+      Object.keys(food.macros || {}).forEach(key => { macros[key] = (Number(food.macros[key]) || 0) / portionFactor; });
+      return { ...food, reference: food.reference === '1 Portion' ? reference : (food.reference || reference), portionFactor, macros, nutritionModel: 'reference-v1' };
+    };
+    const macroFood = (name, category, base, macros, portions) => ({ name, category, base, macros, portions, frequency: 'Häufig' });
 
     createApp({
       data() {
@@ -597,8 +617,14 @@
           ],
           viewMode: 'dashboard',
           darkMode: false,
+          appearanceMode: 'manual',
+          darkManual: false,
+          darkScheduleStart: '20:00',
+          darkScheduleEnd: '07:00',
+          darkLocation: null,
+          foodEditor: null,
           protocolFilter: 'ALLE',
-          protocolSelected: [],
+          protocolSelected: ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'],
           quickNote: '',
           quickNoteSaved: false,
           activeModal: null,
@@ -664,8 +690,10 @@
               'EnzymPeel': 'Beauty'
             },
             foods: [
+              macroFood('Wasser', 'Getränke', '100 ml', { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 }, [100, 200, 300, 500, 600].map(ml => ({ label: `${ml} ml`, f: ml / 100 }))),
               macroFood('Kaffee', 'Getränke', '200 ml', { kcal: 4, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 }, [{ label: '80 ml', f: 0.4 }, { label: '200 ml', f: 1 }]),
               macroFood('Milch', 'Getränke', '50 ml', { kcal: 32, kh: 2.4, protein: 1.65, fett: 1.8, ballaststoffe: 0 }, [{ label: '25 ml', f: 0.5 }, { label: '50 ml', f: 1 }, { label: '100 ml', f: 2 }]),
+              macroFood('Mozzarella', 'Milchprodukte', '1 Packung (125 g)', { kcal: 350, kh: 1.25, protein: 22.5, fett: 27.5, ballaststoffe: 0 }, [{ label: '½ Packung', f: 0.5 }, { label: '1 Packung', f: 1 }, { label: '1½ Packungen', f: 1.5 }, { label: '2 Packungen', f: 2 }]),
               macroFood('Buttermilch', 'Getränke', '500 ml', { kcal: 185, kh: 20, protein: 17, fett: 3, ballaststoffe: 0 }, [{ label: '165 ml', f: 0.33 }, { label: '250 ml', f: 0.5 }, { label: '500 ml', f: 1 }]),
               macroFood('Shake · 12k vegan', 'Getränke', '30 g', { kcal: 119.7, kh: 1.44, protein: 24, fett: 1.74, ballaststoffe: 1.05 }, [{ label: '½', f: 0.5 }, { label: '30 g', f: 1 }, { label: '2×', f: 2 }]),
               macroFood('Shake · Vanilla vegan', 'Getränke', '30 g', { kcal: 123.9, kh: 0.78, protein: 24.6, fett: 2.34, ballaststoffe: 0.6 }, [{ label: '½', f: 0.5 }, { label: '30 g', f: 1 }, { label: '2×', f: 2 }]),
@@ -726,6 +754,7 @@
             food_quantities: {},
             custom_foods: [],
             open_food_group: '',
+            show_rare_foods: false,
             body_symptoms: [],
             soul_symptoms: [],
             activity_duration: '',
@@ -758,9 +787,7 @@
           return list;
         },
         groupedEntries() {
-          const filtered = this.protocolSelected.length === 0
-            ? this.entries
-            : this.entries.filter(e => this.protocolSelected.includes(e.type));
+          const filtered = this.entries.filter(e => this.protocolSelected.includes(e.type));
 
           return this.groupEntriesByNightEnd(filtered);
         },
@@ -785,18 +812,11 @@
           return this.config.foods.filter(f => this.form.selected_foods.includes(f.name));
         },
         foodGroups() {
-          const groups = [];
-          this.config.foods.forEach(food => {
-            const [name, variant] = food.name.split(' · ');
-            let group = groups.find(item => item.name === name);
-            if (!group) {
-              group = { name, variants: [] };
-              groups.push(group);
-            }
-            group.variants.push({ ...food, variant: variant || food.name });
-          });
-          return groups;
+          return this.groupFoods(this.config.foods);
         },
+        frequentFoodGroups() { return this.groupFoods(this.config.foods.filter(food => (food.frequency || 'Häufig') === 'Häufig')); },
+        rareFoodGroups() { return this.groupFoods(this.config.foods.filter(food => food.frequency === 'Selten')); },
+        managementFoodGroups() { return this.groupFoods(this.config.foods); },
         mealMacros() {
           return this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities, this.form.custom_foods);
         },
@@ -862,16 +882,30 @@
             .catch((err) => console.log('SW Fehler:', err));
         }
         await this.loadSettings();
+        setInterval(() => this.applyAppearance(), 60000);
         await this.seedV012();
         await this.loadEntries();
       },
       methods: {
+        groupFoods(foods) {
+          const groups = [];
+          (foods || []).forEach(food => {
+            const [name, variant] = food.name.split(' · ');
+            let group = groups.find(item => item.name === name);
+            if (!group) { group = { name, variants: [] }; groups.push(group); }
+            group.variants.push({ ...food, variant: variant || food.name });
+          });
+          return groups.sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
+        },
         isProtocolFilterActive(value) {
-          return value === 'ALLE' ? this.protocolSelected.length === 0 : this.protocolSelected.includes(value);
+          return value === 'ALLE' ? this.protocolSelected.length === this.allProtocolTypes().length : this.protocolSelected.includes(value);
+        },
+        allProtocolTypes() {
+          return ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'];
         },
         toggleProtocolFilter(value) {
           if (value === 'ALLE') {
-            this.protocolSelected = [];
+            this.protocolSelected = this.allProtocolTypes();
             return;
           }
           const index = this.protocolSelected.indexOf(value);
@@ -921,17 +955,70 @@
         findFood(name) {
           return this.config.foods.find(f => f.name === name) || null;
         },
+        referenceFactorFromFood(food) {
+          return referenceFactorFromText(food && food.reference, food && food.base);
+        },
+        referenceUnit(reference) {
+          const match = String(reference || '100 g').match(/(g|ml|cm)/i);
+          return match ? match[1] : 'g';
+        },
+        newServing(reference) {
+          const refAmount = Number((String(reference || '100 g').match(/[\d.,]+/) || ['100'])[0].replace(',', '.')) || 100;
+          return { label: '1 Portion', amount: refAmount, multipliers: [{ label: '1×', f: 1 }] };
+        },
+        servingAmountFactor(reference, serving) {
+          if (serving && serving.amount !== '' && serving.amount !== null && serving.amount !== undefined && Number(serving.amount) > 0) {
+            const refAmount = Number((String(reference || '100 g').match(/[\d.,]+/) || ['100'])[0].replace(',', '.')) || 100;
+            return Number(serving.amount) / refAmount;
+          }
+          return referenceFactorFromText(reference, serving && serving.base);
+        },
+        servingDisplay(reference, serving) {
+          const amount = serving && serving.amount;
+          const measure = amount !== '' && amount !== null && amount !== undefined ? `${amount} ${this.referenceUnit(reference)}` : (serving && serving.base || '1 Portion');
+          return serving && serving.label ? `${serving.label} · ${measure}` : measure;
+        },
+        editableServing(reference, serving) {
+          if (serving && serving.amount !== '' && serving.amount !== null && serving.amount !== undefined) return JSON.parse(JSON.stringify(serving));
+          const base = String(serving && serving.base || '1 Portion');
+          const match = base.match(/([\d.,]+)\s*(g|ml|cm)/i);
+          const label = match ? base.replace(match[0], '').replace(/[()·-]/g, ' ').replace(/\s+/g, ' ').trim() : base;
+          return { label: label || '1 Portion', amount: match ? Number(match[1].replace(',', '.')) : '', multipliers: JSON.parse(JSON.stringify(serving && serving.multipliers || [{ label: '1×', f: 1 }])) };
+        },
+        storedServing(reference, serving) {
+          const amount = Number(serving.amount);
+          const label = String(serving.label || '1 Portion').trim();
+          const base = `${label} (${amount} ${this.referenceUnit(reference)})`;
+          return { label, amount, base, portionFactor: this.servingAmountFactor(reference, serving), multipliers: (serving.multipliers || []).filter(p => p.label).map(p => ({ label: p.label, f: Number(p.f) || 1 })) };
+        },
+        foodPortionGroups(food) {
+          if (food && Array.isArray(food.servings) && food.servings.length) return food.servings;
+          return [{ base: food && food.base || '1 Portion', portionFactor: Number(food && food.portionFactor) || 1, multipliers: food && food.portions || [{ label: '1', f: 1 }] }];
+        },
+        servingFactor(food, serving, multiplier) {
+          const primary = Number(food && food.portionFactor) || 1;
+          const servingFactor = Number(serving && serving.portionFactor) || this.servingAmountFactor(food && food.reference, serving) || primary;
+          return (servingFactor / primary) * (Number(multiplier) || 1);
+        },
+        customServingFactor(food, serving, multiplier) {
+          const primary = this.servingAmountFactor(food && food.reference, food && food.servings && food.servings[0]);
+          const servingFactor = this.servingAmountFactor(food && food.reference, serving);
+          return (servingFactor / primary) * (Number(multiplier) || 1);
+        },
         calculateFoodMacros(selectedFoods, quantities, customFoods = []) {
           const total = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
           (selectedFoods || []).forEach(name => {
             const food = this.findFood(name);
             const factor = quantities && quantities[name] !== undefined ? Number(quantities[name]) : 1;
             if (!food || !food.macros || !Number.isFinite(factor)) return;
-            Object.keys(total).forEach(key => { total[key] += (Number(food.macros[key]) || 0) * factor; });
+            const portionFactor = Number(food.portionFactor) || 1;
+            Object.keys(total).forEach(key => { total[key] += (Number(food.macros[key]) || 0) * portionFactor * factor; });
           });
           (customFoods || []).forEach(food => {
             if (!food || !String(food.name || '').trim()) return;
-            ['kcal', 'kh', 'protein', 'fett'].forEach(key => { total[key] += Number(food[key]) || 0; });
+            const portionFactor = Number(food.portionFactor) || referenceFactorFromText(food.reference, food.servings && food.servings[0] && food.servings[0].base) || this.referenceFactorFromFood(food);
+            const multiplier = Number(food.factor) || 1;
+            ['kcal', 'kh', 'protein', 'fett'].forEach(key => { total[key] += (Number(food[key]) || 0) * portionFactor * multiplier; });
           });
           return total;
         },
@@ -951,12 +1038,12 @@
             const custom = (entry.custom_foods || []).filter(food => String(food && food.name || '').trim());
             total += custom.length;
             withKcal += custom.filter(food => this.hasMacroValue(food, 'kcal')).length;
-            if (!entry.custom_foods && String(entry.details || '').trim()) total += 1;
+            if ((!entry.custom_foods || !entry.custom_foods.length) && String(entry.details || '').trim()) total += 1;
           });
           return total ? Math.round((withKcal / total) * 100) : 100;
         },
         addCustomFood() {
-          this.form.custom_foods.push({ name: '', kcal: '', kh: '', protein: '', fett: '' });
+          this.form.custom_foods.push({ name: '', kcal: '', kh: '', protein: '', fett: '', reference: '100 g', servings: [this.newServing('100 g')], factor: 1, frequency: 'Selten', save_to_list: false });
         },
         removeCustomFood(index) {
           this.form.custom_foods.splice(index, 1);
@@ -968,8 +1055,10 @@
         portionLabel(name, factor) {
           const food = this.findFood(name);
           if (food) {
-            const hit = food.portions.find(p => p.f === factor);
-            if (hit) return hit.label;
+            for (const serving of this.foodPortionGroups(food)) {
+              const hit = (serving.multipliers || []).find(p => this.servingFactor(food, serving, p.f) === Number(factor));
+              if (hit) return `${this.servingDisplay(food.reference, serving)} · ${hit.label}`;
+            }
             if (food.base) return this.formatFactor(factor) + ' × ' + food.base;
           }
           return this.formatFactor(factor) + 'x';
@@ -990,8 +1079,14 @@
           return names.length > 4 ? `${preview}, …` : preview;
         },
         entryKcal(entry) {
-          const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {});
+          const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {}, entry.custom_foods || []);
           return this.displayMacro(macros.kcal, 0);
+        },
+        mealHasKcal(entry) {
+          const hasFood = (entry.selected_foods || []).length
+            || (entry.custom_foods || []).some(food => String(food.name || '').trim())
+            || String(entry.details || '').trim();
+          return !!hasFood && this.foodMacroCoverage([entry]) === 100;
         },
         protocolBodySoul(entry) {
           return [...(entry.body_symptoms || []), ...(entry.soul_symptoms || [])].join(', ');
@@ -1057,8 +1152,9 @@
             delete this.form.food_quantities[food.name];
           } else {
             this.form.selected_foods.push(food.name);
-            const standard = food.portions.find(p => p.f === 1) || food.portions[0];
-            this.form.food_quantities[food.name] = standard.f;
+            const serving = this.foodPortionGroups(food)[0];
+            const standard = serving.multipliers.find(p => Number(p.f) === 1) || serving.multipliers[0];
+            this.form.food_quantities[food.name] = this.servingFactor(food, serving, standard.f);
           }
         },
         toggleFoodGroup(name) {
@@ -1218,13 +1314,93 @@
             }
           });
           const darkModeSetting = stored.find(item => item.key === 'darkMode');
-          this.darkMode = !!(darkModeSetting && darkModeSetting.value);
-          document.body.classList.toggle('dark-mode', this.darkMode);
+          const appearance = stored.find(item => item.key === 'appearance');
+          if (appearance && appearance.value) {
+            Object.assign(this, appearance.value);
+          } else {
+            this.darkManual = !!(darkModeSetting && darkModeSetting.value);
+          }
+          const foodsNeedMigration = this.config.foods.some(food => food && food.nutritionModel !== 'reference-v1');
+          this.config.foods = this.config.foods.map(normalizeFoodNutrition);
+          if (foodsNeedMigration) await db.settings.put({ key: 'foods', value: this.config.foods });
+          this.applyAppearance();
         },
-        async setDarkMode(enabled) {
-          this.darkMode = !!enabled;
+        isTimeInDarkRange(now, start, end) {
+          const minutes = now.getHours() * 60 + now.getMinutes();
+          const toMinutes = value => { const [h, m] = String(value || '00:00').split(':').map(Number); return h * 60 + m; };
+          const from = toMinutes(start); const until = toMinutes(end);
+          return from <= until ? minutes >= from && minutes < until : minutes >= from || minutes < until;
+        },
+        approximateSunHours(date, latitude) {
+          const day = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+          const declination = -23.44 * Math.cos((360 / 365) * (day + 10) * Math.PI / 180);
+          const angle = Math.acos(-Math.tan(latitude * Math.PI / 180) * Math.tan(declination * Math.PI / 180)) * 180 / Math.PI;
+          const solarNoon = 12 - ((this.darkLocation.longitude / 15) + date.getTimezoneOffset() / 60);
+          return { rise: solarNoon - angle / 15, set: solarNoon + angle / 15 };
+        },
+        applyAppearance() {
+          const now = new Date();
+          if (this.appearanceMode === 'manual') this.darkMode = this.darkManual;
+          if (this.appearanceMode === 'schedule') this.darkMode = this.isTimeInDarkRange(now, this.darkScheduleStart, this.darkScheduleEnd);
+          if (this.appearanceMode === 'sun') {
+            if (!this.darkLocation) this.darkMode = this.darkManual;
+            else {
+              const sun = this.approximateSunHours(now, this.darkLocation.latitude);
+              const hour = now.getHours() + now.getMinutes() / 60;
+              this.darkMode = hour < sun.rise || hour >= sun.set;
+            }
+          }
           document.body.classList.toggle('dark-mode', this.darkMode);
-          await db.settings.put({ key: 'darkMode', value: this.darkMode });
+          document.getElementById('app')?.classList.toggle('dark-mode', this.darkMode);
+        },
+        async saveAppearanceSettings() {
+          await db.settings.put({ key: 'appearance', value: { appearanceMode: this.appearanceMode, darkManual: this.darkManual, darkScheduleStart: this.darkScheduleStart, darkScheduleEnd: this.darkScheduleEnd, darkLocation: this.darkLocation } });
+          this.applyAppearance();
+        },
+        async setAppearanceMode(mode) { this.appearanceMode = mode; await this.saveAppearanceSettings(); },
+        async setManualDarkMode(enabled) { this.darkManual = !!enabled; await this.saveAppearanceSettings(); },
+        useLocationForDarkMode() {
+          if (!navigator.geolocation) return alert('Standort ist in diesem Browser nicht verfügbar.');
+          navigator.geolocation.getCurrentPosition(async pos => {
+            this.darkLocation = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+            await this.saveAppearanceSettings();
+          }, () => alert('Standortfreigabe wurde nicht erteilt.'));
+        },
+        newFoodEditor() {
+          this.foodEditor = { originalName: '', baseName: '', variant: '', reference: '100 g', frequency: 'Selten', macros: { kcal: '', kh: '', protein: '', fett: '', ballaststoffe: 0 }, servings: [this.newServing('100 g')] };
+        },
+        editFoodEditor(food) {
+          const parts = food.name.split(' · ');
+          this.foodEditor = { originalName: food.name, baseName: parts[0], variant: parts.slice(1).join(' · '), reference: food.reference || '100 g', frequency: food.frequency || 'Häufig', macros: { ...food.macros }, servings: this.foodPortionGroups(food).map(serving => this.editableServing(food.reference, serving)) };
+        },
+        async saveFoodEditor() {
+          const editor = this.foodEditor;
+          if (!editor || !editor.baseName.trim()) return alert('Bitte einen Lebensmittelnamen eingeben.');
+          const name = editor.variant.trim() ? `${editor.baseName.trim()} · ${editor.variant.trim()}` : editor.baseName.trim();
+          const servings = editor.servings.filter(serving => String(serving.label || '').trim() && Number(serving.amount) > 0).map(serving => this.storedServing(editor.reference, serving));
+          if (!servings.length) return alert('Bitte mindestens eine Portion mit Menge angeben.');
+          const food = { name, category: 'Eigene', reference: editor.reference || '100 g', base: servings[0].base, portionFactor: servings[0].portionFactor, nutritionModel: 'reference-v1', frequency: editor.frequency, macros: { kcal: Number(editor.macros.kcal) || 0, kh: Number(editor.macros.kh) || 0, protein: Number(editor.macros.protein) || 0, fett: Number(editor.macros.fett) || 0, ballaststoffe: Number(editor.macros.ballaststoffe) || 0 }, portions: servings[0].multipliers, servings };
+          const index = this.config.foods.findIndex(item => item.name === editor.originalName);
+          if (index >= 0) this.config.foods.splice(index, 1, food); else this.config.foods.push(food);
+          await db.settings.put({ key: 'foods', value: this.config.foods });
+          this.foodEditor = null;
+        },
+        async saveCustomFoodsToList() {
+          const marked = (this.form.custom_foods || []).filter(food => food.save_to_list && String(food.name || '').trim());
+          if (!marked.length) return;
+          marked.forEach(food => {
+            if (this.findFood(food.name)) return;
+            const servings = (food.servings || []).filter(serving => String(serving.label || '').trim() && Number(serving.amount) > 0).map(serving => this.storedServing(food.reference, serving));
+            if (!servings.length) return;
+            this.config.foods.push({ name: food.name.trim(), category: 'Eigene', reference: food.reference || '100 g', base: servings[0].base, portionFactor: servings[0].portionFactor, nutritionModel: 'reference-v1', frequency: food.frequency || 'Selten', macros: { kcal: Number(food.kcal) || 0, kh: Number(food.kh) || 0, protein: Number(food.protein) || 0, fett: Number(food.fett) || 0, ballaststoffe: 0 }, portions: servings[0].multipliers, servings });
+          });
+          await db.settings.put({ key: 'foods', value: this.config.foods });
+        },
+        async deleteFoodEditor() {
+          if (!this.foodEditor || !this.foodEditor.originalName) return;
+          this.config.foods = this.config.foods.filter(food => food.name !== this.foodEditor.originalName);
+          await db.settings.put({ key: 'foods', value: this.config.foods });
+          this.foodEditor = null;
         },
         async loadEntries() {
           this.entries = await db.entries.where('is_deleted').equals(0).toArray();
@@ -1234,6 +1410,7 @@
             const nowIso = new Date().toISOString();
             const combinedString = `${this.form.date}T${this.form.time}:00`;
             const localDateObj = new Date(combinedString);
+            if (this.activeModal === 'MAHLZEIT') await this.saveCustomFoodsToList();
             
             const rawPayload = {
               type: this.activeModal,
@@ -1301,8 +1478,9 @@
               addon_quantities: entry.addon_quantities ? {...entry.addon_quantities} : (entry.addon_name ? {[entry.addon_name]: entry.addon_factor || 1} : {}),
               selected_foods: entry.selected_foods ? [...entry.selected_foods] : [],
               food_quantities: entry.food_quantities ? {...entry.food_quantities} : {},
-              custom_foods: entry.custom_foods ? JSON.parse(JSON.stringify(entry.custom_foods)) : (entry.details ? [{ name: entry.details, kcal: '', kh: '', protein: '', fett: '' }] : []),
+              custom_foods: entry.custom_foods ? JSON.parse(JSON.stringify(entry.custom_foods)).map(food => { const reference = food.reference || '100 g'; const originalServings = (food.servings && food.servings.length) ? food.servings : [{ base: food.base || '1 Portion', multipliers: (food.portions && food.portions.length) ? food.portions : [{ label: '1×', f: 1 }] }]; return { factor: 1, frequency: 'Selten', save_to_list: false, ...food, reference, servings: originalServings.map(serving => this.editableServing(reference, serving)) }; }) : (entry.details ? [{ name: entry.details, kcal: '', kh: '', protein: '', fett: '', reference: '100 g', servings: [this.newServing('100 g')], factor: 1, frequency: 'Selten', save_to_list: false }] : []),
               open_food_group: '',
+              show_rare_foods: false,
               body_symptoms: entry.body_symptoms ? [...entry.body_symptoms] : (entry.symptoms ? [...entry.symptoms] : []),
               soul_symptoms: entry.soul_symptoms ? [...entry.soul_symptoms] : [],
               activity_duration: entry.activity_duration || '',
@@ -1329,6 +1507,7 @@
               food_quantities: {},
               custom_foods: [],
               open_food_group: '',
+              show_rare_foods: false,
               body_symptoms: [],
               soul_symptoms: [],
               activity_duration: '',
@@ -1550,12 +1729,8 @@
           return labels[type] || type;
         },
         typeCardStyle(type) {
-          const colors = {
-            SCHLAF: 'bg-blue-50', MAHLZEIT: 'bg-rose-50', ADDON: 'bg-amber-50',
-            BODYSOUL: 'bg-white', BEWEGUNG: 'bg-green-50',
-            ZYKLUS: 'bg-white', NOTIZ: 'bg-white'
-          };
-          return colors[type] || 'bg-slate-50';
+          const colors = { SCHLAF: 'bg-blue-50', MAHLZEIT: 'bg-rose-50', ADDON: 'bg-amber-50', BEWEGUNG: 'bg-green-50', BODYSOUL: 'bg-white', ZYKLUS: 'bg-white', NOTIZ: 'bg-white' };
+          return colors[type] || 'bg-white';
         },
         dayLabel(iso) {
           if (!iso) return '';

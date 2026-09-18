@@ -780,7 +780,7 @@
         protocolFilters() {
           const counts = {};
           this.entries.forEach(e => { counts[e.type] = (counts[e.type] || 0) + 1; });
-          const list = [{ value: 'ALLE', label: 'Alle', count: this.entries.length }];
+          const list = [{ value: 'ALLE', label: 'Alle', count: this.entries.length }, { value: 'KEINE', label: 'Keine', count: 0 }];
           ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'].forEach(t => {
             if (counts[t]) list.push({ value: t, label: this.typeLabel(t), count: counts[t] });
           });
@@ -898,7 +898,9 @@
           return groups.sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
         },
         isProtocolFilterActive(value) {
-          return value === 'ALLE' ? this.protocolSelected.length === this.allProtocolTypes().length : this.protocolSelected.includes(value);
+          if (value === 'ALLE') return this.protocolSelected.length === this.allProtocolTypes().length;
+          if (value === 'KEINE') return this.protocolSelected.length === 0;
+          return this.protocolSelected.includes(value);
         },
         allProtocolTypes() {
           return ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'];
@@ -906,6 +908,10 @@
         toggleProtocolFilter(value) {
           if (value === 'ALLE') {
             this.protocolSelected = this.allProtocolTypes();
+            return;
+          }
+          if (value === 'KEINE') {
+            this.protocolSelected = [];
             return;
           }
           const index = this.protocolSelected.indexOf(value);

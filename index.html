@@ -27,21 +27,30 @@
     #app .protocol-card-detail { font-weight: 400; }
     #app .protocol-card-heading strong,
     #app .protocol-card-detail strong { font-weight: 500; }
+    .macro-input { appearance: textfield; -moz-appearance: textfield; }
+    .macro-input::-webkit-outer-spin-button,
+    .macro-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
   <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white border-x border-slate-200 shadow-sm">
     
     <!-- HEADER -->
-    <header class="text-center py-4 border-b border-slate-200">
-      <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking <span class="text-xs font-semibold text-slate-400 align-middle">{{ appVersion }}</span></h1>
-      <p class="mt-1 text-xs font-medium text-slate-500 tabular-nums">
-        {{ currentCycleDayText }} <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-green-600"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg>{{ currentDayMovementText }}</span> <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ displayMacro(todayKcal, 0) }} kcal</span>
+    <header class="py-4 border-b border-slate-200">
+      <div class="flex items-center justify-between gap-3">
+        <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking <span class="text-xs font-semibold text-slate-400 align-middle">{{ appVersion }}</span></h1>
+        <button @click="viewMode = 'settings'" class="shrink-0 p-1.5 text-slate-500 hover:text-slate-800 transition" aria-label="Einstellungen">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+        </button>
+      </div>
+      <p class="mt-1 text-left text-xs font-medium text-slate-500 tabular-nums">
+        {{ currentCycleDayText }} <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-green-600"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg>{{ currentDayMovementText }}</span> <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ displayMacro(todayKcal, 0) }} kcal<span class="ml-0.5 text-red-400 font-medium">({{ todayMacroCoverage }} % erfasst)</span></span>
       </p>
     </header>
 
     <!-- DASHBOARD BUTTONS -->
-    <main v-if="viewMode === 'dashboard'" class="flex-1 flex flex-col py-5">
+    <main v-if="viewMode === 'dashboard'" class="py-5 space-y-3">
+      <h2 class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Daten eintragen</h2>
       <!-- SCHNELLNOTIZ -->
       <div class="flex items-center gap-2">
         <input type="text" v-model="quickNote" @keyup.enter="saveQuickNote"
@@ -65,22 +74,13 @@
         </button>
       </div>
 
-      <nav class="mt-auto pt-6 flex items-center justify-center gap-5 text-xs" aria-label="Navigation">
-        <button @click="viewMode = 'protocol'" class="text-slate-500 hover:text-slate-800 transition underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500">
-          Protokoll
-        </button>
-        <button @click="viewMode = 'settings'" class="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 transition underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
-          Einstellungen
-        </button>
-      </nav>
     </main>
 
     <!-- PROTOKOLL ANSICHT -->
-    <section v-if="viewMode === 'protocol'" class="my-auto py-2 space-y-3">
+    <section v-if="viewMode === 'dashboard' || viewMode === 'protocol'" class="py-3 space-y-3 border-t border-slate-200">
       <div class="flex justify-between items-center border-b border-slate-200 pb-2">
         <h2 class="protocol-title text-base font-bold text-slate-700">Protokoll</h2>
-        <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
+        <button v-if="viewMode === 'protocol'" @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
       </div>
 
       <!-- FILTER -->
@@ -117,7 +117,7 @@
           <div v-for="entry in day.items" :key="entry.id" class="px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-start" :class="typeCardStyle(entry.type)">
             <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
               <div class="protocol-card-heading text-xs leading-5">
-                <span class="text-slate-400 font-mono">{{ formatTime(entry.timestamp) }}</span>
+                <span class="text-slate-400">{{ formatTime(entry.timestamp) }}</span>
                 <span class="ml-1.5 text-slate-600">
                   <template v-if="entry.type === 'MAHLZEIT'"><svg class="w-3 h-3 inline-block align-[-2px] text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg> {{ entryKcal(entry) }} kcal</template>
                   <template v-else-if="entry.type === 'SCHLAF'">{{ entry.subtype || 'Schlaf' }}</template>
@@ -388,10 +388,24 @@
               </div>
             </div>
 
-            <div class="pt-1">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Weitere Lebensmittel &amp; Mengen (frei)</label>
-              <textarea v-model="form.details" placeholder="z. B. Butterkäse 40 g, Salami 30 g, Gurke" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800 h-20"></textarea>
-              <p v-if="form.details.trim()" class="text-[11px] text-amber-700 mt-1">Freitext ist gespeichert, aber noch nicht in den Makros enthalten.</p>
+            <div class="pt-1 space-y-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <label class="block text-xs font-medium text-slate-500">Weitere Lebensmittel (frei)</label>
+                <button @click="addCustomFood" class="text-[11px] text-slate-600 hover:text-slate-900 underline underline-offset-2">+ Lebensmittel</button>
+              </div>
+              <div v-for="(food, index) in form.custom_foods" :key="index" class="rounded-lg border border-slate-200 bg-slate-50 p-2 space-y-1.5">
+                <div class="flex gap-1.5">
+                  <input v-model="food.name" type="text" placeholder="z. B. Big Mac" class="min-w-0 flex-1 px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-800">
+                  <button @click="removeCustomFood(index)" class="px-1 text-xs text-rose-400 hover:text-rose-600" aria-label="Freies Lebensmittel entfernen">×</button>
+                </div>
+                <div class="grid grid-cols-4 gap-1.5">
+                  <input v-model="food.kcal" type="number" min="0" step="0.1" inputmode="decimal" placeholder="kcal" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
+                  <input v-model="food.kh" type="number" min="0" step="0.1" inputmode="decimal" placeholder="KH g" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
+                  <input v-model="food.protein" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Protein" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
+                  <input v-model="food.fett" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Fett g" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
+                </div>
+              </div>
+              <p v-if="mealMacroCoverage < 100" class="text-[11px] text-amber-700">Bei {{ mealMacroCoverage }} % der eingetragenen Lebensmittel sind kcal hinterlegt – die Tagessumme ist daher noch unvollständig.</p>
             </div>
           </template>
 
@@ -678,6 +692,7 @@
             addon_quantities: {},
             selected_foods: [],
             food_quantities: {},
+            custom_foods: [],
             open_food_group: '',
             body_symptoms: [],
             soul_symptoms: [],
@@ -751,7 +766,14 @@
           return groups;
         },
         mealMacros() {
-          return this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities);
+          return this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities, this.form.custom_foods);
+        },
+        mealMacroCoverage() {
+          return this.foodMacroCoverage([{
+            selected_foods: this.form.selected_foods,
+            custom_foods: this.form.custom_foods,
+            details: this.form.details
+          }]);
         },
         todayKcal() {
           const lastNightEnd = this.entries
@@ -762,9 +784,16 @@
           return this.entries
             .filter(e => e.type === 'MAHLZEIT' && new Date(e.timestamp) >= start)
             .reduce((sum, e) => {
-              const macros = e.meal_macros || this.calculateFoodMacros(e.selected_foods || [], e.food_quantities || {});
+              const macros = e.meal_macros || this.calculateFoodMacros(e.selected_foods || [], e.food_quantities || {}, e.custom_foods || []);
               return sum + (Number(macros.kcal) || 0);
             }, 0);
+        },
+        todayMacroCoverage() {
+          const lastNightEnd = this.entries
+            .filter(e => e.type === 'SCHLAF' && this.sleepKindFor(e) === 'Nachtruhe' && this.sleepActionFor(e) === 'Ende')
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+          const start = lastNightEnd ? new Date(lastNightEnd.timestamp) : new Date(new Date().setHours(0, 0, 0, 0));
+          return this.foodMacroCoverage(this.entries.filter(e => e.type === 'MAHLZEIT' && new Date(e.timestamp) >= start));
         },
         bodySymptomsList() {
           return [...this.config.bodySymptoms].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
@@ -860,7 +889,7 @@
         findFood(name) {
           return this.config.foods.find(f => f.name === name) || null;
         },
-        calculateFoodMacros(selectedFoods, quantities) {
+        calculateFoodMacros(selectedFoods, quantities, customFoods = []) {
           const total = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
           (selectedFoods || []).forEach(name => {
             const food = this.findFood(name);
@@ -868,7 +897,37 @@
             if (!food || !food.macros || !Number.isFinite(factor)) return;
             Object.keys(total).forEach(key => { total[key] += (Number(food.macros[key]) || 0) * factor; });
           });
+          (customFoods || []).forEach(food => {
+            if (!food || !String(food.name || '').trim()) return;
+            ['kcal', 'kh', 'protein', 'fett'].forEach(key => { total[key] += Number(food[key]) || 0; });
+          });
           return total;
+        },
+        hasMacroValue(food, key) {
+          return food && food[key] !== '' && food[key] !== null && food[key] !== undefined && Number.isFinite(Number(food[key]));
+        },
+        foodMacroCoverage(entries) {
+          let total = 0;
+          let withKcal = 0;
+          (entries || []).forEach(entry => {
+            const selected = entry.selected_foods || [];
+            total += selected.length;
+            withKcal += selected.filter(name => {
+              const food = this.findFood(name);
+              return food && food.macros && Number.isFinite(Number(food.macros.kcal));
+            }).length;
+            const custom = (entry.custom_foods || []).filter(food => String(food && food.name || '').trim());
+            total += custom.length;
+            withKcal += custom.filter(food => this.hasMacroValue(food, 'kcal')).length;
+            if (!entry.custom_foods && String(entry.details || '').trim()) total += 1;
+          });
+          return total ? Math.round((withKcal / total) * 100) : 100;
+        },
+        addCustomFood() {
+          this.form.custom_foods.push({ name: '', kcal: '', kh: '', protein: '', fett: '' });
+        },
+        removeCustomFood(index) {
+          this.form.custom_foods.splice(index, 1);
         },
         displayMacro(value, digits = 1) {
           const options = { minimumFractionDigits: 0, maximumFractionDigits: digits };
@@ -890,7 +949,10 @@
             .join(', ');
         },
         foodNamesPreview(entry) {
-          const names = entry.selected_foods || Object.keys(entry.food_quantities || {});
+          const names = [
+            ...(entry.selected_foods || Object.keys(entry.food_quantities || {})),
+            ...(entry.custom_foods || []).map(food => String(food.name || '').trim()).filter(Boolean)
+          ];
           if (!names.length) return entry.details || 'Mahlzeit';
           const preview = names.slice(0, 4).join(', ');
           return names.length > 4 ? `${preview}, …` : preview;
@@ -1152,7 +1214,8 @@
               addon_quantities: JSON.parse(JSON.stringify(this.form.addon_quantities || {})),
               selected_foods: Array.from(this.form.selected_foods || []),
               food_quantities: JSON.parse(JSON.stringify(this.form.food_quantities || {})),
-              meal_macros: this.activeModal === 'MAHLZEIT' ? this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities) : null,
+              custom_foods: JSON.parse(JSON.stringify((this.form.custom_foods || []).filter(food => String(food.name || '').trim()))),
+              meal_macros: this.activeModal === 'MAHLZEIT' ? this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities, this.form.custom_foods) : null,
               body_symptoms: Array.from(this.form.body_symptoms || []),
               soul_symptoms: Array.from(this.form.soul_symptoms || []),
               activity_duration: this.form.activity_duration || '',
@@ -1198,6 +1261,7 @@
               addon_quantities: entry.addon_quantities ? {...entry.addon_quantities} : (entry.addon_name ? {[entry.addon_name]: entry.addon_factor || 1} : {}),
               selected_foods: entry.selected_foods ? [...entry.selected_foods] : [],
               food_quantities: entry.food_quantities ? {...entry.food_quantities} : {},
+              custom_foods: entry.custom_foods ? JSON.parse(JSON.stringify(entry.custom_foods)) : (entry.details ? [{ name: entry.details, kcal: '', kh: '', protein: '', fett: '' }] : []),
               open_food_group: '',
               body_symptoms: entry.body_symptoms ? [...entry.body_symptoms] : (entry.symptoms ? [...entry.symptoms] : []),
               soul_symptoms: entry.soul_symptoms ? [...entry.soul_symptoms] : [],
@@ -1223,6 +1287,7 @@
               addon_quantities: {},
               selected_foods: [],
               food_quantities: {},
+              custom_foods: [],
               open_food_group: '',
               body_symptoms: [],
               soul_symptoms: [],
@@ -1332,9 +1397,10 @@
             const kcal = group.items
               .filter(entry => entry.type === 'MAHLZEIT')
               .reduce((sum, entry) => {
-                const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {});
+                const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {}, entry.custom_foods || []);
                 return sum + (Number(macros.kcal) || 0);
               }, 0);
+            const macroCoverage = this.foodMacroCoverage(group.items.filter(entry => entry.type === 'MAHLZEIT'));
             const movementMinutes = group.items
               .filter(entry => entry.type === 'BEWEGUNG')
               .reduce((sum, entry) => sum + (Number(entry.activity_duration) || 0), 0);
@@ -1345,7 +1411,7 @@
                 ? this.logicalDayLabel(group.anchor, index)
                 : 'Ohne Nachtruhe Ende',
               durationText: '',
-              kcalText: `${this.displayMacro(kcal, 0)} kcal`,
+              kcalText: `${this.displayMacro(kcal, 0)} kcal (${macroCoverage} % erfasst)`,
               movementText: movementMinutes ? `${this.formatDurationShort(movementMinutes)} Bewegung` : '',
               sleepText: sleepMinutes ? `${this.formatDurationShort(sleepMinutes)} Schlaf` : '',
               missingNightEnd: index === 0 && nightStart,

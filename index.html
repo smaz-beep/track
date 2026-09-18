@@ -3,13 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Frau Sarah's Tracking v013</title>
+  <title>Frau Sarah's Tracking v015</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Ruhige, gut lesbare Grundtypografie. */
+    body, button, input, select, textarea {
+      font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+    #app h1 { font-weight: 600; letter-spacing: .018em; }
+    #app .protocol-title { font-weight: 600; letter-spacing: .01em; }
+    #app .protocol-filter { font-weight: 500; }
+    #app .protocol-day-title { font-weight: 600; letter-spacing: .06em; }
+    #app .protocol-card-heading { font-weight: 500; }
+    #app .protocol-card-detail { font-weight: 400; }
+    #app .protocol-card-heading strong,
+    #app .protocol-card-detail strong { font-weight: 500; }
+  </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
   <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white border-x border-slate-200 shadow-sm">
@@ -17,59 +35,59 @@
     <!-- HEADER -->
     <header class="text-center py-4 border-b border-slate-200">
       <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking <span class="text-xs font-semibold text-slate-400 align-middle">{{ appVersion }}</span></h1>
-      <p class="mt-1 text-xs font-medium text-slate-500">
-        {{ currentCycleDayText }}
+      <p class="mt-1 text-xs font-medium text-slate-500 tabular-nums">
+        {{ currentCycleDayText }} <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-green-600"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg>{{ currentDayMovementText }}</span> <span class="px-1 text-slate-300" aria-hidden="true">•</span> <span class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ displayMacro(todayKcal, 0) }} kcal</span>
       </p>
     </header>
 
     <!-- DASHBOARD BUTTONS -->
-    <main v-if="viewMode === 'dashboard'" class="my-auto py-6 space-y-3">
+    <main v-if="viewMode === 'dashboard'" class="flex-1 flex flex-col py-5">
       <!-- SCHNELLNOTIZ -->
-      <div class="flex gap-2">
+      <div class="flex items-center gap-2">
         <input type="text" v-model="quickNote" @keyup.enter="saveQuickNote"
           :placeholder="quickNoteSaved ? '✓ Notiz gespeichert' : 'Schnellnotiz …'"
           :class="quickNoteSaved ? 'placeholder:text-emerald-600 placeholder:font-semibold' : 'placeholder:text-slate-400'"
-          class="flex-1 p-3 border border-slate-200 rounded-2xl text-sm bg-slate-50 text-slate-800">
+          class="flex-1 px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800">
         <button @click="saveQuickNote" :disabled="!quickNote.trim()"
-          class="px-5 py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-300 text-white font-bold rounded-2xl shadow-sm transition">
+          aria-label="Schnellnotiz speichern"
+          class="w-8 py-2 text-base leading-none text-slate-700 hover:text-slate-950 disabled:text-slate-300 transition">
           ✓
         </button>
       </div>
 
-      <hr class="border-t border-slate-200 my-1">
+      <hr class="border-t border-slate-200 my-3">
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 gap-2.5">
         <button v-for="btn in dashboardButtons" :key="btn.type" @click="openModal(btn.type)"
-          class="h-24 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center transition gap-1">
-          <svg class="w-7 h-7" :class="btn.color" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" v-html="btn.icon"></svg>
-          <span class="text-base sm:text-lg tracking-wide">{{ btn.label }}</span>
+          class="h-20 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl border border-slate-200 flex flex-col items-center justify-center transition gap-0.5">
+          <svg class="w-6 h-6" :class="btn.color" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" v-html="btn.icon"></svg>
+          <span class="text-sm tracking-wide">{{ btn.label }}</span>
         </button>
       </div>
 
-      <hr class="border-t border-slate-200 my-1">
-
-      <div class="flex gap-2">
-        <button @click="viewMode = 'protocol'" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm text-base tracking-wide transition flex items-center justify-center">
+      <nav class="mt-auto pt-6 flex items-center justify-center gap-5 text-xs" aria-label="Navigation">
+        <button @click="viewMode = 'protocol'" class="text-slate-500 hover:text-slate-800 transition underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500">
           Protokoll
         </button>
-        <button @click="viewMode = 'settings'" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-2xl border border-slate-200 shadow-sm text-base transition flex items-center justify-center">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+        <button @click="viewMode = 'settings'" class="inline-flex items-center gap-1 text-slate-500 hover:text-slate-800 transition underline underline-offset-4 decoration-slate-300 hover:decoration-slate-500">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+          Einstellungen
         </button>
-      </div>
+      </nav>
     </main>
 
     <!-- PROTOKOLL ANSICHT -->
     <section v-if="viewMode === 'protocol'" class="my-auto py-2 space-y-3">
       <div class="flex justify-between items-center border-b border-slate-200 pb-2">
-        <h2 class="text-base font-bold text-slate-700">Protokoll</h2>
+        <h2 class="protocol-title text-base font-bold text-slate-700">Protokoll</h2>
         <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
       </div>
 
       <!-- FILTER -->
       <div class="flex flex-wrap gap-1.5">
-        <button v-for="f in protocolFilters" :key="f.value" @click="protocolFilter = f.value"
-          :class="protocolFilter === f.value ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-600 border-slate-200'"
-          class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition">
+        <button v-for="f in protocolFilters" :key="f.value" @click="toggleProtocolFilter(f.value)"
+          :class="isProtocolFilterActive(f.value) ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-600 border-slate-200'"
+          class="protocol-filter px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition">
           {{ f.label }}<span v-if="f.count" class="opacity-60"> {{ f.count }}</span>
         </button>
       </div>
@@ -79,56 +97,67 @@
       </div>
 
       <div class="space-y-3 max-h-[58vh] overflow-y-auto pr-1">
-        <div v-for="day in groupedEntries" :key="day.key" class="space-y-2">
+          <div v-for="day in groupedEntries" :key="day.key" class="space-y-1">
 
           <!-- TAGESTRENNER -->
-          <div class="flex items-center gap-2 sticky top-0 bg-white py-1 z-10">
+          <div v-if="day.label" class="flex items-center gap-2 sticky top-0 bg-white py-1 z-10">
             <div class="h-px flex-1 bg-slate-200"></div>
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{{ day.label }}</span>
-            <span class="text-[10px] text-slate-400">{{ day.items.length }}</span>
+            <span class="protocol-day-title text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{{ day.label }}</span>
+            <span class="text-[10px] whitespace-nowrap">
+              <span v-if="day.kcalText" class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ day.kcalText }}</span>
+              <span v-if="day.movementText" class="px-1 text-slate-300">//</span>
+              <span v-if="day.movementText" class="inline-flex items-center gap-0.5 text-green-600"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg>{{ day.movementText }}</span>
+              <span v-if="day.sleepText" class="px-1 text-slate-300">//</span>
+              <span v-if="day.sleepText" class="inline-flex items-center gap-0.5 text-blue-500"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.2 13.2A9.2 9.2 0 1 1 10.8 2.8a7.2 7.2 0 0 0 10.4 10.4z"/></svg>{{ day.sleepText }}</span>
+              <span v-if="!day.kcalText && !day.movementText && !day.sleepText" class="text-slate-400">{{ day.durationText || day.items.length }}</span>
+            </span>
             <div class="h-px flex-1 bg-slate-200"></div>
           </div>
 
-          <div v-for="entry in day.items" :key="entry.id" class="p-3 bg-slate-50 border border-slate-200 border-l-4 rounded-xl flex justify-between items-start" :class="typeBorder(entry.type)">
+          <div v-for="entry in day.items" :key="entry.id" class="px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-start" :class="typeCardStyle(entry.type)">
             <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
-              <div class="text-[11px] text-slate-400 font-mono">{{ formatTime(entry.timestamp) }}</div>
-              <div class="font-bold text-sm text-indigo-950">{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> — {{ entry.subtype }}</span></div>
+              <div class="protocol-card-heading text-xs leading-5">
+                <span class="text-slate-400 font-mono">{{ formatTime(entry.timestamp) }}</span>
+                <span class="ml-1.5 text-slate-600">
+                  <template v-if="entry.type === 'MAHLZEIT'"><svg class="w-3 h-3 inline-block align-[-2px] text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg> {{ entryKcal(entry) }} kcal</template>
+                  <template v-else-if="entry.type === 'SCHLAF'">{{ entry.subtype || 'Schlaf' }}</template>
+                  <template v-else-if="entry.type === 'BEWEGUNG'"><svg class="w-3 h-3 inline-block align-[-2px] text-green-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg> {{ entry.subtype || 'Bewegung' }}</template>
+                  <template v-else-if="entry.type === 'BODYSOUL'"><span class="text-purple-500 font-normal">Body <svg class="w-3 h-3 inline-block align-[-2px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3 15.2 3 8.8C3 5.8 5.3 4 8 4c1.8 0 3.4 1 4 2.5C12.6 5 14.2 4 16 4c2.7 0 5 1.8 5 4.8 0 6.4-9 11.7-9 11.7z"/></svg> Soul</span></template>
+                  <template v-else-if="entry.type === 'ZYKLUS'"><span class="text-pink-500">{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> · {{ entry.subtype }}</span></span></template>
+                  <template v-else>{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> · {{ entry.subtype }}</span></template>
+                </span>
+              </div>
 
-              <div class="text-xs text-slate-600 mt-1 space-y-0.5">
+              <div class="protocol-card-detail text-xs text-slate-600 mt-0.5 leading-snug">
                 <div v-if="entry.type === 'SCHLAF'">
-                  <span v-if="entry.sleep_rating">Bewertung: <strong>{{ entry.sleep_rating }}</strong></span>
-                  <span v-if="entry.sleep_tiredness"> · Zustand: <strong>{{ entry.sleep_tiredness }}</strong></span>
+                  <span v-if="entry.sleep_rating">{{ entry.sleep_rating }}</span>
+                  <span v-if="entry.sleep_tiredness"><span v-if="entry.sleep_rating"> · </span>{{ entry.sleep_tiredness }}</span>
                   <span v-if="entry.alarm_used !== null && entry.alarm_used !== undefined"> · {{ entry.alarm_used ? 'Mit Wecker' : 'Ohne Wecker' }}</span>
-                  <span v-if="entry.wake_reasons && entry.wake_reasons.length"> · Gründe: <strong>{{ entry.wake_reasons.join(', ') }}</strong></span>
+                  <span v-if="entry.wake_reasons && entry.wake_reasons.length">{{ entry.sleep_rating || entry.sleep_tiredness ? ' · ' : '' }}{{ entry.wake_reasons.join(', ') }}</span>
                 </div>
 
                 <div v-if="entry.type === 'MAHLZEIT'">
-                  <span v-if="entry.food_quantities && Object.keys(entry.food_quantities).length">
-                    <strong>{{ describeFoods(entry.food_quantities) }}</strong>
-                  </span>
-                  <span v-if="entry.details"><span v-if="entry.food_quantities && Object.keys(entry.food_quantities).length"> · </span>{{ entry.details }}</span>
+                  {{ foodNamesPreview(entry) }}
                 </div>
 
                 <div v-if="entry.type === 'ADDON'">
                   <span v-if="entry.addon_quantities && Object.keys(entry.addon_quantities).length">
-                    <strong v-for="(factor, name, idx) in entry.addon_quantities" :key="name">
+                    <span v-for="(factor, name, idx) in entry.addon_quantities" :key="name">
                       {{ name }} ({{ formatFactor(factor) }}x)<span v-if="idx < Object.keys(entry.addon_quantities).length - 1">, </span>
-                    </strong>
+                    </span>
                   </span>
                   <span v-else>
-                    {{ entry.selected_addons ? entry.selected_addons.join(', ') : entry.addon_name }} — <strong>Faktor: {{ entry.addon_factor }}x</strong>
+                    {{ entry.selected_addons ? entry.selected_addons.join(', ') : entry.addon_name }} — Faktor: {{ entry.addon_factor }}x
                   </span>
                 </div>
 
                 <div v-if="entry.type === 'BODYSOUL'">
-                  <span v-if="entry.body_symptoms && entry.body_symptoms.length">Body: <strong>{{ entry.body_symptoms.join(', ') }}</strong></span>
-                  <span v-if="entry.body_symptoms && entry.body_symptoms.length && entry.soul_symptoms && entry.soul_symptoms.length"> · </span>
-                  <span v-if="entry.soul_symptoms && entry.soul_symptoms.length">Soul: <strong>{{ entry.soul_symptoms.join(', ') }}</strong></span>
+                  {{ protocolBodySoul(entry) }}
                 </div>
 
                 <div v-if="entry.type === 'BEWEGUNG'">
-                  <span v-if="entry.activity_duration">Dauer: <strong>{{ entry.activity_duration }} Min.</strong></span>
-                  <span v-if="entry.activity_distance"> · <strong>{{ entry.activity_distance }} km</strong></span>
+                  <span v-if="entry.activity_duration">{{ entry.activity_duration }} Min.</span>
+                  <span v-if="entry.activity_distance"> · {{ entry.activity_distance }} km</span>
                   <span v-if="entry.activity_intensity"> · Intensität: <strong>{{ entry.activity_intensity }}</strong></span>
                 </div>
 
@@ -143,10 +172,17 @@
             </div>
 
             <div class="flex gap-1">
-              <button @click="editEntry(entry)" class="text-indigo-600 hover:text-indigo-800 text-xs px-1.5 py-1 font-semibold">Edit</button>
-              <button @click="deleteEntry(entry.id)" class="text-rose-400 hover:text-rose-600 text-xs px-1.5 py-1">Löschen</button>
+              <button @click="editEntry(entry)" class="text-slate-400 hover:text-slate-600 p-1.5" aria-label="Eintrag bearbeiten">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 16.8V20h3.2L17 10.2 13.8 7 4 16.8zM19.7 7.5a1 1 0 0 0 0-1.4l-1.8-1.8a1 1 0 0 0-1.4 0l-1.4 1.4 3.2 3.2 1.4-1.3z"/></svg>
+              </button>
+              <button @click="deleteEntry(entry.id)" class="text-slate-400 hover:text-slate-600 p-1.5" aria-label="Eintrag löschen">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 8h10l-.8 12H7.8L7 8zm3-4h4l1 2h4v2H5V6h4l1-2z"/></svg>
+              </button>
             </div>
           </div>
+          <button v-if="day.missingNightEnd" @click="addMissingNightEnd()" class="w-full px-2.5 py-2 border border-dashed border-amber-300 bg-amber-50 text-left text-xs text-amber-800 hover:bg-amber-100">
+            <strong>Nachtruhe Ende fehlt</strong> · antippen zum Nachtragen
+          </button>
         </div>
       </div>
     </section>
@@ -166,12 +202,20 @@
         </p>
         <div class="flex gap-2 pt-1">
           <button @click="exportJsonBackup" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> Backup exportieren
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> JSON sichern
           </button>
           <label class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5 cursor-pointer">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21V9.8l-4.6 4.6L6 13l7-7 7 7-1.4 1.4L14 9.8V21h-2zM4 3h16v2H4V3z"/></svg> Backup einspielen
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21V9.8l-4.6 4.6L6 13l7-7 7 7-1.4 1.4L14 9.8V21h-2zM4 3h16v2H4V3z"/></svg> JSON einspielen
             <input type="file" accept=".json" @change="importJsonBackup" class="hidden">
           </label>
+        </div>
+        <div class="flex gap-2">
+          <button @click="exportCsvAktuell" class="flex-1 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> CSV aktueller Zeitraum
+          </button>
+          <button @click="exportCsvHistorie" class="flex-1 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> CSV gesamte Historie
+          </button>
         </div>
       </div>
 
@@ -185,7 +229,7 @@
         <div class="flex flex-wrap gap-1.5 pt-1">
           <span v-for="item in config.addons" :key="item" class="inline-flex items-center gap-1.5 bg-white border px-2.5 py-1 rounded-lg text-xs font-medium">
             {{ item }}
-            <button @click="removeSettingItem('addons', item)" class="text-rose-500 hover:text-rose-700 font-bold ml-1">×</button>
+            <button @click="removeSettingItem('addons', item)" class="text-rose-400 hover:text-rose-500 font-bold ml-1">×</button>
           </span>
         </div>
       </div>
@@ -200,29 +244,21 @@
         <div class="flex flex-wrap gap-1.5 pt-1">
           <span v-for="item in config.activities" :key="item" class="inline-flex items-center gap-1.5 bg-white border px-2.5 py-1 rounded-lg text-xs font-medium">
             {{ item }}
-            <button @click="removeSettingItem('activities', item)" class="text-rose-500 hover:text-rose-700 font-bold ml-1">×</button>
+            <button @click="removeSettingItem('activities', item)" class="text-rose-400 hover:text-rose-500 font-bold ml-1">×</button>
           </span>
         </div>
       </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="pt-3 border-t border-slate-200 text-center space-y-2.5">
-      <div class="flex gap-2">
-        <button @click="exportCsvAktuell" class="flex-1 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> Aktuelle CSV
-        </button>
-        <button @click="exportCsvHistorie" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> Historie (Datum)
-        </button>
-      </div>
-    </footer>
 
     <!-- MODAL -->
     <div v-if="activeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
       <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto border">
-        <h3 class="text-base font-bold text-slate-800 border-b pb-2">
-          {{ editingId ? 'Eintrag bearbeiten' : (activeModal === 'BODYSOUL' ? 'Body & Soul' : activeModal) }}
+        <h3 class="flex items-center gap-2 text-base font-bold text-slate-800 border-b pb-2">
+          <span>{{ editingId ? 'Eintrag bearbeiten' : (activeModal === 'BODYSOUL' ? 'Body & Soul' : activeModal) }}</span>
+          <span v-if="activeModal === 'MAHLZEIT'" class="ml-auto text-[11px] font-medium text-slate-500 tabular-nums text-right">
+            {{ displayMacro(mealMacros.kcal, 0) }} kcal · KH {{ displayMacro(mealMacros.kh) }} g · Protein {{ displayMacro(mealMacros.protein) }} g · Fett {{ displayMacro(mealMacros.fett) }} g
+          </span>
         </h3>
         
         <div class="space-y-3.5">
@@ -241,20 +277,31 @@
           <!-- SCHLAF MASK -->
           <template v-if="activeModal === 'SCHLAF'">
             <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Ereignis</label>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Eintrag</label>
               <div class="grid grid-cols-3 gap-1.5">
-                <button v-for="sub in ['Einschlafen', 'Aufstehen', 'In der Nacht aufgewacht']" :key="sub" @click="form.subtype = sub"
-                  :class="form.subtype === sub ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="py-2 px-1 rounded-lg text-[11px] font-semibold border border-slate-200 text-center leading-tight">
-                  {{ sub }}
+                <button v-for="kind in ['Nachtruhe', 'Nickerchen', 'Aufgewacht']" :key="kind" @click="form.sleep_kind = kind; form.sleep_action = kind === 'Aufgewacht' ? 'Wach' : 'Start'"
+                  :class="form.sleep_kind === kind ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
+                  class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
+                  {{ kind }}
                 </button>
               </div>
             </div>
 
-            <div v-if="form.subtype === 'Einschlafen'">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Zustand</label>
+            <div v-if="form.sleep_kind !== 'Aufgewacht'">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Zeitpunkt</label>
               <div class="grid grid-cols-2 gap-1.5">
-                <button v-for="m in ['sehr müde', 'aufgekratzt', 'feini', 'unruhig']" :key="m" @click="form.sleep_tiredness = (form.sleep_tiredness === m ? '' : m)"
+                <button v-for="action in ['Start', 'Ende']" :key="action" @click="form.sleep_action = action"
+                  :class="form.sleep_action === action ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
+                  class="py-2 px-1 rounded-lg text-xs font-semibold border border-slate-200 text-center">
+                  {{ action }}
+                </button>
+              </div>
+            </div>
+
+            <div v-if="form.sleep_action === 'Start'">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Gefühl</label>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button v-for="m in ['bissi unruhig', 'sehr sehr müde', 'einfach bissi fertig', 'eigentlich nicht müde', 'feini']" :key="m" @click="form.sleep_tiredness = (form.sleep_tiredness === m ? '' : m)"
                   :class="form.sleep_tiredness === m ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
                   class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
                   {{ m }}
@@ -262,7 +309,7 @@
               </div>
             </div>
 
-            <div v-if="form.subtype === 'Aufstehen'" class="space-y-3">
+            <div v-if="form.sleep_action === 'Ende'" class="space-y-3">
               <div>
                 <label class="block text-xs font-medium text-slate-500 mb-1">Bewertung</label>
                 <div class="grid grid-cols-5 gap-1">
@@ -282,8 +329,8 @@
               </div>
             </div>
 
-            <div v-if="form.subtype === 'In der Nacht aufgewacht'">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Grund (Mehrfachauswahl)</label>
+            <div v-if="form.sleep_kind === 'Aufgewacht'">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Anmerkungen (Mehrfachauswahl)</label>
               <div class="flex flex-wrap gap-2">
                 <button v-for="reason in ['WC', 'Essen', 'Rauchen']" :key="reason" @click="toggleWakeReason(reason)"
                   :class="form.wake_reasons.includes(reason) ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
@@ -296,24 +343,20 @@
 
           <!-- MAHLZEIT MASK -->
           <template v-if="activeModal === 'MAHLZEIT'">
-            <div>
-              <label class="block text-xs font-medium text-slate-500 mb-1">Mahlzeittyp</label>
-              <div class="grid grid-cols-2 gap-1.5">
-                <button v-for="mType in ['Frühstück', 'Mittagessen', 'Abendessen', 'Snack']" :key="mType" @click="form.subtype = (form.subtype === mType ? '' : mType)"
-                  :class="form.subtype === mType ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="py-2.5 px-2 rounded-lg text-xs font-semibold border border-slate-200 text-center">
-                  {{ mType }}
-                </button>
-              </div>
-            </div>
-
             <div class="pt-1">
               <label class="block text-xs font-medium text-slate-500 mb-1">Lebensmittel</label>
-              <div class="flex flex-wrap gap-1.5">
-                <button v-for="food in config.foods" :key="food.name" @click="toggleFood(food)"
-                  :class="form.selected_foods.includes(food.name) ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-700 border-slate-200'"
-                  class="px-3 py-2 rounded-lg text-xs font-semibold border transition">
-                  {{ food.name }}
+              <div class="flex flex-wrap gap-1">
+                <button v-for="group in foodGroups" :key="group.name" @click="group.variants.length > 1 ? toggleFoodGroup(group.name) : toggleFood(group.variants[0])"
+                  :class="hasSelectedFoodGroup(group) ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200'"
+                  class="px-2 py-1 text-[11px] font-semibold border transition">
+                  {{ group.name }}<span v-if="group.variants.length > 1" class="ml-1 opacity-60">{{ form.open_food_group === group.name ? '−' : '+' }}</span>
+                </button>
+              </div>
+              <div v-for="group in foodGroups.filter(g => g.variants.length > 1 && form.open_food_group === g.name)" :key="`${group.name}-varianten`" class="mt-1.5 flex flex-wrap gap-1 border-l-2 border-slate-300 pl-2">
+                <button v-for="food in group.variants" :key="food.name" @click="toggleFood(food)"
+                  :class="form.selected_foods.includes(food.name) ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 text-slate-700 border-slate-200'"
+                  class="px-2 py-1 text-[11px] font-semibold border transition">
+                  {{ food.variant }}
                 </button>
               </div>
             </div>
@@ -338,6 +381,9 @@
                     class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">
                     {{ portion.label }}
                   </button>
+                  <button @click="toggleFood(food)" class="px-1.5 py-1 text-[10px] font-bold text-rose-500 hover:text-rose-700" aria-label="Lebensmittel entfernen">
+                    ×
+                  </button>
                 </div>
               </div>
             </div>
@@ -345,6 +391,7 @@
             <div class="pt-1">
               <label class="block text-xs font-medium text-slate-500 mb-1">Weitere Lebensmittel &amp; Mengen (frei)</label>
               <textarea v-model="form.details" placeholder="z. B. Butterkäse 40 g, Salami 30 g, Gurke" class="w-full p-2 border rounded-lg text-sm bg-slate-50 text-slate-800 h-20"></textarea>
+              <p v-if="form.details.trim()" class="text-[11px] text-amber-700 mt-1">Freitext ist gespeichert, aber noch nicht in den Makros enthalten.</p>
             </div>
           </template>
 
@@ -479,21 +526,25 @@
 
     const { createApp } = Vue;
 
+    // Makros gelten jeweils für die Basisportion (bei Faktor 1). Die Werte
+    // stammen aus LM.xlsx; dort bleibt die Liste für spätere Anpassungen lesbar.
+    const macroFood = (name, category, base, macros, portions) => ({ name, category, base, macros, portions });
+
     createApp({
       data() {
         return {
-          appVersion: 'v013',
+          appVersion: 'v015',
           // Startseiten-Buttons: Farbe und Symbol stehen NUR hier.
           // Farbe = Tailwind-Klasse (z. B. text-blue-500, text-red-600, text-[#ff8800]).
           dashboardButtons: [
             { type: 'SCHLAF', label: 'Schlaf', color: 'text-blue-500',
               icon: '<path d="M21.2 13.2A9.2 9.2 0 1 1 10.8 2.8a7.2 7.2 0 0 0 10.4 10.4z"/>' },
-            { type: 'MAHLZEIT', label: 'Mahlzeit', color: 'text-red-500',
-              icon: '<path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7z"/><path d="M16 6v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>' },
+            { type: 'MAHLZEIT', label: 'Mahlzeit', color: 'text-red-400',
+              icon: '<path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/>' },
             { type: 'ADDON', label: 'AddOns', color: 'text-yellow-400',
               icon: '<path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7V3z"/>' },
             { type: 'BODYSOUL', label: 'Body & Soul', color: 'text-purple-500',
-              icon: '<path d="M12 4c1.8 2.5 2.8 5 2.8 7.2 0 1.8-1.2 3.4-2.8 4.6-1.6-1.2-2.8-2.8-2.8-4.6C9.2 9 10.2 6.5 12 4z"/><path d="M16.5 7.8c.9 2.4.8 4.6 0 6.4-.7 1.6-2.1 2.8-3.8 3.4-.3-2 0-4 .9-5.7.8-1.6 1.8-3 2.9-4.1z"/><path d="M7.5 7.8c-.9 2.4-.8 4.6 0 6.4.7 1.6 2.1 2.8 3.8 3.4.3-2 0-4-.9-5.7-.8-1.6-1.8-3-2.9-4.1z"/><path d="M21 12.5c-.4 2.5-1.8 4.5-3.8 5.8-1.6 1-3.4 1.5-5.2 1.5 1-1.8 2.4-3.3 4.2-4.5 1.5-1 3.1-2 4.8-2.8z"/><path d="M3 12.5c.4 2.5 1.8 4.5 3.8 5.8 1.6 1 3.4 1.5 5.2 1.5-1-1.8-2.4-3.3-4.2-4.5-1.5-1-3.1-2-4.8-2.8z"/>' },
+              icon: '<path d="M12 20.5S3 15.2 3 8.8C3 5.8 5.3 4 8 4c1.8 0 3.4 1 4 2.5C12.6 5 14.2 4 16 4c2.7 0 5 1.8 5 4.8 0 6.4-9 11.7-9 11.7z"/>' },
             { type: 'BEWEGUNG', label: 'Bewegung', color: 'text-green-500',
               icon: '<circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/>' },
             { type: 'ZYKLUS', label: 'Zyklus', color: 'text-pink-400',
@@ -501,6 +552,7 @@
           ],
           viewMode: 'dashboard',
           protocolFilter: 'ALLE',
+          protocolSelected: [],
           quickNote: '',
           quickNoteSaved: false,
           activeModal: null,
@@ -531,9 +583,11 @@
               'Mir ist kalt',
               'Müde',
               'Müde extrem',
+              'total k.o.',
               'Puffy Eyes',
               'Puls',
               'Tinnitus gefühlt laut'
+              , 'sehr durstig'
             ],
             soulSymptoms: [
               'Ausgeglichen',
@@ -543,6 +597,7 @@
               'Leer',
               'On fire',
               'Weinerlich'
+              , 'einfach fertig', 'feiniiii', 'verärgert', 'ängstlich', 'angespannt', 'irgendwie unzufrieden'
             ],
             activities: ['Spaziergang', 'Radfahren', 'Training', 'Yoga', 'Meditation', 'Dehnen'],
             addonGroupOrder: ['Sups', 'Meds', 'Beauty', 'Sonstiges'],
@@ -562,25 +617,43 @@
               'Retinal A-Game10': 'Beauty',
               'EnzymPeel': 'Beauty'
             },
-            // Reihenfolge = Reihenfolge der Buttons. Basisportion = Faktor 1.
-            // Makros spaeter je Basisportion erganzen (z. B. macros: { kcal: 0, kh: 0, eiweiss: 0, fett: 0 })
             foods: [
-              { name: 'Kaffee', base: '200 ml',
-                portions: [{ label: '200 ml', f: 1 }, { label: '80 ml', f: 0.4 }] },
-              { name: 'Zucker', base: '5 g (1 TL)',
-                portions: [{ label: '2,5 g', f: 0.5 }, { label: '5 g', f: 1 }, { label: '10 g', f: 2 }] },
-              { name: 'Milch', base: '50 ml',
-                portions: [{ label: '25 ml', f: 0.5 }, { label: '50 ml', f: 1 }, { label: '100 ml', f: 2 }] },
-              { name: 'Buttermilch', base: '500 ml',
-                portions: [{ label: '165 ml', f: 0.33 }, { label: '250 ml', f: 0.5 }, { label: '500 ml', f: 1 }] },
-              { name: 'Banane', base: '1 Stück',
-                portions: [{ label: '½ Stück', f: 0.5 }, { label: '1 Stück', f: 1 }] },
-              { name: 'Nüsse', base: '1 Stück',
-                portions: [{ label: '3 Stück', f: 3 }, { label: '5 Stück', f: 5 }, { label: '10 Stück', f: 10 }] },
-              { name: 'Mischbrot', base: '1 Scheibe',
-                portions: [{ label: '½ Scheibe', f: 0.5 }, { label: '1 Scheibe', f: 1 }, { label: '2 Scheiben', f: 2 }] },
-              { name: 'Vollkornbrot', base: '1 Scheibe',
-                portions: [{ label: '½ Scheibe', f: 0.5 }, { label: '1 Scheibe', f: 1 }, { label: '2 Scheiben', f: 2 }] }
+              macroFood('Kaffee', 'Getränke', '200 ml', { kcal: 4, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 }, [{ label: '80 ml', f: 0.4 }, { label: '200 ml', f: 1 }]),
+              macroFood('Milch', 'Getränke', '50 ml', { kcal: 32, kh: 2.4, protein: 1.65, fett: 1.8, ballaststoffe: 0 }, [{ label: '25 ml', f: 0.5 }, { label: '50 ml', f: 1 }, { label: '100 ml', f: 2 }]),
+              macroFood('Buttermilch', 'Getränke', '500 ml', { kcal: 185, kh: 20, protein: 17, fett: 3, ballaststoffe: 0 }, [{ label: '165 ml', f: 0.33 }, { label: '250 ml', f: 0.5 }, { label: '500 ml', f: 1 }]),
+              macroFood('Shake · 12k vegan', 'Getränke', '30 g', { kcal: 119.7, kh: 1.44, protein: 24, fett: 1.74, ballaststoffe: 1.05 }, [{ label: '½', f: 0.5 }, { label: '30 g', f: 1 }, { label: '2×', f: 2 }]),
+              macroFood('Shake · Vanilla vegan', 'Getränke', '30 g', { kcal: 123.9, kh: 0.78, protein: 24.6, fett: 2.34, ballaststoffe: 0.6 }, [{ label: '½', f: 0.5 }, { label: '30 g', f: 1 }, { label: '2×', f: 2 }]),
+              macroFood('Zucker', 'Süßes', '5 g', { kcal: 19.35, kh: 5, protein: 0, fett: 0, ballaststoffe: 0 }, [{ label: '2,5 g', f: 0.5 }, { label: '5 g', f: 1 }, { label: '10 g', f: 2 }]),
+              macroFood('Cottage Cheese', 'Milchprodukte', '100 g', { kcal: 98, kh: 2.7, protein: 11, fett: 4.3, ballaststoffe: 0 }, [{ label: '50 g', f: 0.5 }, { label: '100 g', f: 1 }, { label: '200 g', f: 2 }]),
+              macroFood('Frischkäse', 'Milchprodukte', '100 g', { kcal: 290, kh: 3, protein: 6, fett: 28, ballaststoffe: 0 }, [{ label: '50 g', f: 0.5 }, { label: '100 g', f: 1 }, { label: '200 g', f: 2 }]),
+              macroFood('Gouda · dünnes Blatt', 'Milchprodukte', '15 g', { kcal: 52.5, kh: 0, protein: 3.45, fett: 4.35, ballaststoffe: 0 }, [0.5, 1, 2, 3, 4].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Gouda · dickes Blatt', 'Milchprodukte', '30 g', { kcal: 105, kh: 0, protein: 6.9, fett: 8.7, ballaststoffe: 0 }, [0.5, 1, 2, 3, 4].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Mischbrot', 'Brot', '1 Scheibe', { kcal: 110, kh: 20.5, protein: 3, fett: 0.75, ballaststoffe: 3 }, [{ label: '½', f: 0.5 }, { label: '1 Scheibe', f: 1 }, { label: '2', f: 2 }]),
+              macroFood('Vollkornbrot', 'Brot', '1 Scheibe', { kcal: 100, kh: 19.5, protein: 3.5, fett: 1, ballaststoffe: 4 }, [{ label: '½', f: 0.5 }, { label: '1 Scheibe', f: 1 }, { label: '2', f: 2 }]),
+              macroFood('Schinken · dünnes Blatt', 'Fleisch & Fisch', '10 g', { kcal: 10.5, kh: 0.1, protein: 1.9, fett: 0.3, ballaststoffe: 0 }, [0.5, 1, 2, 3, 4].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Schinken · dickes Blatt', 'Fleisch & Fisch', '20 g', { kcal: 21, kh: 0.2, protein: 3.8, fett: 0.6, ballaststoffe: 0 }, [0.5, 1, 2, 3, 4].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Thunfisch · im Saft', 'Fleisch & Fisch', '1 Dose', { kcal: 154, kh: 0, protein: 35, fett: 1.4, ballaststoffe: 0 }, [0.25, 0.5, 1, 2].map(f => ({ label: `${String(f).replace('.', ',')} Dose`, f })) ),
+              macroFood('Thunfisch · in Öl', 'Fleisch & Fisch', '1 Dose', { kcal: 266, kh: 0, protein: 33.6, fett: 14, ballaststoffe: 0 }, [0.25, 0.5, 1, 2].map(f => ({ label: `${String(f).replace('.', ',')} Dose`, f })) ),
+              macroFood('Ei', 'Fleisch & Fisch', '1 Ei', { kcal: 93, kh: 0.6, protein: 7.8, fett: 6.6, ballaststoffe: 0 }, [0.5, 1, 2, 3, 4].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Gurke', 'Gemüse', '10 cm', { kcal: 18, kh: 3, protein: 0.9, fett: 0.3, ballaststoffe: 0.7 }, [5, 10, 15, 20].map(f => ({ label: `${f} cm`, f: f / 10 })) ),
+              macroFood('Tomate · Kirsche', 'Gemüse', '1 Stück', { kcal: 2.7, kh: 0.39, protein: 0.15, fett: 0.03, ballaststoffe: 0.18 }, [0.5, 1, 2, 3].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Tomate · Ei', 'Gemüse', '1 Stück', { kcal: 9, kh: 1.3, protein: 0.5, fett: 0.1, ballaststoffe: 0.6 }, [0.5, 1, 2, 3].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Tomate · normal', 'Gemüse', '1 Stück', { kcal: 18, kh: 2.6, protein: 1, fett: 0.2, ballaststoffe: 1.2 }, [0.5, 1, 2, 3].map(f => ({ label: `${String(f).replace('.', ',')}×`, f })) ),
+              macroFood('Essiggurkerl', 'Gemüse', '1 Stück', { kcal: 3.75, kh: 0.5, protein: 0.25, fett: 0.025, ballaststoffe: 0.25 }, [1, 2, 3, 4, 5, 6].map(f => ({ label: `${f}`, f })) ),
+              macroFood('Zwiebel · klein', 'Gemüse', '1 Stück', { kcal: 16.8, kh: 2.94, protein: 0.72, fett: 0.12, ballaststoffe: 0.9 }, [{ label: '½', f: 0.5 }, { label: '1', f: 1 }]),
+              macroFood('Zwiebel · normal', 'Gemüse', '1 Stück', { kcal: 28, kh: 4.9, protein: 1.2, fett: 0.2, ballaststoffe: 1.5 }, [{ label: '½', f: 0.5 }, { label: '1', f: 1 }]),
+              macroFood('Zwiebel · groß', 'Gemüse', '1 Stück', { kcal: 44.8, kh: 7.84, protein: 1.92, fett: 0.32, ballaststoffe: 2.4 }, [{ label: '½', f: 0.5 }, { label: '1', f: 1 }]),
+              macroFood('Bohnen Dose', 'Hülsenfrüchte', '1 Dose', { kcal: 252, kh: 33.6, protein: 19.2, fett: 1.2, ballaststoffe: 14.4 }, [{ label: '½ Dose', f: 0.5 }, { label: '1 Dose', f: 1 }, { label: '2 Dosen', f: 2 }]),
+              macroFood('Kartoffel · klein', 'Beilagen', '1 Stück', { kcal: 58.4, kh: 12, protein: 1.6, fett: 0.08, ballaststoffe: 1.68 }, [1, 2, 3, 4, 5].map(f => ({ label: `${f}`, f })) ),
+              macroFood('Kartoffel · normal', 'Beilagen', '1 Stück', { kcal: 109.5, kh: 22.5, protein: 3, fett: 0.15, ballaststoffe: 3.15 }, [1, 2, 3, 4, 5].map(f => ({ label: `${f}`, f })) ),
+              macroFood('Kartoffel · groß', 'Beilagen', '1 Stück', { kcal: 182.5, kh: 37.5, protein: 5, fett: 0.25, ballaststoffe: 5.25 }, [1, 2, 3, 4, 5].map(f => ({ label: `${f}`, f })) ),
+              macroFood('Vollkornnudeln', 'Beilagen', '80 g roh', { kcal: 278.4, kh: 52, protein: 11.2, fett: 1.6, ballaststoffe: 6 }, [{ label: '½', f: 0.5 }, { label: '80 g', f: 1 }, { label: '2×', f: 2 }]),
+              macroFood('Nudeln', 'Beilagen', '80 g roh', { kcal: 287.2, kh: 58.4, protein: 10.4, fett: 1.2, ballaststoffe: 2.4 }, [{ label: '½', f: 0.5 }, { label: '80 g', f: 1 }, { label: '2×', f: 2 }]),
+              macroFood('Banane', 'Obst & Nüsse', '1 Stück', { kcal: 106.8, kh: 24, protein: 1.2, fett: 0.36, ballaststoffe: 3.12 }, [{ label: '½', f: 0.5 }, { label: '1', f: 1 }]),
+              macroFood('Nüsse', 'Obst & Nüsse', '10 Stk.', { kcal: 195, kh: 4.2, protein: 4.5, fett: 18, ballaststoffe: 2.1 }, [1, 3, 5, 7, 10].map(f => ({ label: `${f} Stk.`, f: f / 10 })) ),
+              macroFood('Butter', 'Fette & Würzen', '10 g', { kcal: 71.7, kh: 0.06, protein: 0.08, fett: 8.1, ballaststoffe: 0 }, [{ label: '5 g', f: 0.5 }, { label: '10 g', f: 1 }, { label: '20 g', f: 2 }, { label: '30 g', f: 3 }]),
+              macroFood('Öl', 'Fette & Würzen', '1 EL', { kcal: 82.8, kh: 0, protein: 0, fett: 9.2, ballaststoffe: 0 }, [1, 2, 3, 4, 5].map(f => ({ label: `${f} EL`, f })) ),
+              macroFood('Essig', 'Fette & Würzen', '1 EL', { kcal: 10, kh: 2, protein: 0.01, fett: 0, ballaststoffe: 0 }, [1, 2, 3, 4, 5].map(f => ({ label: `${f} EL`, f })) )
             ],
             foodCombos: [
               { name: 'Kaffee mit Zucker & Milch', items: { 'Kaffee': 1, 'Zucker': 1, 'Milch': 1 } }
@@ -596,6 +669,8 @@
             details: '',
             note: '',
             sleep_tiredness: '',
+            sleep_kind: 'Nachtruhe',
+            sleep_action: 'Start',
             sleep_rating: '',
             alarm_used: null,
             wake_reasons: [],
@@ -603,6 +678,7 @@
             addon_quantities: {},
             selected_foods: [],
             food_quantities: {},
+            open_food_group: '',
             body_symptoms: [],
             soul_symptoms: [],
             activity_duration: '',
@@ -635,24 +711,60 @@
           return list;
         },
         groupedEntries() {
-          const filtered = this.protocolFilter === 'ALLE'
+          const filtered = this.protocolSelected.length === 0
             ? this.entries
-            : this.entries.filter(e => e.type === this.protocolFilter);
-          const sorted = [...filtered].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-          const days = [];
-          let current = null;
-          sorted.forEach(entry => {
-            const key = this.toLocalDateString(new Date(entry.timestamp));
-            if (!current || current.key !== key) {
-              current = { key: key, label: this.dayLabel(entry.timestamp), items: [] };
-              days.push(current);
-            }
-            current.items.push(entry);
-          });
-          return days;
+            : this.entries.filter(e => this.protocolSelected.includes(e.type));
+
+          return this.groupEntriesByNightEnd(filtered);
+        },
+        currentDayMovementMinutes() {
+          const lastNightEnd = this.entries
+            .filter(e => e.type === 'SCHLAF' && this.sleepKindFor(e) === 'Nachtruhe' && this.sleepActionFor(e) === 'Ende')
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+          const start = lastNightEnd ? new Date(lastNightEnd.timestamp) : new Date(new Date().setHours(0, 0, 0, 0));
+          return this.entries
+            .filter(e => e.type === 'BEWEGUNG')
+            .filter(e => new Date(e.timestamp) >= start)
+            .reduce((total, e) => total + (Number(e.activity_duration) || 0), 0);
+        },
+        currentDayMovementText() {
+          const roundedQuarterHours = Math.round((this.currentDayMovementMinutes / 60) * 4) / 4;
+          const wholeHours = Math.floor(roundedQuarterHours);
+          const quarter = Math.round((roundedQuarterHours - wholeHours) * 4);
+          const fractions = ['0', '25', '50', '75'];
+          return `Bewegung ${wholeHours},${fractions[quarter]}h`;
         },
         selectedFoodList() {
           return this.config.foods.filter(f => this.form.selected_foods.includes(f.name));
+        },
+        foodGroups() {
+          const groups = [];
+          this.config.foods.forEach(food => {
+            const [name, variant] = food.name.split(' · ');
+            let group = groups.find(item => item.name === name);
+            if (!group) {
+              group = { name, variants: [] };
+              groups.push(group);
+            }
+            group.variants.push({ ...food, variant: variant || food.name });
+          });
+          return groups;
+        },
+        mealMacros() {
+          return this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities);
+        },
+        todayKcal() {
+          const lastNightEnd = this.entries
+            .filter(e => e.type === 'SCHLAF' && this.sleepKindFor(e) === 'Nachtruhe' && this.sleepActionFor(e) === 'Ende')
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+          const start = lastNightEnd ? new Date(lastNightEnd.timestamp) : new Date(new Date().setHours(0, 0, 0, 0));
+
+          return this.entries
+            .filter(e => e.type === 'MAHLZEIT' && new Date(e.timestamp) >= start)
+            .reduce((sum, e) => {
+              const macros = e.meal_macros || this.calculateFoodMacros(e.selected_foods || [], e.food_quantities || {});
+              return sum + (Number(macros.kcal) || 0);
+            }, 0);
         },
         bodySymptomsList() {
           return [...this.config.bodySymptoms].sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }));
@@ -693,6 +805,18 @@
         await this.loadEntries();
       },
       methods: {
+        isProtocolFilterActive(value) {
+          return value === 'ALLE' ? this.protocolSelected.length === 0 : this.protocolSelected.includes(value);
+        },
+        toggleProtocolFilter(value) {
+          if (value === 'ALLE') {
+            this.protocolSelected = [];
+            return;
+          }
+          const index = this.protocolSelected.indexOf(value);
+          if (index >= 0) this.protocolSelected.splice(index, 1);
+          else this.protocolSelected.push(value);
+        },
         async saveQuickNote() {
           const text = this.quickNote.trim();
           if (!text) return;
@@ -709,6 +833,8 @@
               updated_at: nowIso,
               is_deleted: 0,
               sleep_tiredness: '',
+              sleep_kind: '',
+              sleep_action: '',
               sleep_rating: '',
               alarm_used: null,
               wake_reasons: [],
@@ -734,6 +860,20 @@
         findFood(name) {
           return this.config.foods.find(f => f.name === name) || null;
         },
+        calculateFoodMacros(selectedFoods, quantities) {
+          const total = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
+          (selectedFoods || []).forEach(name => {
+            const food = this.findFood(name);
+            const factor = quantities && quantities[name] !== undefined ? Number(quantities[name]) : 1;
+            if (!food || !food.macros || !Number.isFinite(factor)) return;
+            Object.keys(total).forEach(key => { total[key] += (Number(food.macros[key]) || 0) * factor; });
+          });
+          return total;
+        },
+        displayMacro(value, digits = 1) {
+          const options = { minimumFractionDigits: 0, maximumFractionDigits: digits };
+          return new Intl.NumberFormat('de-AT', options).format(Number(value) || 0);
+        },
         portionLabel(name, factor) {
           const food = this.findFood(name);
           if (food) {
@@ -749,6 +889,73 @@
             .map(name => name + ' (' + this.portionLabel(name, quantities[name]) + ')')
             .join(', ');
         },
+        foodNamesPreview(entry) {
+          const names = entry.selected_foods || Object.keys(entry.food_quantities || {});
+          if (!names.length) return entry.details || 'Mahlzeit';
+          const preview = names.slice(0, 4).join(', ');
+          return names.length > 4 ? `${preview}, …` : preview;
+        },
+        entryKcal(entry) {
+          const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {});
+          return this.displayMacro(macros.kcal, 0);
+        },
+        protocolBodySoul(entry) {
+          return [...(entry.body_symptoms || []), ...(entry.soul_symptoms || [])].join(', ');
+        },
+        formatDuration(minutes) {
+          const safeMinutes = Math.max(0, Math.round(Number(minutes) || 0));
+          const hours = Math.floor(safeMinutes / 60);
+          const rest = safeMinutes % 60;
+          return hours ? `${hours} Std. ${String(rest).padStart(2, '0')} Min.` : `${rest} Min.`;
+        },
+        formatDurationClock(minutes) {
+          const safeMinutes = Math.max(0, Math.round(Number(minutes) || 0));
+          return `${String(Math.floor(safeMinutes / 60)).padStart(2, '0')}:${String(safeMinutes % 60).padStart(2, '0')}`;
+        },
+        formatDurationShort(minutes) {
+          const safeMinutes = Math.max(0, Math.round(Number(minutes) || 0));
+          const hours = Math.floor(safeMinutes / 60);
+          const rest = safeMinutes % 60;
+          return hours ? `${hours}h ${rest}min` : `${rest}min`;
+        },
+        logicalDayLabel(anchor, index) {
+          if (index === 0) return 'HEUTE';
+          const date = new Date(anchor.timestamp);
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+          if (this.toLocalDateString(date) === this.toLocalDateString(yesterday)) return 'GESTERN';
+          return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'long' });
+        },
+        sleepMinutesForDay(anchor, dayEntries) {
+          let minutes = 0;
+          if (anchor) {
+            const priorNightStart = this.entries
+              .filter(entry => new Date(entry.timestamp) < new Date(anchor.timestamp)
+                && entry.type === 'SCHLAF'
+                && this.sleepKindFor(entry) === 'Nachtruhe'
+                && this.sleepActionFor(entry) === 'Start')
+              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+            if (priorNightStart) minutes += Math.max(0, new Date(anchor.timestamp) - new Date(priorNightStart.timestamp)) / 60000;
+          }
+
+          let napStart = null;
+          [...dayEntries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).forEach(entry => {
+            if (entry.type !== 'SCHLAF' || this.sleepKindFor(entry) !== 'Nickerchen') return;
+            const action = this.sleepActionFor(entry);
+            if (action === 'Start') napStart = entry;
+            if (action === 'Ende' && napStart) {
+              minutes += Math.max(0, new Date(entry.timestamp) - new Date(napStart.timestamp)) / 60000;
+              napStart = null;
+            }
+          });
+          return minutes;
+        },
+        addMissingNightEnd() {
+          this.openModal('SCHLAF');
+          this.form.sleep_kind = 'Nachtruhe';
+          this.form.sleep_action = 'Ende';
+        },
         toggleFood(food) {
           const idx = this.form.selected_foods.indexOf(food.name);
           if (idx > -1) {
@@ -759,6 +966,12 @@
             const standard = food.portions.find(p => p.f === 1) || food.portions[0];
             this.form.food_quantities[food.name] = standard.f;
           }
+        },
+        toggleFoodGroup(name) {
+          this.form.open_food_group = this.form.open_food_group === name ? '' : name;
+        },
+        hasSelectedFoodGroup(group) {
+          return group.variants.some(food => this.form.selected_foods.includes(food.name));
         },
         setFoodPortion(food, factor) {
           if (!this.form.selected_foods.includes(food.name)) {
@@ -922,12 +1135,16 @@
             
             const rawPayload = {
               type: this.activeModal,
-              subtype: this.form.subtype || '',
+              subtype: this.activeModal === 'SCHLAF'
+                ? (this.form.sleep_kind === 'Aufgewacht' ? 'Aufgewacht' : `${this.form.sleep_kind || 'Nachtruhe'} ${this.form.sleep_action || 'Start'}`)
+                : (this.form.subtype || ''),
               details: this.form.details || '',
               note: this.form.note || '',
               timestamp: localDateObj.toISOString(),
               updated_at: nowIso,
               sleep_tiredness: this.form.sleep_tiredness || '',
+              sleep_kind: this.activeModal === 'SCHLAF' ? (this.form.sleep_kind || 'Nachtruhe') : '',
+              sleep_action: this.activeModal === 'SCHLAF' ? (this.form.sleep_action || 'Start') : '',
               sleep_rating: this.form.sleep_rating || '',
               alarm_used: this.form.alarm_used !== null ? this.form.alarm_used : null,
               wake_reasons: Array.from(this.form.wake_reasons || []),
@@ -935,6 +1152,7 @@
               addon_quantities: JSON.parse(JSON.stringify(this.form.addon_quantities || {})),
               selected_foods: Array.from(this.form.selected_foods || []),
               food_quantities: JSON.parse(JSON.stringify(this.form.food_quantities || {})),
+              meal_macros: this.activeModal === 'MAHLZEIT' ? this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities) : null,
               body_symptoms: Array.from(this.form.body_symptoms || []),
               soul_symptoms: Array.from(this.form.soul_symptoms || []),
               activity_duration: this.form.activity_duration || '',
@@ -971,6 +1189,8 @@
               details: entry.details || '',
               note: entry.note || '',
               sleep_tiredness: entry.sleep_tiredness || '',
+              sleep_kind: this.sleepActionFor(entry) === 'Wach' ? 'Aufgewacht' : this.sleepKindFor(entry),
+              sleep_action: this.sleepActionFor(entry),
               sleep_rating: entry.sleep_rating || '',
               alarm_used: entry.alarm_used !== undefined ? entry.alarm_used : null,
               wake_reasons: entry.wake_reasons ? [...entry.wake_reasons] : [],
@@ -978,6 +1198,7 @@
               addon_quantities: entry.addon_quantities ? {...entry.addon_quantities} : (entry.addon_name ? {[entry.addon_name]: entry.addon_factor || 1} : {}),
               selected_foods: entry.selected_foods ? [...entry.selected_foods] : [],
               food_quantities: entry.food_quantities ? {...entry.food_quantities} : {},
+              open_food_group: '',
               body_symptoms: entry.body_symptoms ? [...entry.body_symptoms] : (entry.symptoms ? [...entry.symptoms] : []),
               soul_symptoms: entry.soul_symptoms ? [...entry.soul_symptoms] : [],
               activity_duration: entry.activity_duration || '',
@@ -989,10 +1210,12 @@
             this.form = {
               date: this.toLocalDateString(now),
               time: this.toLocalTimeString(now),
-              subtype: type === 'SCHLAF' ? 'Einschlafen' : type === 'MAHLZEIT' ? '' : type === 'BEWEGUNG' ? '' : type === 'ZYKLUS' ? '' : '',
+              subtype: type === 'MAHLZEIT' ? '' : type === 'BEWEGUNG' ? '' : type === 'ZYKLUS' ? '' : '',
               details: '',
               note: '',
               sleep_tiredness: '',
+              sleep_kind: type === 'SCHLAF' ? 'Nachtruhe' : '',
+              sleep_action: type === 'SCHLAF' ? 'Start' : '',
               sleep_rating: '',
               alarm_used: null,
               wake_reasons: [],
@@ -1000,6 +1223,7 @@
               addon_quantities: {},
               selected_foods: [],
               food_quantities: {},
+              open_food_group: '',
               body_symptoms: [],
               soul_symptoms: [],
               activity_duration: '',
@@ -1075,6 +1299,143 @@
           this.config[key] = this.config[key].filter(i => i !== val);
           await db.settings.put({ key: key, value: [...this.config[key]] });
         },
+        openMovementProtocol() {
+          this.protocolSelected = ['BEWEGUNG'];
+          this.viewMode = 'protocol';
+        },
+        groupEntriesByNightEnd(entries) {
+          const visibleIds = new Set(entries.map(entry => entry.id));
+          // Die Grenzen kommen immer aus allen Einträgen. So bleiben sie auch
+          // bei einem Filter (z. B. nur Mahlzeiten) konsistent.
+          const chronological = [...this.entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          const groups = [];
+          let current = null;
+
+          chronological.forEach(entry => {
+            const isNightEnd = entry.type === 'SCHLAF'
+              && this.sleepKindFor(entry) === 'Nachtruhe'
+              && this.sleepActionFor(entry) === 'Ende';
+            if (isNightEnd) {
+              if (current) groups.push(current);
+              current = { anchor: entry, items: [entry] };
+            } else {
+              if (!current) current = { anchor: null, items: [] };
+              current.items.push(entry);
+            }
+          });
+          if (current) groups.push(current);
+
+          return groups.reverse().map((group, index) => {
+            const nightStart = group.items.some(entry => entry.type === 'SCHLAF'
+              && this.sleepKindFor(entry) === 'Nachtruhe'
+              && this.sleepActionFor(entry) === 'Start');
+            const kcal = group.items
+              .filter(entry => entry.type === 'MAHLZEIT')
+              .reduce((sum, entry) => {
+                const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {});
+                return sum + (Number(macros.kcal) || 0);
+              }, 0);
+            const movementMinutes = group.items
+              .filter(entry => entry.type === 'BEWEGUNG')
+              .reduce((sum, entry) => sum + (Number(entry.activity_duration) || 0), 0);
+            const sleepMinutes = this.sleepMinutesForDay(group.anchor, group.items);
+            return {
+              key: `tag-${group.anchor ? group.anchor.id : index}`,
+              label: group.anchor
+                ? this.logicalDayLabel(group.anchor, index)
+                : 'Ohne Nachtruhe Ende',
+              durationText: '',
+              kcalText: `${this.displayMacro(kcal, 0)} kcal`,
+              movementText: movementMinutes ? `${this.formatDurationShort(movementMinutes)} Bewegung` : '',
+              sleepText: sleepMinutes ? `${this.formatDurationShort(sleepMinutes)} Schlaf` : '',
+              missingNightEnd: index === 0 && nightStart,
+              items: group.items
+                .filter(entry => visibleIds.has(entry.id))
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            };
+          }).filter(group => group.items.length > 0);
+        },
+        groupSleepEntries(entries) {
+          const sorted = [...entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          const groups = [];
+          let activeSleep = null;
+
+          sorted.forEach(entry => {
+            const kind = this.sleepKindFor(entry);
+            const action = this.sleepActionFor(entry);
+
+            if (action === 'Start') {
+              if (activeSleep) groups.push(activeSleep);
+              activeSleep = { kind: kind, items: [entry] };
+              return;
+            }
+
+            if (activeSleep && (activeSleep.kind === kind || action === 'Wach' || kind === 'Aufgewacht')) {
+              activeSleep.items.push(entry);
+              if (action === 'Ende') {
+                groups.push(activeSleep);
+                activeSleep = null;
+              }
+              return;
+            }
+
+            groups.push({ items: [entry] });
+          });
+
+          if (activeSleep) groups.push(activeSleep);
+
+          return groups.reverse().map((group, index) => ({
+            key: `schlaf-${group.items[0].id || index}`,
+            label: this.sleepNightLabel(group.items, group.kind),
+            durationText: this.sleepDurationText(group.items),
+            items: group.items
+          }));
+        },
+        sleepKindFor(entry) {
+          if (entry.sleep_kind) return entry.sleep_kind;
+          if (entry.subtype === 'In der Nacht aufgewacht' || entry.subtype === 'Aufgewacht') return 'Aufgewacht';
+          return entry.subtype && entry.subtype.startsWith('Nickerchen') ? 'Nickerchen' : 'Nachtruhe';
+        },
+        sleepActionFor(entry) {
+          if (entry.sleep_action) return entry.sleep_action;
+          if (entry.subtype === 'Einschlafen') return 'Start';
+          if (entry.subtype === 'Aufstehen') return 'Ende';
+          if (entry.subtype === 'In der Nacht aufgewacht') return 'Wach';
+          if (entry.subtype && entry.subtype.endsWith(' Start')) return 'Start';
+          if (entry.subtype && entry.subtype.endsWith(' Ende')) return 'Ende';
+          if (entry.subtype && entry.subtype.endsWith(' Wach')) return 'Wach';
+          return '';
+        },
+        sleepNightLabel(items, kind) {
+          const startEntry = items.find(e => this.sleepActionFor(e) === 'Start') || items[0];
+          const endEntry = items.find(e => this.sleepActionFor(e) === 'Ende') || items[items.length - 1];
+          const start = new Date(startEntry.timestamp);
+          const end = new Date(endEntry.timestamp);
+          const startDate = this.toLocalDateString(start);
+          const endDate = this.toLocalDateString(end);
+
+          if (startDate === endDate) {
+            return `${kind} · ${start.toLocaleDateString('de-DE', { day: '2-digit', month: 'long' })}`;
+          }
+
+          const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+          if (sameMonth) {
+            return `${kind} ${start.getDate()}.–${end.getDate()}. ${end.toLocaleDateString('de-DE', { month: 'long' })}`;
+          }
+
+          return `${kind} ${start.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}–${end.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' })}`;
+        },
+        sleepDurationText(items) {
+          const asleep = items.find(e => this.sleepActionFor(e) === 'Start');
+          const awake = items.find(e => this.sleepActionFor(e) === 'Ende');
+          if (!asleep || !awake) return '';
+
+          const minutes = Math.round((new Date(awake.timestamp) - new Date(asleep.timestamp)) / 60000);
+          if (minutes <= 0) return '';
+          const hours = Math.floor(minutes / 60);
+          const remainingMinutes = minutes % 60;
+          return `${hours} Std. ${String(remainingMinutes).padStart(2, '0')} Min.`;
+        },
         typeLabel(type) {
           const labels = {
             SCHLAF: 'Schlaf', MAHLZEIT: 'Mahlzeit', ADDON: 'AddOns',
@@ -1082,13 +1443,13 @@
           };
           return labels[type] || type;
         },
-        typeBorder(type) {
+        typeCardStyle(type) {
           const colors = {
-            SCHLAF: 'border-l-blue-500', MAHLZEIT: 'border-l-red-500', ADDON: 'border-l-yellow-400',
-            BODYSOUL: 'border-l-purple-500', BEWEGUNG: 'border-l-green-500',
-            ZYKLUS: 'border-l-pink-400', NOTIZ: 'border-l-slate-400'
+            SCHLAF: 'bg-blue-50', MAHLZEIT: 'bg-rose-50', ADDON: 'bg-amber-50',
+            BODYSOUL: 'bg-white', BEWEGUNG: 'bg-green-50',
+            ZYKLUS: 'bg-white', NOTIZ: 'bg-white'
           };
-          return colors[type] || 'border-l-slate-300';
+          return colors[type] || 'bg-slate-50';
         },
         dayLabel(iso) {
           if (!iso) return '';

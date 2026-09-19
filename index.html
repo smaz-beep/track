@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Frau Sarah's Tracking v015</title>
+  <title>Frau Sarah's Tracking v016</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -60,8 +60,11 @@
     <header class="py-4 border-b border-slate-200">
       <div class="flex items-center justify-between gap-3">
         <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking <span class="text-xs font-semibold text-slate-400 align-middle">{{ appVersion }}</span></h1>
-        <button @click="viewMode = 'settings'" class="shrink-0 p-1.5 text-slate-500 hover:text-slate-800 transition" aria-label="Einstellungen">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+        <button v-if="viewMode !== 'settings'" @click="viewMode = 'settings'" class="shrink-0 p-2 text-slate-700 hover:text-slate-900 transition" aria-label="Einstellungen">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+        </button>
+        <button v-else @click="viewMode = 'dashboard'" class="shrink-0 flex items-center gap-1.5 p-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition" aria-label="Speichern und zurück zur Startseite">
+          <span>Speichern &amp; zurück</span><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 3h12l3 3v15H4V3h1zm2 2v5h9V5H7zm5 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
         </button>
       </div>
       <p class="mt-1 text-left text-xs font-medium text-slate-500 tabular-nums">
@@ -107,7 +110,7 @@
         <button v-for="f in protocolFilters" :key="f.value" @click="toggleProtocolFilter(f.value)"
           :class="isProtocolFilterActive(f.value) ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-600 border-slate-200'"
           class="protocol-filter px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition">
-          {{ f.label }}<span v-if="f.count" class="opacity-60"> {{ f.count }}</span>
+          {{ f.label }}
         </button>
       </div>
 
@@ -120,10 +123,11 @@
 
           <!-- TAGESTRENNER -->
           <div v-if="day.label" class="sticky top-0 bg-white py-1 z-10">
-            <div class="flex flex-wrap items-center gap-x-1 gap-y-0.5">
+            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-x-1 gap-y-0.5 shrink-0">
             <span class="protocol-day-title text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{{ day.label }}</span>
             <span class="text-[10px] whitespace-nowrap">
-              <span v-if="day.kcalText" class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ day.kcalText }}</span>
+              <span v-if="day.kcalText" class="inline-flex items-center gap-0.5 text-red-400"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>{{ day.kcalText }}<span v-if="day.macroCoverage > 0 && day.macroCoverage < 100" class="text-rose-500">({{ day.macroCoverage }} % erfasst)</span></span>
               <span v-if="day.movementText" class="px-1 text-slate-300">//</span>
               <span v-if="day.movementText" class="inline-flex items-center gap-0.5 text-green-600"><svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg>{{ day.movementText }}</span>
               <span v-if="day.sleepText" class="px-1 text-slate-300">//</span>
@@ -131,6 +135,7 @@
               <span v-if="!day.kcalText && !day.movementText && !day.sleepText" class="text-slate-400">{{ day.durationText || day.items.length }}</span>
             </span>
             </div>
+            <span class="h-px flex-1 bg-slate-200" aria-hidden="true"></span>
           </div>
 
           <div v-for="entry in day.items" :key="entry.id" class="px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-start" :class="typeCardStyle(entry.type)">
@@ -138,7 +143,7 @@
               <div class="protocol-card-heading text-xs leading-5">
                 <span class="text-slate-400">{{ formatTime(entry.timestamp) }}</span>
                 <span class="ml-1.5 text-slate-600">
-                  <template v-if="entry.type === 'MAHLZEIT'"><svg class="w-3 h-3 inline-block align-[-2px] text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg> {{ entryKcal(entry) }} kcal</template>
+                  <template v-if="entry.type === 'MAHLZEIT'"><svg class="w-3 h-3 inline-block align-[-2px] text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg> <span v-if="foodMacroCoverage([entry]) === 0" class="text-rose-500">Makros fehlen</span><span v-else>{{ entryKcal(entry) }} kcal <span v-if="foodMacroCoverage([entry]) < 100" class="text-rose-500">· {{ foodMacroCoverage([entry]) }} % erfasst</span></span></template>
                   <template v-else-if="entry.type === 'SCHLAF'">{{ entry.subtype || 'Schlaf' }}</template>
                   <template v-else-if="entry.type === 'BEWEGUNG'"><svg class="w-3 h-3 inline-block align-[-2px] text-green-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg> {{ entry.subtype || 'Bewegung' }}</template>
                   <template v-else-if="entry.type === 'BODYSOUL'"><span class="text-purple-500 font-normal">Body <svg class="w-3 h-3 inline-block align-[-2px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3 15.2 3 8.8C3 5.8 5.3 4 8 4c1.8 0 3.4 1 4 2.5C12.6 5 14.2 4 16 4c2.7 0 5 1.8 5 4.8 0 6.4-9 11.7-9 11.7z"/></svg> Soul</span></template>
@@ -156,7 +161,17 @@
                 </div>
 
                 <div v-if="entry.type === 'MAHLZEIT'">
-                  {{ foodNamesPreview(entry) }}
+                  {{ foodNamesPreview(entry) }} <button @click.stop="toggleProtocolMealDetails(entry.id)" class="ml-1 text-slate-400 underline">{{ protocolMealDetails[entry.id] ? 'weniger' : 'Details' }}</button>
+                  <div v-if="protocolMealDetails[entry.id]" class="mt-1 border-l-2 border-rose-200 pl-2 text-[10px] overflow-x-auto">
+                    <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pb-0.5 text-slate-400 border-b border-slate-200">
+                      <span>Lebensmittel · Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span>
+                    </div>
+                    <div v-for="row in entryFoodRows(entry)" :key="row.name" class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 py-0.5">
+                      <span class="truncate">{{ row.name }}<span v-if="row.portion"> · {{ row.portion }}</span></span>
+                      <template v-if="row.hasMacros"><span>{{ displayMacro(row.macros.kcal,0) }}</span><span>{{ displayMacro(row.macros.kh) }}</span><span>{{ displayMacro(row.macros.protein) }}</span><span>{{ displayMacro(row.macros.fett) }}</span><span>{{ displayMacro(row.macros.ballaststoffe) }}</span></template>
+                      <span v-else class="col-span-5 text-rose-500">Makros fehlen</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div v-if="entry.type === 'ADDON'">
@@ -208,9 +223,8 @@
 
     <!-- EINSTELLUNGEN ANSICHT -->
     <section v-if="viewMode === 'settings'" class="my-auto py-2 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+      <div class="border-b border-slate-200 pb-2">
         <h2 class="text-base font-bold text-slate-700">Optionen & Daten</h2>
-        <button @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Fertig</button>
       </div>
 
       <div class="flex items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -224,6 +238,28 @@
           {{ darkMode ? 'An' : 'Aus' }}
         </button>
       </div>
+
+      <details class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <summary class="cursor-pointer list-none flex items-center justify-between gap-3">
+          <div>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Lebensmittel verwalten</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Referenz-Makros inklusive Ballaststoffe</p>
+          </div>
+          <span class="text-xs text-slate-500">öffnen</span>
+        </summary>
+        <div class="mt-3 space-y-2">
+          <div v-for="food in managedFoods" :key="food.name" class="rounded-lg border border-slate-200 bg-white p-2">
+            <div class="flex items-baseline justify-between gap-2 mb-1.5"><span class="text-xs font-semibold text-slate-700">{{ food.name }}</span><span class="text-[10px] text-slate-400">pro {{ food.base }}</span></div>
+            <div class="grid grid-cols-5 gap-1">
+              <input v-model="food.macros.kcal" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="kcal" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
+              <input v-model="food.macros.kh" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="KH" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
+              <input v-model="food.macros.protein" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="P" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
+              <input v-model="food.macros.fett" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="F" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
+              <input v-model="food.macros.ballaststoffe" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Bal." class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
+            </div>
+          </div>
+        </div>
+      </details>
 
       <!-- DATEN & SICHERUNG -->
       <div class="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -288,7 +324,7 @@
         <h3 class="flex items-center gap-2 text-base font-bold text-slate-800 border-b pb-2">
           <span>{{ editingId ? 'Eintrag bearbeiten' : (activeModal === 'BODYSOUL' ? 'Body & Soul' : activeModal) }}</span>
           <span v-if="activeModal === 'MAHLZEIT'" class="ml-auto text-[11px] font-medium text-slate-500 tabular-nums text-right">
-            {{ displayMacro(mealMacros.kcal, 0) }} kcal · KH {{ displayMacro(mealMacros.kh) }} g · Protein {{ displayMacro(mealMacros.protein) }} g · Fett {{ displayMacro(mealMacros.fett) }} g
+            {{ displayMacro(mealMacros.kcal, 0) }} kcal · {{ mealMacroCoverage === 0 ? 'Makros fehlen' : mealMacroCoverage + ' % erfasst' }}
           </span>
         </h3>
         
@@ -374,6 +410,14 @@
 
           <!-- MAHLZEIT MASK -->
           <template v-if="activeModal === 'MAHLZEIT'">
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 text-[10px] text-slate-600 overflow-x-auto">
+              <div class="mb-1"><span class="text-[11px] font-semibold text-slate-600">Mahlzeit – Details</span></div>
+              <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pb-0.5 text-slate-400 border-b border-slate-200"><span>Lebensmittel · Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span></div>
+              <div v-for="food in selectedFoodList" :key="'meal-detail-'+food.name" class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 py-0.5"><span class="truncate">{{ food.name }} · {{ portionLabel(food.name, getFoodFactor(food.name)) }}</span><span>{{ displayMacro(foodMacros(food).kcal,0) }}</span><span>{{ displayMacro(foodMacros(food).kh) }}</span><span>{{ displayMacro(foodMacros(food).protein) }}</span><span>{{ displayMacro(foodMacros(food).fett) }}</span><span>{{ displayMacro(foodMacros(food).ballaststoffe) }}</span></div>
+              <div v-for="food in form.custom_foods.filter(f => f.name)" :key="'meal-detail-custom-'+food.name" class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 py-0.5"><span class="truncate">{{ food.name }} · {{ customFoodPortionLabel(food) }}</span><template v-if="hasMacroValue(food, 'kcal')"><span>{{ displayMacro(customFoodMacros(food).kcal,0) }}</span><span>{{ displayMacro(customFoodMacros(food).kh) }}</span><span>{{ displayMacro(customFoodMacros(food).protein) }}</span><span>{{ displayMacro(customFoodMacros(food).fett) }}</span><span>{{ displayMacro(customFoodMacros(food).ballaststoffe) }}</span></template><span v-else class="col-span-5 text-rose-500">Makros fehlen</span></div>
+              <div v-if="!selectedFoodList.length && !form.custom_foods.filter(f => f.name).length" class="py-1 text-slate-400">Noch keine Lebensmittel.</div>
+              <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pt-1 mt-0.5 border-t border-slate-200 font-semibold text-slate-700"><span>Summe</span><span>{{ displayMacro(mealMacros.kcal,0) }}</span><span>{{ displayMacro(mealMacros.kh) }}</span><span>{{ displayMacro(mealMacros.protein) }}</span><span>{{ displayMacro(mealMacros.fett) }}</span><span>{{ displayMacro(mealMacros.ballaststoffe) }}</span></div>
+            </div>
             <div class="pt-1">
               <label class="block text-xs font-medium text-slate-500 mb-1">Lebensmittel</label>
               <div class="flex flex-wrap gap-1">
@@ -404,17 +448,22 @@
 
             <div v-if="selectedFoodList.length" class="space-y-1.5 pt-1">
               <label class="block text-xs font-medium text-slate-500">Portionen</label>
-              <div v-for="food in selectedFoodList" :key="food.name" class="flex items-center justify-between gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50">
-                <span class="text-xs font-semibold truncate">{{ food.name }}</span>
-                <div class="flex gap-1 flex-wrap justify-end">
-                  <button v-for="portion in food.portions" :key="portion.label" @click="setFoodPortion(food, portion.f)"
-                    :class="getFoodFactor(food.name) === portion.f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
-                    class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">
-                    {{ portion.label }}
-                  </button>
-                  <button @click="toggleFood(food)" class="px-1.5 py-1 text-[10px] font-bold text-rose-500 hover:text-rose-700" aria-label="Lebensmittel entfernen">
-                    ×
-                  </button>
+              <div v-for="food in selectedFoodList" :key="food.name" class="p-2 rounded-lg border border-slate-200 bg-slate-50">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-semibold truncate">{{ food.name }} <span class="font-normal text-slate-500">· {{ displayMacro(foodMacros(food).kcal, 0) }} kcal</span></span>
+                  <div class="flex gap-1 flex-wrap justify-end">
+                    <button v-for="portion in food.portions" :key="portion.label" @click="setFoodPortion(food, portion.f)"
+                      :class="getFoodFactor(food.name) === portion.f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
+                      class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">
+                      {{ portion.label }}
+                    </button>
+                    <button @click="toggleFoodDetails(food.name)" class="px-1.5 py-1 text-[10px] text-slate-500 underline" aria-label="Makrodetails anzeigen">Details</button>
+                    <button @click="toggleFood(food)" class="px-1.5 py-1 text-[10px] font-bold text-rose-500 hover:text-rose-700" aria-label="Lebensmittel entfernen">×</button>
+                  </div>
+                </div>
+                <div v-if="portionDetailsOpen[food.name]" class="mt-1.5 pt-1.5 border-t border-slate-200 text-[10px] text-slate-600 overflow-x-auto">
+                  <div class="grid grid-cols-[minmax(5rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 text-slate-400"><span>Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span></div>
+                  <div class="grid grid-cols-[minmax(5rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pt-0.5"><span>{{ portionLabel(food.name, getFoodFactor(food.name)) }}</span><span>{{ displayMacro(foodMacros(food).kcal,0) }}</span><span>{{ displayMacro(foodMacros(food).kh) }}</span><span>{{ displayMacro(foodMacros(food).protein) }}</span><span>{{ displayMacro(foodMacros(food).fett) }}</span><span>{{ displayMacro(foodMacros(food).ballaststoffe) }}</span></div>
                 </div>
               </div>
             </div>
@@ -429,11 +478,32 @@
                   <input v-model="food.name" type="text" placeholder="z. B. Big Mac" class="min-w-0 flex-1 px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-800">
                   <button @click="removeCustomFood(index)" class="px-1 text-xs text-rose-400 hover:text-rose-600" aria-label="Freies Lebensmittel entfernen">×</button>
                 </div>
-                <div class="grid grid-cols-4 gap-1.5">
+                <label class="block text-[11px] text-slate-500">Makros gelten pro
+                  <select v-model="food.reference" @change="syncCustomPortionLabels(food)" class="ml-1 px-1.5 py-1 border border-slate-200 rounded text-[11px] bg-white text-slate-700">
+                    <option value="100 g">100 g</option><option value="100 ml">100 ml</option><option value="10 cm">10 cm</option><option value="Portion">Portion</option>
+                  </select>
+                </label>
+                <div class="grid grid-cols-5 gap-1.5">
                   <input v-model="food.kcal" type="number" min="0" step="0.1" inputmode="decimal" placeholder="kcal" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
                   <input v-model="food.kh" type="number" min="0" step="0.1" inputmode="decimal" placeholder="KH g" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
                   <input v-model="food.protein" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Protein" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
                   <input v-model="food.fett" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Fett g" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
+                  <input v-model="food.ballaststoffe" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Bal. g" class="macro-input w-full px-1.5 py-1.5 border border-slate-200 rounded text-[11px] bg-white">
+                </div>
+                <div class="border-t border-slate-200 pt-1.5 space-y-1.5">
+                  <div class="flex items-center justify-between"><span class="text-[11px] text-slate-500">Portionen & Multiplikatoren</span><button @click="addCustomPortion(food)" class="text-[11px] text-slate-600 underline">+ Portion</button></div>
+                  <div v-for="(portion, portionIndex) in customFoodPortions(food)" :key="portionIndex" class="rounded border border-slate-200 bg-white p-1.5 space-y-1">
+                    <div class="flex gap-1">
+                      <input v-model="portion.label" type="text" placeholder="z. B. 1 Packung" class="min-w-0 flex-1 px-1.5 py-1 border border-slate-200 rounded text-[11px]">
+                      <input v-model="portion.amount" type="number" min="0" step="0.1" inputmode="decimal" :placeholder="referenceUnit(food.reference)" class="macro-input w-20 px-1.5 py-1 border border-slate-200 rounded text-[11px]">
+                      <button v-if="customFoodPortions(food).length > 1" @click="removeCustomPortion(food, portionIndex)" class="px-1 text-xs text-rose-400" aria-label="Portion entfernen">×</button>
+                    </div>
+                    <div class="flex items-center gap-1"><input v-model="portion.factors" type="text" placeholder="0,5; 1; 2" class="min-w-0 flex-1 px-1.5 py-1 border border-slate-200 rounded text-[11px]"><span class="text-[10px] text-slate-400">Multiplikatoren</span></div>
+                    <div class="flex flex-wrap gap-1">
+                      <button v-for="factor in customMultipliers(portion)" :key="factor" @click="setCustomPortion(food, portionIndex, factor)" :class="customFoodFactor(food) === customPortionFactor(food, portion, factor) ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-700'" class="px-1.5 py-0.5 border border-slate-200 rounded text-[10px]">{{ formatFactor(factor) }}×</button>
+                    </div>
+                  </div>
+                  <p class="text-[10px] text-slate-400">Aktuell: {{ customFoodPortionLabel(food) }} · {{ displayMacro(customFoodMacros(food).kcal, 0) }} kcal</p>
                 </div>
               </div>
               <p v-if="mealMacroCoverage < 100" class="text-[11px] text-amber-700">Bei {{ mealMacroCoverage }} % der eingetragenen Lebensmittel sind kcal hinterlegt – die Tagessumme ist daher noch unvollständig.</p>
@@ -571,14 +641,14 @@
 
     const { createApp } = Vue;
 
-    // Makros gelten jeweils für die Basisportion (bei Faktor 1). Die Werte
-    // stammen aus LM.xlsx; dort bleibt die Liste für spätere Anpassungen lesbar.
-    const macroFood = (name, category, base, macros, portions) => ({ name, category, base, macros, portions });
+    // Bestehende Lebensmittel bleiben kompatibel; neue Lebensmittel speichern
+    // ihre Nährwerte getrennt nach Referenzwert und Portion.
+    const macroFood = (name, category, base, macros, portions) => ({ name, category, base, macros, portions, frequency: 'Häufig' });
 
     createApp({
       data() {
         return {
-          appVersion: 'v015',
+          appVersion: 'v016',
           // Startseiten-Buttons: Farbe und Symbol stehen NUR hier.
           // Farbe = Tailwind-Klasse (z. B. text-blue-500, text-red-600, text-[#ff8800]).
           dashboardButtons: [
@@ -598,10 +668,13 @@
           viewMode: 'dashboard',
           darkMode: false,
           protocolFilter: 'ALLE',
-          protocolSelected: [],
+          protocolSelected: ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'],
           quickNote: '',
           quickNoteSaved: false,
           activeModal: null,
+          mealDetailsOpen: false,
+          portionDetailsOpen: {},
+          protocolMealDetails: {},
           editingId: null,
           entries: [],
           config: {
@@ -664,6 +737,7 @@
               'EnzymPeel': 'Beauty'
             },
             foods: [
+              macroFood('Wasser', 'Getränke', '100 ml', { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 }, [100, 200, 300, 500, 600].map(ml => ({ label: `${ml} ml`, f: ml / 100 }))),
               macroFood('Kaffee', 'Getränke', '200 ml', { kcal: 4, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 }, [{ label: '80 ml', f: 0.4 }, { label: '200 ml', f: 1 }]),
               macroFood('Milch', 'Getränke', '50 ml', { kcal: 32, kh: 2.4, protein: 1.65, fett: 1.8, ballaststoffe: 0 }, [{ label: '25 ml', f: 0.5 }, { label: '50 ml', f: 1 }, { label: '100 ml', f: 2 }]),
               macroFood('Buttermilch', 'Getränke', '500 ml', { kcal: 185, kh: 20, protein: 17, fett: 3, ballaststoffe: 0 }, [{ label: '165 ml', f: 0.33 }, { label: '250 ml', f: 0.5 }, { label: '500 ml', f: 1 }]),
@@ -751,16 +825,14 @@
         protocolFilters() {
           const counts = {};
           this.entries.forEach(e => { counts[e.type] = (counts[e.type] || 0) + 1; });
-          const list = [{ value: 'ALLE', label: 'Alle', count: this.entries.length }];
+          const list = [{ value: 'ALLE', label: 'Alle' }, { value: 'KEINE', label: 'Keine' }];
           ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'].forEach(t => {
-            if (counts[t]) list.push({ value: t, label: this.typeLabel(t), count: counts[t] });
+            if (counts[t]) list.push({ value: t, label: this.typeLabel(t) });
           });
           return list;
         },
         groupedEntries() {
-          const filtered = this.protocolSelected.length === 0
-            ? this.entries
-            : this.entries.filter(e => this.protocolSelected.includes(e.type));
+          const filtered = this.entries.filter(e => this.protocolSelected.includes(e.type));
 
           return this.groupEntriesByNightEnd(filtered);
         },
@@ -796,6 +868,9 @@
             group.variants.push({ ...food, variant: variant || food.name });
           });
           return groups;
+        },
+        managedFoods() {
+          return [...this.config.foods].sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
         },
         mealMacros() {
           return this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities, this.form.custom_foods);
@@ -867,10 +942,17 @@
       },
       methods: {
         isProtocolFilterActive(value) {
-          return value === 'ALLE' ? this.protocolSelected.length === 0 : this.protocolSelected.includes(value);
+          if (value === 'ALLE') return this.protocolSelected.length === this.allProtocolTypes().length;
+          if (value === 'KEINE') return this.protocolSelected.length === 0;
+          return this.protocolSelected.includes(value);
         },
+        allProtocolTypes() { return ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ']; },
         toggleProtocolFilter(value) {
           if (value === 'ALLE') {
+            this.protocolSelected = this.allProtocolTypes();
+            return;
+          }
+          if (value === 'KEINE') {
             this.protocolSelected = [];
             return;
           }
@@ -921,6 +1003,12 @@
         findFood(name) {
           return this.config.foods.find(f => f.name === name) || null;
         },
+        foodMacros(food) {
+          const factor = this.getFoodFactor(food.name) === null ? 1 : this.getFoodFactor(food.name);
+          const result = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
+          Object.keys(result).forEach(key => { result[key] = (Number(food.macros && food.macros[key]) || 0) * Number(factor || 1); });
+          return result;
+        },
         calculateFoodMacros(selectedFoods, quantities, customFoods = []) {
           const total = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
           (selectedFoods || []).forEach(name => {
@@ -931,7 +1019,8 @@
           });
           (customFoods || []).forEach(food => {
             if (!food || !String(food.name || '').trim()) return;
-            ['kcal', 'kh', 'protein', 'fett'].forEach(key => { total[key] += Number(food[key]) || 0; });
+            const macros = this.customFoodMacros(food);
+            Object.keys(total).forEach(key => { total[key] += Number(macros[key]) || 0; });
           });
           return total;
         },
@@ -951,15 +1040,83 @@
             const custom = (entry.custom_foods || []).filter(food => String(food && food.name || '').trim());
             total += custom.length;
             withKcal += custom.filter(food => this.hasMacroValue(food, 'kcal')).length;
-            if (!entry.custom_foods && String(entry.details || '').trim()) total += 1;
+            if ((!entry.custom_foods || !entry.custom_foods.length) && String(entry.details || '').trim()) total += 1;
           });
           return total ? Math.round((withKcal / total) * 100) : 100;
         },
         addCustomFood() {
-          this.form.custom_foods.push({ name: '', kcal: '', kh: '', protein: '', fett: '' });
+          this.form.custom_foods.push({ name: '', reference: 'Portion', kcal: '', kh: '', protein: '', fett: '', ballaststoffe: '', portions: [{ label: 'Basisportion', amount: 1, factors: '0,5; 1; 2' }], active_portion: 0, active_multiplier: 1 });
         },
         removeCustomFood(index) {
           this.form.custom_foods.splice(index, 1);
+        },
+        referenceAmount(reference) {
+          const value = Number.parseFloat(String(reference || '').replace(',', '.'));
+          return Number.isFinite(value) && value > 0 ? value : 1;
+        },
+        referenceUnit(reference) {
+          if (reference === '100 ml') return 'ml';
+          if (reference === '10 cm') return 'cm';
+          if (reference === '100 g') return 'g';
+          return 'Portion';
+        },
+        customFoodPortions(food) {
+          if (Array.isArray(food && food.portions) && food.portions.length) return food.portions;
+          return [{ label: food && food.reference === 'Portion' ? 'Basisportion' : 'Portion 1', amount: 1, factors: '1' }];
+        },
+        customMultipliers(portion) {
+          const raw = Array.isArray(portion && portion.factors) ? portion.factors.join(';') : String(portion && portion.factors || '1');
+          const values = raw.split(/[;,\s]+/).map(item => Number.parseFloat(item.replace(',', '.'))).filter(item => Number.isFinite(item) && item > 0);
+          return values.length ? [...new Set(values)] : [1];
+        },
+        customPortionFactor(food, portion, multiplier) {
+          const amount = Number.parseFloat(String(portion && portion.amount || '').replace(',', '.'));
+          const safeAmount = Number.isFinite(amount) && amount > 0 ? amount : this.referenceAmount(food.reference);
+          const portionRatio = food.reference === 'Portion' ? 1 : safeAmount / this.referenceAmount(food.reference);
+          return portionRatio * Number(multiplier || 1);
+        },
+        customFoodFactor(food) {
+          const portions = this.customFoodPortions(food);
+          const index = Math.min(Math.max(Number(food && food.active_portion) || 0, 0), portions.length - 1);
+          return this.customPortionFactor(food, portions[index], Number(food && food.active_multiplier) || 1);
+        },
+        customFoodMacros(food) {
+          const factor = this.customFoodFactor(food);
+          const result = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
+          Object.keys(result).forEach(key => { result[key] = (Number(food && food[key]) || 0) * factor; });
+          return result;
+        },
+        customFoodPortionLabel(food) {
+          const portions = this.customFoodPortions(food);
+          const index = Math.min(Math.max(Number(food && food.active_portion) || 0, 0), portions.length - 1);
+          const portion = portions[index];
+          const configured = String(portion.label || '').trim();
+          const base = !configured || (food.reference !== 'Portion' && configured === 'Basisportion') ? (food.reference === 'Portion' ? 'Basisportion' : `Portion ${index + 1}`) : configured;
+          return `${base} · ${this.formatFactor(Number(food && food.active_multiplier) || 1)}×`;
+        },
+        syncCustomPortionLabels(food) {
+          if (!Array.isArray(food.portions)) food.portions = this.customFoodPortions(food);
+          food.portions.forEach((portion, index) => {
+            const current = String(portion.label || '').trim();
+            const automatic = !current || current === 'Basisportion' || current === 'Neue Portion' || /^Portion\s+\d+$/.test(current) || current === '1 Portion';
+            if (automatic) portion.label = food.reference === 'Portion' && index === 0 ? 'Basisportion' : `Portion ${index + 1}`;
+          });
+        },
+        addCustomPortion(food) {
+          if (!Array.isArray(food.portions)) food.portions = this.customFoodPortions(food);
+          food.portions.push({ label: `Portion ${food.portions.length + 1}`, amount: this.referenceAmount(food.reference), factors: '0,5; 1; 2' });
+        },
+        removeCustomPortion(food, index) {
+          if (!Array.isArray(food.portions) || food.portions.length < 2) return;
+          food.portions.splice(index, 1);
+          food.active_portion = Math.min(Number(food.active_portion) || 0, food.portions.length - 1);
+        },
+        setCustomPortion(food, index, multiplier) {
+          food.active_portion = index;
+          food.active_multiplier = multiplier;
+        },
+        toggleFoodDetails(name) {
+          this.portionDetailsOpen[name] = !this.portionDetailsOpen[name];
         },
         displayMacro(value, digits = 1) {
           const options = { minimumFractionDigits: 0, maximumFractionDigits: digits };
@@ -990,8 +1147,22 @@
           return names.length > 4 ? `${preview}, …` : preview;
         },
         entryKcal(entry) {
-          const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {});
+          const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {}, entry.custom_foods || []);
           return this.displayMacro(macros.kcal, 0);
+        },
+        toggleProtocolMealDetails(id) {
+          this.protocolMealDetails[id] = !this.protocolMealDetails[id];
+        },
+        entryFoodRows(entry) {
+          const rows = (entry.selected_foods || []).map(name => {
+            const food = this.findFood(name);
+            const factor = entry.food_quantities && entry.food_quantities[name] !== undefined ? entry.food_quantities[name] : 1;
+            const macros = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
+            if (food && food.macros) Object.keys(macros).forEach(key => { macros[key] = (Number(food.macros[key]) || 0) * Number(factor); });
+            return { name, portion: this.portionLabel(name, factor), macros, hasMacros: !!(food && food.macros && Number.isFinite(Number(food.macros.kcal))) };
+          });
+          (entry.custom_foods || []).filter(food => String(food.name || '').trim()).forEach(food => rows.push({ name: food.name, portion: this.customFoodPortionLabel(food), macros: this.customFoodMacros(food), hasMacros: this.hasMacroValue(food, 'kcal') }));
+          return rows;
         },
         protocolBodySoul(entry) {
           return [...(entry.body_symptoms || []), ...(entry.soul_symptoms || [])].join(', ');
@@ -1217,6 +1388,10 @@
               this.config[item.key] = item.value;
             }
           });
+          if (!this.config.foods.some(food => food.name === 'Wasser')) {
+            this.config.foods.unshift(macroFood('Wasser', 'Getränke', '100 ml', { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 }, [100, 200, 300, 500, 600].map(ml => ({ label: `${ml} ml`, f: ml / 100 }))));
+            await db.settings.put({ key: 'foods', value: this.config.foods });
+          }
           const darkModeSetting = stored.find(item => item.key === 'darkMode');
           this.darkMode = !!(darkModeSetting && darkModeSetting.value);
           document.body.classList.toggle('dark-mode', this.darkMode);
@@ -1281,6 +1456,8 @@
         },
         openModal(type, entry = null) {
           this.activeModal = type;
+          this.mealDetailsOpen = false;
+          this.portionDetailsOpen = {};
           const now = new Date();
           if (entry) {
             this.editingId = entry.id;
@@ -1301,7 +1478,7 @@
               addon_quantities: entry.addon_quantities ? {...entry.addon_quantities} : (entry.addon_name ? {[entry.addon_name]: entry.addon_factor || 1} : {}),
               selected_foods: entry.selected_foods ? [...entry.selected_foods] : [],
               food_quantities: entry.food_quantities ? {...entry.food_quantities} : {},
-              custom_foods: entry.custom_foods ? JSON.parse(JSON.stringify(entry.custom_foods)) : (entry.details ? [{ name: entry.details, kcal: '', kh: '', protein: '', fett: '' }] : []),
+              custom_foods: entry.custom_foods ? JSON.parse(JSON.stringify(entry.custom_foods)).map(food => ({ reference: 'Portion', ballaststoffe: '', portions: [{ label: 'Basisportion', amount: 1, factors: '1' }], active_portion: 0, active_multiplier: 1, ...food })) : (entry.details ? [{ name: entry.details, reference: 'Portion', kcal: '', kh: '', protein: '', fett: '', ballaststoffe: '', portions: [{ label: 'Basisportion', amount: 1, factors: '1' }], active_portion: 0, active_multiplier: 1 }] : []),
               open_food_group: '',
               body_symptoms: entry.body_symptoms ? [...entry.body_symptoms] : (entry.symptoms ? [...entry.symptoms] : []),
               soul_symptoms: entry.soul_symptoms ? [...entry.soul_symptoms] : [],
@@ -1336,6 +1513,7 @@
               activity_intensity: ''
             };
           }
+          if (type === 'MAHLZEIT') this.form.custom_foods.forEach(food => this.syncCustomPortionLabels(food));
         },
         closeModal() {
           this.activeModal = null;
@@ -1400,6 +1578,9 @@
             await db.settings.put({ key: key, value: [...this.config[key]] });
           }
         },
+        async saveFoods() {
+          await db.settings.put({ key: 'foods', value: this.config.foods });
+        },
         async removeSettingItem(key, val) {
           this.config[key] = this.config[key].filter(i => i !== val);
           await db.settings.put({ key: key, value: [...this.config[key]] });
@@ -1451,7 +1632,8 @@
                 ? this.logicalDayLabel(group.anchor, index)
                 : 'Ohne Nachtruhe Ende',
               durationText: '',
-              kcalText: `${this.displayMacro(kcal, 0)} kcal (${macroCoverage} % erfasst)`,
+              kcalText: macroCoverage === 0 ? 'Makros fehlen' : `${this.displayMacro(kcal, 0)} kcal`,
+              macroCoverage,
               movementText: movementMinutes ? this.formatDurationShort(movementMinutes) : '',
               sleepText: sleepMinutes ? this.formatDurationShort(sleepMinutes) : '',
               missingNightEnd: index === 0 && nightStart,

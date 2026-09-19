@@ -1,8 +1,8 @@
-# Frau Sarahs Tracking – Version 015
+# Frau Sarahs Tracking – Version 016
 
-Dies ist die Arbeitsversion 015 für das Tagesprotokoll, den Lebensmittelkatalog und die Makro-Auswertung.
+Dies ist die Arbeitsversion 016. Sie startet bewusst mit dem wieder funktionierenden V015-Stand ohne ausgelagerte CSS-Datei.
 
-## Neu in Version 015
+## Ausgangspunkt für Version 016
 
 - Lebensmittel stehen ohne zusätzlichen Kategorien-Klick in einer gemeinsamen Liste.
 - In der oberen Lebensmittelliste stehen nur Namen; Mengen und Portionswahl erscheinen erst nach der Auswahl.

@@ -197,13 +197,14 @@
 
                 <div v-if="entry.type === 'MAHLZEIT'">
                   <div class="mt-1 border-l-2 border-rose-200 pl-1.5 text-[9px]">
-                    <div class="grid grid-cols-[minmax(0,1fr)_2.1rem_1.7rem_1.7rem_1.7rem_2rem] gap-x-0.5 pb-0.5 text-slate-400 border-b border-slate-200">
-                      <span>Lebensmittel · Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span>
+                    <div class="grid grid-cols-[minmax(0,1fr)_2.1rem_1.7rem_1.7rem_1.7rem_2rem_4.4rem] gap-x-0.5 pb-0.5 text-slate-400 border-b border-slate-200">
+                      <span>Lebensmittel · Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span><span></span>
                     </div>
-                    <div v-for="row in entryFoodRows(entry)" :key="row.name" class="grid grid-cols-[minmax(0,1fr)_2.1rem_1.7rem_1.7rem_1.7rem_2rem] gap-x-0.5 py-0.5">
+                    <div v-for="row in entryFoodRows(entry)" :key="row.name" class="grid grid-cols-[minmax(0,1fr)_2.1rem_1.7rem_1.7rem_1.7rem_2rem_4.4rem] gap-x-0.5 py-0.5">
                       <span class="truncate">{{ row.name }}<span v-if="row.portion"> · {{ row.portion }}</span></span>
                       <template v-if="row.hasMacros"><span>{{ displayMacro(row.macros.kcal,0) }}</span><span>{{ displayMacro(row.macros.kh) }}</span><span>{{ displayMacro(row.macros.protein) }}</span><span>{{ displayMacro(row.macros.fett) }}</span><span>{{ displayMacro(row.macros.ballaststoffe) }}</span></template>
                       <span v-else class="col-span-5 text-rose-500">Makros fehlen</span>
+                      <span v-if="row.archived" class="text-right text-slate-400">archiviert</span><span v-else></span>
                     </div>
                   </div>
                 </div>
@@ -290,7 +291,7 @@
                 <button type="button" @click.stop="cancelManagedFood(food)" class="text-slate-500 underline">Abbrechen</button>
               </div>
               <div v-else class="flex items-center shrink-0" @click.stop>
-                <button type="button" @click="toggleManagedFood(food)" class="flex h-6 w-6 items-center justify-center rounded text-lg leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-700" :aria-label="openManagedFood === food.id ? 'Lebensmittel schließen' : 'Lebensmittel öffnen'">{{ openManagedFood === food.id ? '−' : '+' }}</button>
+                <button type="button" @click="toggleManagedFood(food)" class="flex h-6 w-6 items-center justify-center rounded text-lg leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-700" :aria-label="openManagedFood === food.id ? 'Lebensmittel schließen' : 'Lebensmittel bearbeiten'" :title="openManagedFood === food.id ? 'Schließen' : 'Bearbeiten'"><span v-if="openManagedFood === food.id">−</span><svg v-else class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 16.8V20h3.2L17 10.2 13.8 7 4 16.8zM19.7 7.5a1 1 0 0 0 0-1.4l-1.8-1.8a1 1 0 0 0-1.4 0l-1.4 1.4 3.2 3.2 1.4-1.3z"/></svg></button>
                 <span class="mx-1.5 h-4 w-px bg-slate-200" aria-hidden="true"></span>
                 <button type="button" @click="archiveManagedFood(food)" class="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Lebensmittel archivieren" title="Archivieren"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="0.5"/><path d="M3.5 8.5h17M7 12h10M7 16h10"/></svg></button>
                 <button type="button" @click="duplicateManagedFood(food)" class="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Lebensmittel duplizieren" title="Duplizieren"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2zm2-2v2h4a2 2 0 0 1 2 2v4h2V5h-8zm4 4H6v8h8V9z"/></svg></button>
@@ -509,7 +510,7 @@
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-2 text-[10px] text-slate-600 overflow-x-auto">
               <div class="mb-1"><span class="text-[11px] font-semibold text-slate-600">Mahlzeit – Details</span></div>
               <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pb-0.5 text-slate-400 border-b border-slate-200"><span>Lebensmittel · Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span></div>
-              <div v-for="food in selectedFoodList" :key="'meal-detail-'+food.name" class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 py-0.5"><span class="truncate">{{ food.name }} · {{ portionLabel(food.name, getFoodFactor(food.name)) }}</span><span>{{ displayMacro(foodMacros(food).kcal,0) }}</span><span>{{ displayMacro(foodMacros(food).kh) }}</span><span>{{ displayMacro(foodMacros(food).protein) }}</span><span>{{ displayMacro(foodMacros(food).fett) }}</span><span>{{ displayMacro(foodMacros(food).ballaststoffe) }}</span></div>
+              <div v-for="food in selectedFoodList" :key="'meal-detail-'+food.id" class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 py-0.5"><span class="truncate">{{ food.name }} · {{ portionLabel(food.id, getFoodFactor(food.id)) }}</span><span>{{ displayMacro(foodMacros(food).kcal,0) }}</span><span>{{ displayMacro(foodMacros(food).kh) }}</span><span>{{ displayMacro(foodMacros(food).protein) }}</span><span>{{ displayMacro(foodMacros(food).fett) }}</span><span>{{ displayMacro(foodMacros(food).ballaststoffe) }}</span></div>
               <div v-for="food in form.custom_foods.filter(f => f.name)" :key="'meal-detail-custom-'+food.name" class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 py-0.5"><span class="truncate">{{ food.name }} · {{ customFoodPortionLabel(food) }}</span><template v-if="hasMacroValue(food, 'kcal')"><span>{{ displayMacro(customFoodMacros(food).kcal,0) }}</span><span>{{ displayMacro(customFoodMacros(food).kh) }}</span><span>{{ displayMacro(customFoodMacros(food).protein) }}</span><span>{{ displayMacro(customFoodMacros(food).fett) }}</span><span>{{ displayMacro(customFoodMacros(food).ballaststoffe) }}</span></template><span v-else class="col-span-5 text-rose-500">Makros fehlen</span></div>
               <div v-if="!selectedFoodList.length && !form.custom_foods.filter(f => f.name).length" class="py-1 text-slate-400">Noch keine Lebensmittel.</div>
               <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pt-1 mt-0.5 border-t border-slate-200 font-semibold text-slate-700"><span>Summe</span><span>{{ displayMacro(mealMacros.kcal,0) }}</span><span>{{ displayMacro(mealMacros.kh) }}</span><span>{{ displayMacro(mealMacros.protein) }}</span><span>{{ displayMacro(mealMacros.fett) }}</span><span>{{ displayMacro(mealMacros.ballaststoffe) }}</span></div>
@@ -532,7 +533,7 @@
               </div>
               <div v-for="group in foodGroups.filter(g => g.variants.length > 1 && form.open_food_group === g.name)" :key="`${group.name}-varianten`" class="mt-1.5 flex flex-wrap gap-1 border-l-2 border-slate-300 pl-2">
                 <button v-for="food in group.variants" :key="food.name" @click="toggleFood(food)"
-                  :class="form.selected_foods.includes(food.name) ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 text-slate-700 border-slate-200'"
+                  :class="form.selected_foods.includes(food.id) ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 text-slate-700 border-slate-200'"
                   class="px-2 py-1 text-[11px] font-semibold border transition">
                   {{ food.variant }}
                 </button>
@@ -541,22 +542,22 @@
 
             <div v-if="selectedFoodList.length" class="space-y-1.5 pt-1">
               <label class="block text-xs font-medium text-slate-500">Portionen</label>
-              <div v-for="food in selectedFoodList" :key="food.name" class="p-2 rounded-lg border border-slate-200 bg-slate-50">
+              <div v-for="food in selectedFoodList" :key="food.id" class="p-2 rounded-lg border border-slate-200 bg-slate-50">
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-xs font-semibold truncate">{{ food.name }} <span class="font-normal text-slate-500">· {{ displayMacro(foodMacros(food).kcal, 0) }} kcal</span></span>
                   <div class="flex gap-1 flex-wrap justify-end">
                     <button v-for="portion in food.portions" :key="portion.label" @click="setFoodPortion(food, portion.f)"
-                      :class="getFoodFactor(food.name) === portion.f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
+                      :class="getFoodFactor(food.id) === portion.f ? 'bg-slate-800 text-white' : 'bg-white text-slate-700'"
                       class="px-2 py-1 rounded text-[10px] font-bold border border-slate-300 whitespace-nowrap">
                       {{ portion.label }}
                     </button>
-                    <button @click="toggleFoodDetails(food.name)" class="px-1.5 py-1 text-[10px] text-slate-500 underline" aria-label="Makrodetails anzeigen">Details</button>
+                    <button @click="toggleFoodDetails(food.id)" class="px-1.5 py-1 text-[10px] text-slate-500 underline" aria-label="Makrodetails anzeigen">Details</button>
                     <button @click="toggleFood(food)" class="px-1.5 py-1 text-[10px] font-bold text-rose-500 hover:text-rose-700" aria-label="Lebensmittel entfernen">×</button>
                   </div>
                 </div>
-                <div v-if="portionDetailsOpen[food.name]" class="mt-1.5 pt-1.5 border-t border-slate-200 text-[10px] text-slate-600 overflow-x-auto">
+                <div v-if="portionDetailsOpen[food.id]" class="mt-1.5 pt-1.5 border-t border-slate-200 text-[10px] text-slate-600 overflow-x-auto">
                   <div class="grid grid-cols-[minmax(5rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 text-slate-400"><span>Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span></div>
-                  <div class="grid grid-cols-[minmax(5rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pt-0.5"><span>{{ portionLabel(food.name, getFoodFactor(food.name)) }}</span><span>{{ displayMacro(foodMacros(food).kcal,0) }}</span><span>{{ displayMacro(foodMacros(food).kh) }}</span><span>{{ displayMacro(foodMacros(food).protein) }}</span><span>{{ displayMacro(foodMacros(food).fett) }}</span><span>{{ displayMacro(foodMacros(food).ballaststoffe) }}</span></div>
+                  <div class="grid grid-cols-[minmax(5rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pt-0.5"><span>{{ portionLabel(food.id, getFoodFactor(food.id)) }}</span><span>{{ displayMacro(foodMacros(food).kcal,0) }}</span><span>{{ displayMacro(foodMacros(food).kh) }}</span><span>{{ displayMacro(foodMacros(food).protein) }}</span><span>{{ displayMacro(foodMacros(food).fett) }}</span><span>{{ displayMacro(foodMacros(food).ballaststoffe) }}</span></div>
                 </div>
               </div>
             </div>
@@ -1026,7 +1027,7 @@
           return new Date().toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
         },
         selectedFoodList() {
-          return this.config.foods.filter(f => this.form.selected_foods.includes(f.name));
+          return this.config.foods.filter(f => this.form.selected_foods.includes(f.id));
         },
         foodGroups() {
           const groups = [];
@@ -1205,20 +1206,43 @@
             alert('Die Notiz konnte nicht gespeichert werden: ' + error.message);
           }
         },
-        findFood(name) {
-          return this.config.foods.find(f => f.name === name) || null;
+        findFood(reference) {
+          return this.config.foods.find(f => f.id === reference) || this.config.foods.find(f => f.name === reference) || null;
+        },
+        foodSnapshot(food, fallbackName = '') {
+          return {
+            name: String(food && food.name || fallbackName || 'Unbekanntes Lebensmittel'),
+            base: String(food && food.base || 'Portion'),
+            macros: JSON.parse(JSON.stringify(food && food.macros || {})),
+            portions: JSON.parse(JSON.stringify(food && food.portions || []))
+          };
+        },
+        buildMealItems(selectedFoods, quantities = {}) {
+          return (selectedFoods || []).map(reference => {
+            const food = this.findFood(reference);
+            const quantity = quantities && quantities[reference] !== undefined ? Number(quantities[reference]) : 1;
+            return {
+              foodId: food ? food.id : null,
+              quantity: Number.isFinite(quantity) ? quantity : 1,
+              snapshot: this.foodSnapshot(food, typeof reference === 'string' ? reference : '')
+            };
+          });
+        },
+        mealItemsFor(entry) {
+          if (Array.isArray(entry && entry.meal_items)) return entry.meal_items;
+          return this.buildMealItems(entry && entry.selected_foods, entry && entry.food_quantities);
         },
         foodMacros(food) {
-          const factor = this.getFoodFactor(food.name) === null ? 1 : this.getFoodFactor(food.name);
+          const factor = this.getFoodFactor(food.id) === null ? 1 : this.getFoodFactor(food.id);
           const result = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
           Object.keys(result).forEach(key => { result[key] = (Number(food.macros && food.macros[key]) || 0) * Number(factor || 1); });
           return result;
         },
         calculateFoodMacros(selectedFoods, quantities, customFoods = []) {
           const total = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
-          (selectedFoods || []).forEach(name => {
-            const food = this.findFood(name);
-            const factor = quantities && quantities[name] !== undefined ? Number(quantities[name]) : 1;
+          (selectedFoods || []).forEach(reference => {
+            const food = this.findFood(reference);
+            const factor = quantities && quantities[reference] !== undefined ? Number(quantities[reference]) : 1;
             if (!food || !food.macros || !Number.isFinite(factor)) return;
             Object.keys(total).forEach(key => { total[key] += (Number(food.macros[key]) || 0) * factor; });
           });
@@ -1236,12 +1260,9 @@
           let total = 0;
           let withKcal = 0;
           (entries || []).forEach(entry => {
-            const selected = entry.selected_foods || [];
-            total += selected.length;
-            withKcal += selected.filter(name => {
-              const food = this.findFood(name);
-              return food && food.macros && Number.isFinite(Number(food.macros.kcal));
-            }).length;
+            const mealItems = this.mealItemsFor(entry);
+            total += mealItems.length;
+            withKcal += mealItems.filter(item => item.snapshot && Number.isFinite(Number(item.snapshot.macros && item.snapshot.macros.kcal))).length;
             const custom = (entry.custom_foods || []).filter(food => String(food && food.name || '').trim());
             total += custom.length;
             withKcal += custom.filter(food => this.hasMacroValue(food, 'kcal')).length;
@@ -1314,8 +1335,8 @@
           this.config.foods.push(food);
           await this.saveFoods();
           if (this.newFoodOrigin === 'meal') {
-            this.form.selected_foods.push(food.name);
-            this.form.food_quantities[food.name] = food.portions[0].f;
+            this.form.selected_foods.push(food.id);
+            this.form.food_quantities[food.id] = food.portions[0].f;
           }
           this.closeNewFoodModal();
         },
@@ -1415,8 +1436,8 @@
           const options = { minimumFractionDigits: 0, maximumFractionDigits: digits };
           return new Intl.NumberFormat('de-AT', options).format(Number(value) || 0);
         },
-        portionLabel(name, factor) {
-          const food = this.findFood(name);
+        portionLabel(reference, factor) {
+          const food = this.findFood(reference);
           if (food) {
             const hit = food.portions.find(p => p.f === factor);
             if (hit) return hit.label;
@@ -1427,12 +1448,12 @@
         describeFoods(quantities) {
           if (!quantities) return '';
           return Object.keys(quantities)
-            .map(name => name + ' (' + this.portionLabel(name, quantities[name]) + ')')
+            .map(reference => (this.findFood(reference)?.name || reference) + ' (' + this.portionLabel(reference, quantities[reference]) + ')')
             .join(', ');
         },
         foodNamesPreview(entry) {
           const names = [
-            ...(entry.selected_foods || Object.keys(entry.food_quantities || {})),
+            ...this.mealItemsFor(entry).map(item => (this.findFood(item.foodId)?.name || (item.snapshot && item.snapshot.name))).filter(Boolean),
             ...(entry.custom_foods || []).map(food => String(food.name || '').trim()).filter(Boolean)
           ];
           if (!names.length) return entry.details || 'Mahlzeit';
@@ -1450,12 +1471,14 @@
           this.protocolEntryDetails[id] = !this.protocolEntryDetails[id];
         },
         entryFoodRows(entry) {
-          const rows = (entry.selected_foods || []).map(name => {
-            const food = this.findFood(name);
-            const factor = entry.food_quantities && entry.food_quantities[name] !== undefined ? entry.food_quantities[name] : 1;
+          const rows = this.mealItemsFor(entry).map(item => {
+            const factor = Number(item.quantity) || 1;
+            const snapshot = item.snapshot || {};
+            const currentFood = this.findFood(item.foodId);
             const macros = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
-            if (food && food.macros) Object.keys(macros).forEach(key => { macros[key] = (Number(food.macros[key]) || 0) * Number(factor); });
-            return { name, portion: this.portionLabel(name, factor), macros, hasMacros: !!(food && food.macros && Number.isFinite(Number(food.macros.kcal))) };
+            if (snapshot.macros) Object.keys(macros).forEach(key => { macros[key] = (Number(snapshot.macros[key]) || 0) * factor; });
+            const portion = (snapshot.portions || []).find(p => Number(p.f) === factor);
+            return { name: currentFood ? currentFood.name : (snapshot.name || 'Unbekanntes Lebensmittel'), archived: !!(currentFood && currentFood.archived), portion: portion ? portion.label : `${this.formatFactor(factor)} × ${snapshot.base || 'Portion'}`, macros, hasMacros: !!(snapshot.macros && Number.isFinite(Number(snapshot.macros.kcal))) };
           });
           (entry.custom_foods || []).filter(food => String(food.name || '').trim()).forEach(food => rows.push({ name: food.name, portion: this.customFoodPortionLabel(food), macros: this.customFoodMacros(food), hasMacros: this.hasMacroValue(food, 'kcal') }));
           return rows;
@@ -1574,35 +1597,35 @@
           if (day && day.anchor) this.form.date = this.toLocalDateString(new Date(day.anchor.timestamp));
         },
         toggleFood(food) {
-          const idx = this.form.selected_foods.indexOf(food.name);
+          const idx = this.form.selected_foods.indexOf(food.id);
           if (idx > -1) {
             this.form.selected_foods.splice(idx, 1);
-            delete this.form.food_quantities[food.name];
+            delete this.form.food_quantities[food.id];
           } else {
-            this.form.selected_foods.push(food.name);
+            this.form.selected_foods.push(food.id);
             const standard = food.portions.find(p => p.f === 1) || food.portions[0];
-            this.form.food_quantities[food.name] = standard.f;
+            this.form.food_quantities[food.id] = standard.f;
           }
         },
         toggleFoodGroup(name) {
           this.form.open_food_group = this.form.open_food_group === name ? '' : name;
         },
         hasSelectedFoodGroup(group) {
-          return group.variants.some(food => this.form.selected_foods.includes(food.name));
+          return group.variants.some(food => this.form.selected_foods.includes(food.id));
         },
         setFoodPortion(food, factor) {
-          if (!this.form.selected_foods.includes(food.name)) {
-            this.form.selected_foods.push(food.name);
+          if (!this.form.selected_foods.includes(food.id)) {
+            this.form.selected_foods.push(food.id);
           }
-          this.form.food_quantities[food.name] = factor;
+          this.form.food_quantities[food.id] = factor;
         },
         getFoodFactor(name) {
           return this.form.food_quantities[name] !== undefined ? this.form.food_quantities[name] : null;
         },
         applyFoodCombo(combo) {
-          Object.keys(combo.items).forEach(name => {
-            if (!this.form.selected_foods.includes(name)) this.form.selected_foods.push(name);
-            this.form.food_quantities[name] = combo.items[name];
+          Object.keys(combo.items || {}).forEach(foodId => {
+            if (!this.form.selected_foods.includes(foodId)) this.form.selected_foods.push(foodId);
+            this.form.food_quantities[foodId] = combo.items[foodId];
           });
         },
         factorsFor(addon) {
@@ -1759,6 +1782,7 @@
           await db.settings.put({ key: 'darkMode', value: this.darkMode });
         },
         async loadEntries() {
+          await this.migrateMealFoodReferences();
           this.entries = await db.entries.where('is_deleted').equals(0).toArray();
           this.protocolRevision += 1;
         },
@@ -1787,6 +1811,7 @@
               addon_quantities: JSON.parse(JSON.stringify(this.form.addon_quantities || {})),
               selected_foods: Array.from(this.form.selected_foods || []),
               food_quantities: JSON.parse(JSON.stringify(this.form.food_quantities || {})),
+              meal_items: this.activeModal === 'MAHLZEIT' ? this.buildMealItems(this.form.selected_foods, this.form.food_quantities) : [],
               custom_foods: JSON.parse(JSON.stringify((this.form.custom_foods || []).filter(food => String(food.name || '').trim()))),
               meal_macros: this.activeModal === 'MAHLZEIT' ? this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities, this.form.custom_foods) : null,
               body_symptoms: Array.from(this.form.body_symptoms || []),
@@ -1821,6 +1846,7 @@
           if (entry) {
             this.editingId = entry.id;
             const entryDate = entry.timestamp ? new Date(entry.timestamp) : now;
+            const savedMealItems = this.mealItemsFor(entry);
             this.form = {
               date: this.toLocalDateString(entryDate),
               time: this.toLocalTimeString(entryDate),
@@ -1835,8 +1861,11 @@
               wake_reasons: entry.wake_reasons ? [...entry.wake_reasons] : [],
               selected_addons: entry.selected_addons ? [...entry.selected_addons] : (entry.addon_name ? [entry.addon_name] : []),
               addon_quantities: entry.addon_quantities ? {...entry.addon_quantities} : (entry.addon_name ? {[entry.addon_name]: entry.addon_factor || 1} : {}),
-              selected_foods: entry.selected_foods ? [...entry.selected_foods] : [],
-              food_quantities: entry.food_quantities ? {...entry.food_quantities} : {},
+              selected_foods: savedMealItems.map(item => item.foodId).filter(Boolean),
+              food_quantities: savedMealItems.reduce((quantities, item) => {
+                if (item.foodId) quantities[item.foodId] = Number(item.quantity) || 1;
+                return quantities;
+              }, {}),
               custom_foods: entry.custom_foods ? JSON.parse(JSON.stringify(entry.custom_foods)).map(food => ({ reference: 'Portion', ballaststoffe: '', portions: [{ label: 'Basisportion', amount: 1, factors: '1' }], active_portion: 0, active_multiplier: 1, ...food })) : (entry.details ? [{ name: entry.details, reference: 'Portion', kcal: '', kh: '', protein: '', fett: '', ballaststoffe: '', portions: [{ label: 'Basisportion', amount: 1, factors: '1' }], active_portion: 0, active_multiplier: 1 }] : []),
               open_food_group: '',
               body_symptoms: entry.body_symptoms ? [...entry.body_symptoms] : (entry.symptoms ? [...entry.symptoms] : []),
@@ -1956,6 +1985,34 @@
           });
           if (changed) await this.saveFoods();
         },
+        async migrateMealFoodReferences() {
+          const marker = await db.settings.get('meal_food_ids_v1');
+          if (marker && marker.value) return;
+          const migratedCombos = JSON.parse(JSON.stringify(this.config.foodCombos || []));
+          let combosChanged = false;
+          migratedCombos.forEach(combo => {
+            const converted = {};
+            Object.entries(combo.items || {}).forEach(([reference, quantity]) => {
+              const food = this.findFood(reference);
+              const key = food ? food.id : reference;
+              if (key !== reference) combosChanged = true;
+              converted[key] = quantity;
+            });
+            combo.items = converted;
+          });
+          await db.transaction('rw', db.entries, db.settings, async () => {
+            const allEntries = await db.entries.toArray();
+            for (const entry of allEntries) {
+              if (entry.type !== 'MAHLZEIT' || Array.isArray(entry.meal_items)) continue;
+              entry.meal_items = this.buildMealItems(entry.selected_foods || Object.keys(entry.food_quantities || {}), entry.food_quantities || {});
+              entry.updated_at = entry.updated_at || new Date().toISOString();
+              await db.entries.put(JSON.parse(JSON.stringify(entry)));
+            }
+            if (combosChanged) await db.settings.put({ key: 'foodCombos', value: migratedCombos });
+            await db.settings.put({ key: 'meal_food_ids_v1', value: true });
+          });
+          if (combosChanged) this.config.foodCombos = migratedCombos;
+        },
         async archiveManagedFood(food) {
           if (this.managedFoodDirty) {
             alert('Bitte zuerst Speichern oder Abbrechen wählen.');
@@ -2024,7 +2081,6 @@
           this.markManagedFoodDirty();
         },
         async saveManagedFood(food) {
-          const previous = this.managedFoodOriginalName || food.name;
           const next = String(food.name || '').trim();
           if (!next) {
             alert('Bitte gib einen Namen für das Lebensmittel ein.');
@@ -2035,23 +2091,6 @@
             return;
           }
           food.name = next;
-          if (previous !== next) {
-            (this.config.foodCombos || []).forEach(combo => {
-              if (!combo.items || combo.items[previous] === undefined) return;
-              combo.items[next] = combo.items[previous];
-              delete combo.items[previous];
-            });
-            const changedEntries = this.entries.filter(entry => (entry.selected_foods || []).includes(previous));
-            for (const entry of changedEntries) {
-              entry.selected_foods = (entry.selected_foods || []).map(name => name === previous ? next : name);
-              if (entry.food_quantities && entry.food_quantities[previous] !== undefined) {
-                entry.food_quantities[next] = entry.food_quantities[previous];
-                delete entry.food_quantities[previous];
-              }
-              await db.entries.put(JSON.parse(JSON.stringify(entry)));
-            }
-            await db.settings.put({ key: 'foodCombos', value: this.config.foodCombos });
-          }
           await this.saveFoods();
           this.openManagedFood = null;
           this.managedFoodOriginalName = next;

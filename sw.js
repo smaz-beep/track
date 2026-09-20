@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tracking-app-v016-79';
+const CACHE_NAME = 'tracking-app-v016-84';
 
 // Ohne diese Dateien laeuft die App nicht - fehlt eine, soll die Installation scheitern
 const CORE_ASSETS = [

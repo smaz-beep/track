@@ -30,27 +30,46 @@
     .macro-input { appearance: textfield; -moz-appearance: textfield; }
     .macro-input::-webkit-outer-spin-button,
     .macro-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    /* Dark Mode – zentrale Farbfläche zum späteren Feinschliff. */
+    body.dark-mode { background: #0b1220; color: #e5e7eb; color-scheme: dark; }
     #app.dark-mode { background: #111827; border-color: #334155; color: #e5e7eb; }
-    body.dark-mode { background: #0f172a; }
     #app.dark-mode .bg-white { background-color: #111827 !important; }
-    #app.dark-mode .bg-slate-50 { background-color: #1f2937 !important; }
-    #app.dark-mode .bg-slate-100 { background-color: #263244 !important; }
+    #app.dark-mode .bg-slate-50 { background-color: #182334 !important; }
+    #app.dark-mode .bg-slate-100 { background-color: #223047 !important; }
     #app.dark-mode .bg-slate-200 { background-color: #334155 !important; }
+    #app.dark-mode .bg-slate-600,
+    #app.dark-mode .bg-slate-700 { background-color: #475569 !important; }
+    #app.dark-mode .bg-slate-800 { background-color: #334155 !important; }
     #app.dark-mode .bg-blue-50 { background-color: #172554 !important; }
     #app.dark-mode .bg-rose-50 { background-color: #3b1d2a !important; }
-    #app.dark-mode .bg-amber-50 { background-color: #3d2e10 !important; }
+    #app.dark-mode .bg-amber-50 { background-color: #3b2b10 !important; }
+    #app.dark-mode .bg-green-50 { background-color: #163126 !important; }
+    #app.dark-mode .border-slate-100,
     #app.dark-mode .border-slate-200,
-    #app.dark-mode .border-slate-300 { border-color: #475569 !important; }
+    #app.dark-mode .border-slate-300,
+    #app.dark-mode .border-slate-400 { border-color: #475569 !important; }
+    #app.dark-mode .text-slate-900,
     #app.dark-mode .text-slate-800,
     #app.dark-mode .text-slate-700 { color: #f1f5f9 !important; }
     #app.dark-mode .text-slate-600 { color: #cbd5e1 !important; }
     #app.dark-mode .text-slate-500,
-    #app.dark-mode .text-slate-400 { color: #94a3b8 !important; }
-    #app.dark-mode .text-slate-300 { color: #64748b !important; }
-    #app.dark-mode .bg-green-50 { background-color: #163126 !important; }
+    #app.dark-mode .text-slate-400 { color: #a8b7cb !important; }
+    #app.dark-mode .text-slate-300 { color: #71839b !important; }
     #app.dark-mode input,
     #app.dark-mode textarea,
-    #app.dark-mode select { color-scheme: dark; }
+    #app.dark-mode select {
+      background-color: #111c2c;
+      border-color: #52637a;
+      color: #f1f5f9;
+      color-scheme: dark;
+    }
+    #app.dark-mode input::placeholder,
+    #app.dark-mode textarea::placeholder { color: #7f91a8; }
+    #app.dark-mode input:focus,
+    #app.dark-mode textarea:focus,
+    #app.dark-mode select:focus { border-color: #7da1d8; }
+    #app.dark-mode .shadow-sm,
+    #app.dark-mode .shadow { box-shadow: 0 1px 3px rgb(0 0 0 / .28) !important; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
@@ -138,7 +157,7 @@
             <span class="h-px flex-1 bg-slate-200" aria-hidden="true"></span>
           </div>
 
-          <div v-for="entry in day.items" :key="entry.id" class="px-2.5 py-1.5 border-b border-slate-200 flex justify-between items-start" :class="typeCardStyle(entry.type)">
+          <div v-for="entry in day.items" :key="entry.id" class="mb-1.5 rounded-lg border border-slate-200 px-2.5 py-2 flex justify-between items-start shadow-sm" :class="typeCardStyle(entry.type)">
             <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
               <div class="protocol-card-heading text-xs leading-5">
                 <span class="text-slate-400">{{ formatTime(entry.timestamp) }}</span>
@@ -222,48 +241,88 @@
     </section>
 
     <!-- EINSTELLUNGEN ANSICHT -->
-    <section v-if="viewMode === 'settings'" class="my-auto py-2 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-      <div class="border-b border-slate-200 pb-2">
+    <section v-if="viewMode === 'settings'" class="pt-2 space-y-4 max-h-[70vh] overflow-y-auto pr-1 flex flex-col">
+      <div class="order-0 border-b border-slate-200 pb-2">
         <h2 class="text-base font-bold text-slate-700">Optionen & Daten</h2>
       </div>
 
-      <div class="flex items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+      <div class="order-1 flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
         <div>
           <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Darstellung</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Dark Mode</p>
+          <p class="text-xs text-slate-500 mt-0.5">Manuell</p>
         </div>
-        <button @click="setDarkMode(!darkMode)" :aria-pressed="darkMode"
-          :class="darkMode ? 'bg-slate-800 text-white' : 'bg-white text-slate-600'"
-          class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold transition">
-          {{ darkMode ? 'An' : 'Aus' }}
-        </button>
+        <button type="button" @click="setDarkMode(!darkMode)" :aria-pressed="darkMode" class="flex shrink-0 items-center gap-1.5 text-[11px] whitespace-nowrap"><svg :class="darkMode ? 'fill-none text-amber-500' : 'fill-amber-400 text-amber-500'" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-label="Hell"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><span class="text-slate-500">Hell</span><input type="range" min="0" max="1" step="1" :value="darkMode ? 1 : 0" tabindex="-1" aria-hidden="true" class="pointer-events-none w-10 accent-slate-700"><span class="text-slate-500">Dunkel</span><svg :class="darkMode ? 'fill-blue-500 text-blue-600' : 'fill-none text-blue-500'" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-label="Dunkel"><path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"></path></svg></button>
       </div>
+      <div class="order-1 -mt-2 flex flex-col gap-1 px-3 text-[11px] text-slate-400"><span>1. Zeitfenster für Dunkel planen</span><span>2. Standortabhängig Sonnenauf/-untergang</span></div>
 
-      <details class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <summary class="cursor-pointer list-none flex items-center justify-between gap-3">
+      <div :class="foodManagementOpen ? 'border-2 border-slate-400' : 'border border-slate-200'" class="order-2 bg-slate-50 p-3 rounded-xl">
+        <button @click="foodManagementOpen = !foodManagementOpen" class="w-full flex items-center justify-between gap-3 text-left">
           <div>
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Lebensmittel verwalten</h3>
             <p class="text-xs text-slate-500 mt-0.5">Referenz-Makros inklusive Ballaststoffe</p>
           </div>
-          <span class="text-xs text-slate-500">öffnen</span>
-        </summary>
-        <div class="mt-3 space-y-2">
-          <div v-for="food in managedFoods" :key="food.name" class="rounded-lg border border-slate-200 bg-white p-2">
-            <div class="flex items-baseline justify-between gap-2 mb-1.5"><span class="text-xs font-semibold text-slate-700">{{ food.name }}</span><span class="text-[10px] text-slate-400">pro {{ food.base }}</span></div>
-            <div class="grid grid-cols-5 gap-1">
-              <input v-model="food.macros.kcal" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="kcal" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
-              <input v-model="food.macros.kh" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="KH" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
-              <input v-model="food.macros.protein" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="P" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
-              <input v-model="food.macros.fett" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="F" class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
-              <input v-model="food.macros.ballaststoffe" @change="saveFoods" type="number" min="0" step="0.1" inputmode="decimal" placeholder="Bal." class="macro-input min-w-0 px-1.5 py-1 border border-slate-200 rounded text-[10px] bg-white">
+          <span class="text-xs text-slate-500">{{ foodManagementOpen ? 'schließen' : 'öffnen' }}</span>
+        </button>
+        <div v-if="foodManagementOpen" class="mt-3 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <input v-model="foodSearch" type="search" placeholder="Lebensmittel suchen …" class="min-w-0 flex-1 px-2.5 py-2 border border-slate-200 rounded-lg text-xs bg-white text-slate-800">
+            <button type="button" @click="openFoodStarter('settings')" class="shrink-0 px-2 py-2 text-xs text-slate-600 underline underline-offset-2" aria-label="Lebensmittel hinzufügen">+ Lebensmittel</button>
+          </div>
+          <div v-for="food in filteredManagedFoods" :key="food.name" :class="openManagedFood === food.name ? (isManagedFoodDirty(food) ? 'border-2 border-rose-300 bg-rose-50' : 'border-2 border-slate-400 bg-white') : 'border border-slate-200 bg-white'" class="rounded-lg overflow-hidden">
+            <div @click="toggleManagedFood(food)" class="w-full flex items-center justify-between gap-2 px-2.5 py-2 text-xs text-slate-700 cursor-pointer">
+              <span class="min-w-0 flex-1 text-left">{{ food.name }}</span>
+              <div v-if="openManagedFood === food.name && isManagedFoodDirty(food)" class="flex items-center gap-2 shrink-0 text-[11px]">
+                <button type="button" @click.stop="saveManagedFood(food)" class="text-rose-700 underline">Speichern</button>
+                <button type="button" @click.stop="cancelManagedFood(food)" class="text-slate-500 underline">Abbrechen</button>
+              </div>
+              <span v-else class="shrink-0 text-slate-400" :aria-label="openManagedFood === food.name ? 'Lebensmittel schließen' : 'Lebensmittel öffnen'">{{ openManagedFood === food.name ? '−' : '+' }}</span>
+            </div>
+            <div v-if="openManagedFood === food.name" class="px-2.5 py-2 border-t border-slate-200 space-y-3 text-[11px] text-slate-600">
+              <input v-model="food.name" @input="managedFoodNameChanged(food)" type="text" aria-label="Lebensmittelname" :class="managedFieldChanged(food, 'name') ? 'text-rose-600 border-rose-200' : 'text-slate-700 border-slate-200'" class="w-full px-2 py-1.5 border rounded text-xs font-semibold bg-white">
+              <textarea v-model="food.note" @input="markManagedFoodDirty" rows="2" placeholder="Füge hier nach Belieben Notizen hinzu …" :class="managedFieldChanged(food, 'note') ? 'text-rose-600 border-rose-200' : 'text-slate-700 border-slate-200'" class="w-full px-2 py-1.5 border rounded text-xs bg-white resize-y"></textarea>
+              <div class="space-y-1.5">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Basiswerte</div>
+                <div class="flex items-end gap-1.5">
+                  <label class="block w-16 shrink-0 text-[10px] text-slate-400">Menge<input :value="managedBaseAmount(food)" @change="setManagedBaseAmount(food, $event.target.value)" type="number" min="0" step="0.1" inputmode="decimal" :class="managedBaseChanged(food) ? 'text-rose-600 border-rose-200' : 'text-slate-700 border-slate-200'" class="macro-input mt-0.5 w-full px-2 py-1.5 border rounded text-xs bg-white"></label>
+                  <label class="block w-24 shrink-0 text-[10px] text-slate-400">Einheit<select :value="managedUnitChoice(food)" @change="setManagedUnitChoice(food, $event.target.value)" :class="managedBaseChanged(food) ? 'text-rose-600 border-rose-200' : 'text-slate-700 border-slate-200'" class="mt-0.5 w-full px-2 py-1.5 border rounded text-xs bg-white"><option value="g">Gramm</option><option value="mg">Milligramm</option><option value="kg">Kilogramm</option><option value="ml">Milliliter</option><option value="cl">Centiliter</option><option value="l">Liter</option><option value="free">Eigene Einheit</option></select></label>
+                  <label v-if="managedUnitChoice(food) === 'free'" class="block flex-1 min-w-0 text-[10px] text-slate-400">Eigene Einheit<input :value="managedBaseUnit(food)" @change="setManagedBaseUnit(food, $event.target.value)" type="text" placeholder="z. B. Dose" :class="managedBaseChanged(food) ? 'text-rose-600 border-rose-200' : 'text-slate-700 border-slate-200'" class="mt-0.5 w-full px-2 py-1.5 border rounded text-xs bg-white"></label>
+                </div>
+                <div class="grid grid-cols-5 gap-1">
+                  <label class="relative block min-w-0"><input v-model="food.macros.kcal" @input="markManagedFoodDirty" type="number" min="0" step="0.1" inputmode="decimal" aria-label="kcal" :class="managedMacroChanged(food, 'kcal') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="macro-input min-w-0 w-full px-1.5 py-1.5 pr-7 border rounded text-[10px] bg-white"><span :class="managedMacroChanged(food, 'kcal') ? 'text-rose-500' : 'text-slate-400'" class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px]">kcal</span></label>
+                  <label class="relative block min-w-0"><input v-model="food.macros.kh" @input="markManagedFoodDirty" type="number" min="0" step="0.1" inputmode="decimal" aria-label="Kohlenhydrate" :class="managedMacroChanged(food, 'kh') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="macro-input min-w-0 w-full px-1.5 py-1.5 pr-5 border rounded text-[10px] bg-white"><span :class="managedMacroChanged(food, 'kh') ? 'text-rose-500' : 'text-slate-400'" class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px]">KH</span></label>
+                  <label class="relative block min-w-0"><input v-model="food.macros.protein" @input="markManagedFoodDirty" type="number" min="0" step="0.1" inputmode="decimal" aria-label="Protein" :class="managedMacroChanged(food, 'protein') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="macro-input min-w-0 w-full px-1.5 py-1.5 pr-4 border rounded text-[10px] bg-white"><span :class="managedMacroChanged(food, 'protein') ? 'text-rose-500' : 'text-slate-400'" class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px]">P</span></label>
+                  <label class="relative block min-w-0"><input v-model="food.macros.fett" @input="markManagedFoodDirty" type="number" min="0" step="0.1" inputmode="decimal" aria-label="Fett" :class="managedMacroChanged(food, 'fett') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="macro-input min-w-0 w-full px-1.5 py-1.5 pr-4 border rounded text-[10px] bg-white"><span :class="managedMacroChanged(food, 'fett') ? 'text-rose-500' : 'text-slate-400'" class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px]">F</span></label>
+                  <label class="relative block min-w-0"><input v-model="food.macros.ballaststoffe" @input="markManagedFoodDirty" type="number" min="0" step="0.1" inputmode="decimal" aria-label="Ballaststoffe" :class="managedMacroChanged(food, 'ballaststoffe') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="macro-input min-w-0 w-full px-1.5 py-1.5 pr-6 border rounded text-[10px] bg-white"><span :class="managedMacroChanged(food, 'ballaststoffe') ? 'text-rose-500' : 'text-slate-400'" class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px]">Bal.</span></label>
+                </div>
+              </div>
+              <div class="border-t border-slate-200 pt-2 space-y-1.5">
+                <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Portionen <span class="normal-case tracking-normal font-normal italic">(berechnet anhand der Basiswerte)</span></span><button @click="addManagedPortion(food)" class="text-[11px] text-slate-600 underline">+ Portion</button></div>
+                <div v-for="(portion, index) in managedFoodPortions(food)" :key="`${food.name}-${index}`" class="rounded border border-slate-200 bg-slate-50 p-1.5 space-y-1">
+                  <div class="flex gap-1">
+                    <input v-model="portion.label" @input="markManagedFoodDirty" type="text" :placeholder="`Portion ${index + 1}`" :class="managedPortionChanged(food, index, 'label') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="min-w-0 flex-1 px-1.5 py-1 border rounded text-[11px] bg-white">
+                    <input :value="managedPortionAmount(food, portion)" @change="setManagedPortionAmount(food, portion, $event.target.value)" type="number" min="0" step="0.1" inputmode="decimal" :placeholder="managedBaseUnit(food)" :class="managedPortionChanged(food, index, 'amount') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="macro-input w-16 px-1.5 py-1 border rounded text-[11px] bg-white">
+                    <span class="self-center text-[10px] text-slate-400">{{ managedBaseUnit(food) }}</span>
+                    <button v-if="managedFoodPortions(food).length > 1" @click="removeManagedPortion(food, index)" class="px-1 text-xs text-rose-400" aria-label="Portion entfernen">×</button>
+                  </div>
+                  <div class="grid grid-cols-5 gap-1">
+                    <label class="relative block min-w-0"><input :value="displayMacro(managedPortionMacros(food, portion).kcal,0)" readonly aria-label="kcal, berechnet" class="min-w-0 w-full px-1.5 py-1 pr-7 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">kcal</span></label>
+                    <label class="relative block min-w-0"><input :value="displayMacro(managedPortionMacros(food, portion).kh)" readonly aria-label="KH, berechnet" class="min-w-0 w-full px-1.5 py-1 pr-5 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">KH</span></label>
+                    <label class="relative block min-w-0"><input :value="displayMacro(managedPortionMacros(food, portion).protein)" readonly aria-label="Protein, berechnet" class="min-w-0 w-full px-1.5 py-1 pr-4 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">P</span></label>
+                    <label class="relative block min-w-0"><input :value="displayMacro(managedPortionMacros(food, portion).fett)" readonly aria-label="Fett, berechnet" class="min-w-0 w-full px-1.5 py-1 pr-4 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">F</span></label>
+                    <label class="relative block min-w-0"><input :value="displayMacro(managedPortionMacros(food, portion).ballaststoffe)" readonly aria-label="Ballaststoffe, berechnet" class="min-w-0 w-full px-1.5 py-1 pr-6 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">Bal.</span></label>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+          <p v-if="filteredManagedFoods.length === 0" class="py-2 text-xs text-slate-400">Kein Lebensmittel gefunden.</p>
         </div>
-      </details>
+      </div>
 
       <!-- DATEN & SICHERUNG -->
-      <div class="space-y-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Datensicherung & Sync</h3>
+      <div class="order-5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <button @click="backupOpen = !backupOpen" class="w-full flex items-center justify-between gap-3 text-left"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Datensicherung & Sync</h3><span class="text-xs text-slate-500">{{ backupOpen ? 'schließen' : 'öffnen' }}</span></button>
+        <div v-if="backupOpen" class="mt-2.5 space-y-2.5">
         <p class="text-xs text-slate-500">
           Sichern Sie Ihre Datenbank als JSON-Datei (inkl. aller Einstellungen) oder stellen Sie ein Backup wieder her.
         </p>
@@ -284,11 +343,13 @@
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v11.2l4.6-4.6 1.4 1.4-7 7-7-7 1.4-1.4L10 14.2V3h2zM4 19h16v2H4v-2z"/></svg> CSV gesamte Historie
           </button>
         </div>
+        </div>
       </div>
 
       <!-- ADDONS KONFIGURATION -->
-      <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Add-ons Verwaltung</h3>
+      <div class="order-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <button @click="addonsOpen = !addonsOpen" class="w-full flex items-center justify-between gap-3 text-left"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Add-ons Verwaltung</h3><span class="text-xs text-slate-500">{{ addonsOpen ? 'schließen' : 'öffnen' }}</span></button>
+        <div v-if="addonsOpen" class="mt-2 space-y-2">
         <div class="flex gap-2">
           <input type="text" v-model="newItem.addon" placeholder="Neues Add-on..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
           <button @click="addSettingItem('addons', newItem.addon); newItem.addon = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
@@ -299,11 +360,13 @@
             <button @click="removeSettingItem('addons', item)" class="text-rose-400 hover:text-rose-500 font-bold ml-1">×</button>
           </span>
         </div>
+        </div>
       </div>
 
       <!-- BEWEGUNGSARTEN KONFIGURATION -->
-      <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Bewegungstypen Verwaltung</h3>
+      <div class="order-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <button @click="activitiesOpen = !activitiesOpen" class="w-full flex items-center justify-between gap-3 text-left"><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Bewegungstypen Verwaltung</h3><span class="text-xs text-slate-500">{{ activitiesOpen ? 'schließen' : 'öffnen' }}</span></button>
+        <div v-if="activitiesOpen" class="mt-2 space-y-2">
         <div class="flex gap-2">
           <input type="text" v-model="newItem.activity" placeholder="Neue Aktivität..." class="flex-1 p-2 border rounded-lg text-xs bg-white text-slate-800">
           <button @click="addSettingItem('activities', newItem.activity); newItem.activity = ''" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-semibold">Hinzufügen</button>
@@ -313,6 +376,7 @@
             {{ item }}
             <button @click="removeSettingItem('activities', item)" class="text-rose-400 hover:text-rose-500 font-bold ml-1">×</button>
           </span>
+        </div>
         </div>
       </div>
     </section>
@@ -419,7 +483,7 @@
               <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pt-1 mt-0.5 border-t border-slate-200 font-semibold text-slate-700"><span>Summe</span><span>{{ displayMacro(mealMacros.kcal,0) }}</span><span>{{ displayMacro(mealMacros.kh) }}</span><span>{{ displayMacro(mealMacros.protein) }}</span><span>{{ displayMacro(mealMacros.fett) }}</span><span>{{ displayMacro(mealMacros.ballaststoffe) }}</span></div>
             </div>
             <div class="pt-1">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Lebensmittel</label>
+              <div class="mb-1 flex items-center justify-between gap-2"><label class="block text-xs font-medium text-slate-500">Lebensmittel</label><button @click="openFoodStarter('meal')" class="text-[11px] text-slate-600 hover:text-slate-900 underline underline-offset-2">+ Lebensmittel</button></div>
               <div class="flex flex-wrap gap-1">
                 <button v-for="group in foodGroups" :key="group.name" @click="group.variants.length > 1 ? toggleFoodGroup(group.name) : toggleFood(group.variants[0])"
                   :class="hasSelectedFoodGroup(group) ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-700 border-slate-200'"
@@ -468,11 +532,7 @@
               </div>
             </div>
 
-            <div class="pt-1 space-y-1.5">
-              <div class="flex items-center justify-between gap-2">
-                <label class="block text-xs font-medium text-slate-500">Weitere Lebensmittel (frei)</label>
-                <button @click="addCustomFood" class="text-[11px] text-slate-600 hover:text-slate-900 underline underline-offset-2">+ Lebensmittel</button>
-              </div>
+            <div v-if="false && form.custom_foods.length" class="pt-2 space-y-1.5">
               <div v-for="(food, index) in form.custom_foods" :key="index" class="rounded-lg border border-slate-200 bg-slate-50 p-2 space-y-1.5">
                 <div class="flex gap-1.5">
                   <input v-model="food.name" type="text" placeholder="z. B. Big Mac" class="min-w-0 flex-1 px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-800">
@@ -629,6 +689,60 @@
       </div>
     </div>
 
+    <!-- LEBENSMITTEL START -->
+    <div v-if="foodStarterOpen" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-start justify-center px-4 pt-[12vh] sm:pt-16">
+      <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-3 shadow-xl border">
+        <div class="flex items-center justify-between gap-3 border-b pb-2"><h3 class="text-base font-bold text-slate-800">Lebensmittel hinzufügen</h3><button v-if="!newFoodModalOpen" type="button" @click="foodStarterOpen = false" class="text-xs text-slate-500 underline">Abbrechen</button></div>
+        <div class="flex items-center gap-2"><button type="button" @click="startBlankFood" class="w-[42%] shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100">Neues Lebensmittel</button><span class="text-xs text-slate-400">oder</span><input v-model="foodStarterSearch" type="search" placeholder="Bestehendes kopieren …" class="min-w-0 flex-1 px-2 py-2.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800"></div>
+        <div v-if="foodStarterSearch" class="space-y-1 max-h-56 overflow-y-auto"><button v-for="food in foodStarterCandidates" :key="food.name" type="button" @click="chooseStarterFood(food)" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50">{{ food.name }}</button><p v-if="!foodStarterCandidates.length" class="py-2 text-xs text-slate-400">Kein Lebensmittel gefunden.</p></div>
+        <div v-if="newFoodModalOpen" class="border-t border-slate-200 pt-3 space-y-3">
+          <input v-model="newFoodDraft.name" type="text" placeholder="Lebensmittelname" class="w-full px-2 py-1.5 border border-slate-200 rounded text-xs font-semibold bg-white text-slate-700">
+          <textarea v-model="newFoodDraft.note" rows="2" placeholder="Füge hier nach Belieben Notizen hinzu …" class="w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700 resize-y"></textarea>
+          <div class="space-y-1.5"><div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Basiswerte</div><div class="flex items-end gap-1.5"><label class="block w-16 shrink-0 text-[10px] text-slate-400">Menge<input v-model="newFoodDraft.baseAmount" type="number" min="0" step="0.1" inputmode="decimal" class="macro-input mt-0.5 w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700"></label><label class="block w-24 shrink-0 text-[10px] text-slate-400">Einheit<select v-model="newFoodDraft.baseUnit" class="mt-0.5 w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700"><option value="g">Gramm</option><option value="mg">Milligramm</option><option value="kg">Kilogramm</option><option value="ml">Milliliter</option><option value="cl">Centiliter</option><option value="l">Liter</option><option value="free">Eigene Einheit</option></select></label><label v-if="newFoodDraft.baseUnit === 'free'" class="block flex-1 min-w-0 text-[10px] text-slate-400">Eigene Einheit<input v-model="newFoodDraft.customUnit" type="text" placeholder="z. B. Dose" class="mt-0.5 w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700"></label></div><div class="grid grid-cols-5 gap-1"><label v-for="field in newFoodMacroFields" :key="field.key" class="relative block min-w-0"><input v-model="newFoodDraft.macros[field.key]" type="number" min="0" step="0.1" inputmode="decimal" :aria-label="field.label" class="macro-input min-w-0 w-full px-1.5 py-1.5 border border-slate-200 rounded text-[10px] bg-white" :class="field.key === 'kcal' ? 'pr-7' : (field.key === 'ballaststoffe' ? 'pr-6' : 'pr-4')"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">{{ field.short }}</span></label></div></div>
+          <div class="border-t border-slate-200 pt-2 space-y-1.5"><div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Portionen <span class="normal-case tracking-normal font-normal italic">(berechnet anhand der Basiswerte)</span></span><button type="button" @click="addNewFoodPortion" class="text-[11px] text-slate-600 underline">+ Portion</button></div><div v-for="(portion, index) in newFoodDraft.portions" :key="index" class="rounded border border-slate-200 bg-slate-50 p-1.5 space-y-1"><div class="flex gap-1"><input v-model="portion.label" type="text" :placeholder="`Portion ${index + 1}`" class="min-w-0 flex-1 px-1.5 py-1 border border-slate-200 rounded text-[11px] bg-white"><input v-model="portion.amount" type="number" min="0" step="0.1" inputmode="decimal" class="macro-input w-16 px-1.5 py-1 border border-slate-200 rounded text-[11px] bg-white"><span class="self-center text-[10px] text-slate-400">{{ newFoodUnitLabel }}</span><button v-if="newFoodDraft.portions.length > 1" type="button" @click="newFoodDraft.portions.splice(index, 1)" class="px-1 text-xs text-rose-400">×</button></div><div class="grid grid-cols-5 gap-1"><label v-for="field in newFoodMacroFields" :key="field.key" class="relative block min-w-0"><input :value="displayMacro(newFoodPortionMacros(portion)[field.key], field.key === 'kcal' ? 0 : 1)" readonly class="min-w-0 w-full px-1.5 py-1 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600" :class="field.key === 'kcal' ? 'pr-7' : (field.key === 'ballaststoffe' ? 'pr-6' : 'pr-4')"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">{{ field.short }}</span></label></div></div></div>
+          <div class="flex gap-2 pt-1"><button type="button" @click="closeNewFoodModal" class="flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl text-sm">Abbrechen</button><button type="button" @click="saveNewFood" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-sm">Lebensmittel anlegen</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEUES LEBENSMITTEL -->
+    <div v-if="newFoodModalOpen && !foodStarterOpen" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-3 shadow-xl max-h-[90vh] overflow-y-auto border">
+        <div class="border-b pb-2"><h3 class="text-base font-bold text-slate-800">Neues Lebensmittel anlegen</h3></div>
+        <input v-model="newFoodDraft.name" type="text" placeholder="Lebensmittelname" class="w-full px-2 py-1.5 border border-slate-200 rounded text-xs font-semibold bg-white text-slate-700">
+        <textarea v-model="newFoodDraft.note" rows="2" placeholder="Füge hier nach Belieben Notizen hinzu …" class="w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700 resize-y"></textarea>
+        <div class="space-y-1.5">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Basiswerte</div>
+          <div class="flex items-end gap-1.5">
+            <label class="block w-16 shrink-0 text-[10px] text-slate-400">Menge<input v-model="newFoodDraft.baseAmount" type="number" min="0" step="0.1" inputmode="decimal" class="macro-input mt-0.5 w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700"></label>
+            <label class="block w-24 shrink-0 text-[10px] text-slate-400">Einheit<select v-model="newFoodDraft.baseUnit" class="mt-0.5 w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700"><option value="g">Gramm</option><option value="mg">Milligramm</option><option value="kg">Kilogramm</option><option value="ml">Milliliter</option><option value="cl">Centiliter</option><option value="l">Liter</option><option value="free">Eigene Einheit</option></select></label>
+            <label v-if="newFoodDraft.baseUnit === 'free'" class="block flex-1 min-w-0 text-[10px] text-slate-400">Eigene Einheit<input v-model="newFoodDraft.customUnit" type="text" placeholder="z. B. Dose" class="mt-0.5 w-full px-2 py-1.5 border border-slate-200 rounded text-xs bg-white text-slate-700"></label>
+          </div>
+          <div class="grid grid-cols-5 gap-1">
+            <label v-for="field in newFoodMacroFields" :key="field.key" class="relative block min-w-0"><input v-model="newFoodDraft.macros[field.key]" type="number" min="0" step="0.1" inputmode="decimal" :aria-label="field.label" class="macro-input min-w-0 w-full px-1.5 py-1.5 border border-slate-200 rounded text-[10px] bg-white" :class="field.key === 'kcal' ? 'pr-7' : (field.key === 'ballaststoffe' ? 'pr-6' : 'pr-4')"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">{{ field.short }}</span></label>
+          </div>
+        </div>
+        <div class="border-t border-slate-200 pt-2 space-y-1.5">
+          <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Portionen <span class="normal-case tracking-normal font-normal italic">(berechnet anhand der Basiswerte)</span></span><button type="button" @click="addNewFoodPortion" class="text-[11px] text-slate-600 underline">+ Portion</button></div>
+          <div v-for="(portion, index) in newFoodDraft.portions" :key="index" class="rounded border border-slate-200 bg-slate-50 p-1.5 space-y-1">
+            <div class="flex gap-1"><input v-model="portion.label" type="text" :placeholder="`Portion ${index + 1}`" class="min-w-0 flex-1 px-1.5 py-1 border border-slate-200 rounded text-[11px] bg-white"><input v-model="portion.amount" type="number" min="0" step="0.1" inputmode="decimal" class="macro-input w-16 px-1.5 py-1 border border-slate-200 rounded text-[11px] bg-white"><span class="self-center text-[10px] text-slate-400">{{ newFoodUnitLabel }}</span><button v-if="newFoodDraft.portions.length > 1" type="button" @click="newFoodDraft.portions.splice(index, 1)" class="px-1 text-xs text-rose-400">×</button></div>
+            <div class="grid grid-cols-5 gap-1"><label v-for="field in newFoodMacroFields" :key="field.key" class="relative block min-w-0"><input :value="displayMacro(newFoodPortionMacros(portion)[field.key], field.key === 'kcal' ? 0 : 1)" readonly class="min-w-0 w-full px-1.5 py-1 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600" :class="field.key === 'kcal' ? 'pr-7' : (field.key === 'ballaststoffe' ? 'pr-6' : 'pr-4')"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">{{ field.short }}</span></label></div>
+          </div>
+        </div>
+        <div class="flex gap-2 pt-1"><button type="button" @click="closeNewFoodModal" class="flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl text-sm">Abbrechen</button><button type="button" @click="saveNewFood" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-xl text-sm">Lebensmittel anlegen</button></div>
+      </div>
+    </div>
+
+    <!-- LEBENSMITTEL KOPIEREN -->
+    <div v-if="copyFoodModalOpen" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-3 shadow-xl max-h-[80vh] overflow-y-auto border">
+        <div class="flex items-center justify-between gap-3 border-b pb-2"><h3 class="text-base font-bold text-slate-800">Lebensmittel kopieren</h3><button type="button" @click="copyFoodModalOpen = false" class="text-xs text-slate-500 underline">Abbrechen</button></div>
+        <p class="text-xs text-slate-500">Wähle ein Lebensmittel. Werte und Portionen werden übernommen und können danach angepasst werden.</p>
+        <input v-model="copyFoodSearch" type="search" placeholder="Lebensmittel suchen …" class="w-full px-2.5 py-2 border border-slate-200 rounded-lg text-xs bg-white text-slate-800">
+        <div class="space-y-1 max-h-64 overflow-y-auto"><button v-for="food in copyFoodCandidates" :key="food.name" type="button" @click="chooseFoodCopy(food)" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50">{{ food.name }}</button><p v-if="!copyFoodCandidates.length" class="py-2 text-xs text-slate-400">Kein Lebensmittel gefunden.</p></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- VUE LOGIC -->
@@ -675,6 +789,23 @@
           mealDetailsOpen: false,
           portionDetailsOpen: {},
           protocolMealDetails: {},
+          foodSearch: '',
+          openManagedFood: '',
+          managedFoodDirty: false,
+          managedFoodSnapshot: null,
+          managedFoodOriginalName: '',
+          newFoodModalOpen: false,
+          newFoodOrigin: 'settings',
+          newFoodDraft: null,
+          foodStarterOpen: false,
+          foodStarterOrigin: 'settings',
+          foodStarterSearch: '',
+          copyFoodModalOpen: false,
+          copyFoodSearch: '',
+          foodManagementOpen: false,
+          backupOpen: false,
+          addonsOpen: false,
+          activitiesOpen: false,
           editingId: null,
           entries: [],
           config: {
@@ -872,6 +1003,18 @@
         managedFoods() {
           return [...this.config.foods].sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
         },
+        filteredManagedFoods() {
+          const query = this.foodSearch.trim().toLocaleLowerCase('de-AT');
+          return query ? this.managedFoods.filter(food => food.name.toLocaleLowerCase('de-AT').includes(query)) : this.managedFoods;
+        },
+        copyFoodCandidates() {
+          const query = this.copyFoodSearch.trim().toLocaleLowerCase('de-AT');
+          return query ? this.managedFoods.filter(food => food.name.toLocaleLowerCase('de-AT').includes(query)) : this.managedFoods;
+        },
+        foodStarterCandidates() {
+          const query = this.foodStarterSearch.trim().toLocaleLowerCase('de-AT');
+          return query ? this.managedFoods.filter(food => food.name.toLocaleLowerCase('de-AT').includes(query)) : this.managedFoods;
+        },
         mealMacros() {
           return this.calculateFoodMacros(this.form.selected_foods, this.form.food_quantities, this.form.custom_foods);
         },
@@ -881,6 +1024,17 @@
             custom_foods: this.form.custom_foods,
             details: this.form.details
           }]);
+        },
+        newFoodMacroFields() {
+          return [
+            { key: 'kcal', short: 'kcal', label: 'kcal' }, { key: 'kh', short: 'KH', label: 'Kohlenhydrate' },
+            { key: 'protein', short: 'P', label: 'Protein' }, { key: 'fett', short: 'F', label: 'Fett' },
+            { key: 'ballaststoffe', short: 'Bal.', label: 'Ballaststoffe' }
+          ];
+        },
+        newFoodUnitLabel() {
+          if (!this.newFoodDraft) return '';
+          return this.newFoodDraft.baseUnit === 'free' ? (this.newFoodDraft.customUnit || 'Einheit') : this.newFoodDraft.baseUnit;
         },
         todayKcal() {
           const lastNightEnd = this.entries
@@ -1046,6 +1200,94 @@
         },
         addCustomFood() {
           this.form.custom_foods.push({ name: '', reference: 'Portion', kcal: '', kh: '', protein: '', fett: '', ballaststoffe: '', portions: [{ label: 'Basisportion', amount: 1, factors: '0,5; 1; 2' }], active_portion: 0, active_multiplier: 1 });
+        },
+        openNewFoodModal(origin, source = null) {
+          this.newFoodOrigin = origin || 'settings';
+          const sourceParts = source ? this.managedBaseParts(source) : { amount: 100, unit: 'g' };
+          const sourceChoice = source ? this.managedUnitChoice(source) : 'g';
+          this.newFoodDraft = {
+            name: source ? `Kopie von ${source.name}` : '', note: source ? String(source.note || '') : '',
+            baseAmount: sourceParts.amount, baseUnit: sourceChoice, customUnit: sourceChoice === 'free' ? sourceParts.unit : '',
+            macros: source ? JSON.parse(JSON.stringify(source.macros || {})) : { kcal: '', kh: '', protein: '', fett: '', ballaststoffe: '' },
+            portions: source ? this.managedFoodPortions(source).map((portion, index) => ({ label: String(portion.label || '') || `Portion ${index + 1}`, amount: this.managedPortionAmount(source, portion) })) : [{ label: 'Portion 1', amount: 100 }]
+          };
+          this.newFoodModalOpen = true;
+        },
+        openFoodStarter(origin) {
+          this.foodStarterOrigin = origin || 'settings';
+          this.foodStarterSearch = '';
+          this.foodStarterOpen = true;
+        },
+        startBlankFood() {
+          this.openNewFoodModal(this.foodStarterOrigin);
+        },
+        chooseStarterFood(food) {
+          this.foodStarterSearch = '';
+          this.openNewFoodModal(this.foodStarterOrigin, food);
+        },
+        openCopyFoodModal() {
+          this.copyFoodSearch = '';
+          this.copyFoodModalOpen = true;
+        },
+        chooseFoodCopy(food) {
+          this.copyFoodModalOpen = false;
+          this.openNewFoodModal('settings', food);
+        },
+        closeNewFoodModal() {
+          this.newFoodModalOpen = false;
+          this.newFoodDraft = null;
+          this.foodStarterOpen = false;
+        },
+        newFoodBaseAmount() {
+          const value = Number.parseFloat(String(this.newFoodDraft && this.newFoodDraft.baseAmount || '').replace(',', '.'));
+          return Number.isFinite(value) && value > 0 ? value : 1;
+        },
+        newFoodPortionMacros(portion) {
+          const factor = (Number(portion && portion.amount) || this.newFoodBaseAmount()) / this.newFoodBaseAmount();
+          const result = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
+          Object.keys(result).forEach(key => { result[key] = (Number(this.newFoodDraft.macros[key]) || 0) * factor; });
+          return result;
+        },
+        addNewFoodPortion() {
+          const portions = this.newFoodDraft.portions;
+          portions.push({ label: `Portion ${portions.length + 1}`, amount: this.newFoodBaseAmount() });
+        },
+        async saveNewFood() {
+          const draft = this.newFoodDraft;
+          const name = String(draft && draft.name || '').trim();
+          if (!name) { alert('Bitte gib einen Namen für das Lebensmittel ein.'); return; }
+          if (this.config.foods.some(food => food.name.toLocaleLowerCase('de-AT') === name.toLocaleLowerCase('de-AT'))) { alert('Dieses Lebensmittel gibt es bereits.'); return; }
+          const baseAmount = this.newFoodBaseAmount();
+          const unit = this.newFoodUnitLabel;
+          const food = { name, category: 'Selten', frequency: 'Selten', note: String(draft.note || ''), base: `${baseAmount} ${unit}`, macros: { ...draft.macros }, portions: draft.portions.map((portion, index) => ({ label: String(portion.label || '').trim() || `Portion ${index + 1}`, f: (Number(portion.amount) || baseAmount) / baseAmount })) };
+          this.config.foods.push(food);
+          await this.saveFoods();
+          if (this.newFoodOrigin === 'meal') {
+            this.form.selected_foods.push(food.name);
+            this.form.food_quantities[food.name] = food.portions[0].f;
+          }
+          this.closeNewFoodModal();
+        },
+        async registerMealFoods() {
+          const added = (this.form.custom_foods || []).filter(food => {
+            const name = String(food && food.name || '').trim();
+            return name && !this.config.foods.some(existing => existing.name.toLocaleLowerCase('de-AT') === name.toLocaleLowerCase('de-AT'));
+          });
+          if (!added.length) return;
+          added.forEach(food => {
+            const reference = String(food.reference || 'Portion');
+            const baseAmount = this.referenceAmount(reference);
+            const portions = this.customFoodPortions(food).map((portion, index) => ({
+              label: String(portion.label || '').trim() || (reference === 'Portion' && index === 0 ? 'Basisportion' : `Portion ${index + 1}`),
+              f: reference === 'Portion' ? 1 : ((Number(portion.amount) || baseAmount) / baseAmount)
+            }));
+            this.config.foods.push({
+              name: String(food.name).trim(), category: 'Selten', base: reference,
+              macros: { kcal: food.kcal || '', kh: food.kh || '', protein: food.protein || '', fett: food.fett || '', ballaststoffe: food.ballaststoffe || '' },
+              portions: portions.length ? portions : [{ label: reference === 'Portion' ? 'Basisportion' : 'Portion 1', f: 1 }], frequency: 'Selten', note: ''
+            });
+          });
+          await this.saveFoods();
         },
         removeCustomFood(index) {
           this.form.custom_foods.splice(index, 1);
@@ -1395,10 +1637,14 @@
           const darkModeSetting = stored.find(item => item.key === 'darkMode');
           this.darkMode = !!(darkModeSetting && darkModeSetting.value);
           document.body.classList.toggle('dark-mode', this.darkMode);
+          document.getElementById('app')?.classList.toggle('dark-mode', this.darkMode);
+          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', this.darkMode ? '#0b1220' : '#ffffff');
         },
         async setDarkMode(enabled) {
           this.darkMode = !!enabled;
           document.body.classList.toggle('dark-mode', this.darkMode);
+          document.getElementById('app')?.classList.toggle('dark-mode', this.darkMode);
+          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', this.darkMode ? '#0b1220' : '#ffffff');
           await db.settings.put({ key: 'darkMode', value: this.darkMode });
         },
         async loadEntries() {
@@ -1447,6 +1693,7 @@
               cleanPayload.is_deleted = 0;
               await db.entries.add(cleanPayload);
             }
+            if (this.activeModal === 'MAHLZEIT') await this.registerMealFoods();
             this.closeModal();
             await this.loadEntries();
           } catch (error) {
@@ -1579,7 +1826,167 @@
           }
         },
         async saveFoods() {
-          await db.settings.put({ key: 'foods', value: this.config.foods });
+          await db.settings.put({ key: 'foods', value: JSON.parse(JSON.stringify(this.config.foods)) });
+        },
+        cloneManagedFood(food) {
+          return JSON.parse(JSON.stringify(food));
+        },
+        isManagedFoodDirty(food) {
+          return this.openManagedFood === food.name && this.managedFoodDirty;
+        },
+        toggleManagedFood(food) {
+          if (this.managedFoodDirty) {
+            alert('Bitte zuerst Speichern oder Abbrechen wählen.');
+            return;
+          }
+          if (this.openManagedFood === food.name) {
+            this.openManagedFood = '';
+            return;
+          }
+          this.openManagedFood = food.name;
+          this.managedFoodOriginalName = food.name;
+          this.managedFoodSnapshot = this.cloneManagedFood(food);
+          this.managedFoodDirty = false;
+        },
+        markManagedFoodDirty() {
+          this.managedFoodDirty = true;
+        },
+        managedSnapshotValue(path, fallback = '') {
+          let current = this.managedFoodSnapshot;
+          for (const key of path) current = current && current[key];
+          return current === undefined || current === null ? fallback : current;
+        },
+        managedFieldChanged(food, key) {
+          return this.managedFoodDirty && String(food[key] ?? '') !== String(this.managedSnapshotValue([key]));
+        },
+        managedBaseChanged(food) {
+          return this.managedFoodDirty && String(food.base || '') !== String(this.managedSnapshotValue(['base']));
+        },
+        managedMacroChanged(food, key) {
+          return this.managedFoodDirty && String((food.macros && food.macros[key]) ?? '') !== String(this.managedSnapshotValue(['macros', key]));
+        },
+        managedPortionChanged(food, index, key) {
+          if (!this.managedFoodDirty) return false;
+          const original = (this.managedFoodSnapshot && this.managedFoodSnapshot.portions || [])[index];
+          if (!original) return true;
+          if (key === 'amount') return Number(this.managedPortionAmount(food, food.portions[index])) !== Number(this.managedBaseAmount(this.managedFoodSnapshot) * (Number(original.f) || 1));
+          return String(food.portions[index] && food.portions[index][key] || '') !== String(original[key] || '');
+        },
+        managedFoodNameChanged(food) {
+          this.openManagedFood = food.name;
+          this.markManagedFoodDirty();
+        },
+        async saveManagedFood(food) {
+          const previous = this.managedFoodOriginalName || food.name;
+          const next = String(food.name || '').trim();
+          if (!next) {
+            alert('Bitte gib einen Namen für das Lebensmittel ein.');
+            return;
+          }
+          if (this.config.foods.some(item => item !== food && item.name === next)) {
+            alert('Dieses Lebensmittel gibt es bereits.');
+            return;
+          }
+          food.name = next;
+          if (previous !== next) {
+            (this.config.foodCombos || []).forEach(combo => {
+              if (!combo.items || combo.items[previous] === undefined) return;
+              combo.items[next] = combo.items[previous];
+              delete combo.items[previous];
+            });
+            const changedEntries = this.entries.filter(entry => (entry.selected_foods || []).includes(previous));
+            for (const entry of changedEntries) {
+              entry.selected_foods = (entry.selected_foods || []).map(name => name === previous ? next : name);
+              if (entry.food_quantities && entry.food_quantities[previous] !== undefined) {
+                entry.food_quantities[next] = entry.food_quantities[previous];
+                delete entry.food_quantities[previous];
+              }
+              await db.entries.put(entry);
+            }
+            await db.settings.put({ key: 'foodCombos', value: this.config.foodCombos });
+          }
+          await this.saveFoods();
+          this.openManagedFood = '';
+          this.managedFoodOriginalName = next;
+          this.managedFoodSnapshot = this.cloneManagedFood(food);
+          this.managedFoodDirty = false;
+        },
+        cancelManagedFood(food) {
+          if (!this.managedFoodSnapshot) return;
+          Object.keys(food).forEach(key => delete food[key]);
+          Object.assign(food, this.cloneManagedFood(this.managedFoodSnapshot));
+          this.openManagedFood = '';
+          this.managedFoodOriginalName = food.name;
+          this.managedFoodDirty = false;
+        },
+        managedBaseParts(food) {
+          const match = String(food && food.base || '').trim().match(/^([0-9]+(?:[.,][0-9]+)?)\s*(.*)$/);
+          return match ? { amount: Number.parseFloat(match[1].replace(',', '.')), unit: match[2].trim() || 'Portion' } : { amount: 1, unit: String(food && food.base || 'Portion').trim() || 'Portion' };
+        },
+        managedBaseAmount(food) {
+          return this.managedBaseParts(food).amount;
+        },
+        managedBaseUnit(food) {
+          return this.managedBaseParts(food).unit;
+        },
+        setManagedBaseAmount(food, value) {
+          const previous = this.managedBaseAmount(food);
+          const next = Number.parseFloat(String(value || '').replace(',', '.'));
+          if (!Number.isFinite(next) || next <= 0) return;
+          this.managedFoodPortions(food).forEach(portion => { portion.f = (previous * (Number(portion.f) || 1)) / next; });
+          food.base = `${next} ${this.managedBaseUnit(food)}`;
+          this.markManagedFoodDirty();
+        },
+        setManagedBaseUnit(food, value) {
+          const unit = String(value || '').trim() || 'Portion';
+          food.base = `${this.managedBaseAmount(food)} ${unit}`;
+          this.markManagedFoodDirty();
+        },
+        managedUnitChoice(food) {
+          const unit = this.managedBaseUnit(food).toLocaleLowerCase('de-AT');
+          const aliases = { gramm: 'g', gram: 'g', g: 'g', milligramm: 'mg', mg: 'mg', kilogramm: 'kg', kg: 'kg', milliliter: 'ml', millilitre: 'ml', ml: 'ml', centiliter: 'cl', cl: 'cl', liter: 'l', litre: 'l', l: 'l' };
+          return aliases[unit] || 'free';
+        },
+        setManagedUnitChoice(food, choice) {
+          const units = { g: 'g', mg: 'mg', kg: 'kg', ml: 'ml', cl: 'cl', l: 'l' };
+          if (choice === 'free') {
+            const current = this.managedBaseUnit(food);
+            const text = this.managedUnitChoice(food) === 'free' ? current : 'Einheit';
+            food.base = `${this.managedBaseAmount(food)} ${text}`;
+            this.markManagedFoodDirty();
+            return;
+          }
+          this.setManagedBaseUnit(food, units[choice] || 'Portion');
+        },
+        managedFoodPortions(food) {
+          if (!Array.isArray(food.portions) || !food.portions.length) food.portions = [{ label: 'Portion 1', f: 1 }];
+          return food.portions;
+        },
+        managedPortionAmount(food, portion) {
+          return Math.round(this.managedBaseAmount(food) * (Number(portion && portion.f) || 1) * 1000) / 1000;
+        },
+        managedPortionMacros(food, portion) {
+          const factor = Number(portion && portion.f) || 1;
+          const result = { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 };
+          Object.keys(result).forEach(key => { result[key] = (Number(food.macros && food.macros[key]) || 0) * factor; });
+          return result;
+        },
+        setManagedPortionAmount(food, portion, value) {
+          const amount = Number.parseFloat(String(value || '').replace(',', '.'));
+          if (!Number.isFinite(amount) || amount <= 0) return;
+          portion.f = amount / this.managedBaseAmount(food);
+          this.markManagedFoodDirty();
+        },
+        addManagedPortion(food) {
+          const portions = this.managedFoodPortions(food);
+          portions.push({ label: `Portion ${portions.length + 1}`, f: 1 });
+          this.markManagedFoodDirty();
+        },
+        removeManagedPortion(food, index) {
+          const portions = this.managedFoodPortions(food);
+          if (portions.length < 2) return;
+          portions.splice(index, 1);
+          this.markManagedFoodDirty();
         },
         async removeSettingItem(key, val) {
           this.config[key] = this.config[key].filter(i => i !== val);

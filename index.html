@@ -20,8 +20,12 @@
       letter-spacing: 0;
     }
     #app h1 { font-weight: 600; letter-spacing: .018em; }
-    #app .protocol-title { font-weight: 600; letter-spacing: .01em; }
+    #app .protocol-title { font-weight: 400; letter-spacing: .12em; }
     #app .protocol-filter { font-weight: 500; }
+    #app .protocol-filter-active { background: #e2e8f0; border-color: #cbd5e1; color: #1e293b; }
+    #app.dark-mode .protocol-filter-active { background: #3a485c; border-color: #617187; color: #f1f5f9; }
+    #app.dark-mode .food-management-active { background-color: #1d2b3d !important; border-color: #f5f8fc !important; box-shadow: none !important; }
+    #app.dark-mode .managed-food-active { border-color: #edf3fa !important; box-shadow: none !important; }
     #app .protocol-day-title { font-weight: 600; letter-spacing: .06em; }
     #app .protocol-card-heading { font-weight: 500; }
     #app .protocol-card-detail { font-weight: 400; }
@@ -67,13 +71,13 @@
     #app.dark-mode textarea::placeholder { color: #7f91a8; }
     #app.dark-mode input:focus,
     #app.dark-mode textarea:focus,
-    #app.dark-mode select:focus { border-color: #7da1d8; }
+    #app.dark-mode select:focus { border-color: #8fa6c1; outline: none !important; box-shadow: none !important; }
     #app.dark-mode .shadow-sm,
     #app.dark-mode .shadow { box-shadow: 0 1px 3px rgb(0 0 0 / .28) !important; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
-  <div id="app" :class="{ 'dark-mode': darkMode }" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 bg-white border-x border-slate-200 shadow-sm">
+  <div id="app" :class="{ 'dark-mode': darkMode }" class="max-w-md mx-auto min-h-screen flex flex-col justify-start p-4 bg-white border-x border-slate-200 shadow-sm">
     
     <!-- HEADER -->
     <header class="py-4 border-b border-slate-200">
@@ -94,7 +98,7 @@
 
     <!-- DASHBOARD BUTTONS -->
     <main v-if="viewMode === 'dashboard'" class="py-5 space-y-3">
-      <h2 class="section-title text-sm font-semibold tracking-[0.12em] text-slate-700">DATEN EINTRAGEN</h2>
+      <h2 class="section-title text-sm font-normal tracking-[0.12em] text-slate-700">DATEN EINTRAGEN</h2>
       <!-- SCHNELLNOTIZ -->
       <div class="relative">
         <input type="text" v-model="quickNote" @keyup.enter="saveQuickNote"
@@ -121,15 +125,22 @@
     <!-- PROTOKOLL ANSICHT -->
     <section v-if="viewMode === 'dashboard' || viewMode === 'protocol'" class="py-3 space-y-3">
       <div class="flex justify-between items-center">
-        <h2 class="section-title protocol-title text-sm font-semibold tracking-[0.12em] text-slate-700">PROTOKOLL</h2>
+        <h2 class="section-title protocol-title text-sm font-normal tracking-[0.12em] text-slate-700">PROTOKOLL</h2>
         <button v-if="viewMode === 'protocol'" @click="viewMode = 'dashboard'" class="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-semibold text-slate-700">Zurück</button>
       </div>
+      <p class="-mt-2 text-[11px] text-slate-400">Wähle, welche Einträge du sehen möchtest.</p>
 
       <!-- FILTER -->
-      <div class="flex flex-wrap gap-1.5">
-        <button v-for="f in protocolFilters" :key="f.value" @click="toggleProtocolFilter(f.value)"
-          :class="isProtocolFilterActive(f.value) ? 'bg-slate-800 text-white border-slate-800' : 'bg-slate-100 text-slate-600 border-slate-200'"
-          class="protocol-filter px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition">
+      <div class="flex flex-wrap items-center gap-1">
+        <button v-for="f in protocolFilters.filter(f => f.value === 'ALLE' || f.value === 'KEINE')" :key="f.value" @click="toggleProtocolFilter(f.value)"
+          :class="isProtocolFilterActive(f.value) ? 'protocol-filter-active' : 'bg-transparent text-slate-500 border-slate-200 hover:bg-slate-50'"
+          class="protocol-filter px-2 py-1 rounded-md text-[10px] border transition">
+          {{ f.label }}
+        </button>
+        <span class="mx-0.5 text-slate-300" aria-hidden="true">•</span>
+        <button v-for="f in protocolFilters.filter(f => f.value !== 'ALLE' && f.value !== 'KEINE')" :key="f.value" @click="toggleProtocolFilter(f.value)"
+          :class="isProtocolFilterActive(f.value) ? 'protocol-filter-active' : 'bg-transparent text-slate-500 border-slate-200 hover:bg-slate-50'"
+          class="protocol-filter px-2 py-1 rounded-md text-[10px] border transition">
           {{ f.label }}
         </button>
       </div>
@@ -158,21 +169,25 @@
             <span class="h-px flex-1 bg-slate-200" aria-hidden="true"></span>
           </div>
 
-          <div v-for="entry in day.items" :key="entry.id" class="mb-1.5 rounded-lg border border-slate-200 px-2.5 py-2 flex justify-between items-start shadow-sm" :class="typeCardStyle(entry.type)">
-            <div class="flex-1 cursor-pointer" @click="editEntry(entry)">
-              <div class="protocol-card-heading text-xs leading-5">
-                <span class="text-slate-400">{{ formatTime(entry.timestamp) }}</span>
-                <span class="ml-1.5 text-slate-600">
-                  <template v-if="entry.type === 'MAHLZEIT'"><svg class="w-3 h-3 inline-block align-[-2px] text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg> <span v-if="foodMacroCoverage([entry]) === 0" class="text-rose-500">Makros fehlen</span><span v-else>{{ entryKcal(entry) }} kcal <span v-if="foodMacroCoverage([entry]) < 100" class="text-rose-500">· {{ foodMacroCoverage([entry]) }} % erfasst</span></span></template>
-                  <template v-else-if="entry.type === 'SCHLAF'">{{ entry.subtype || 'Schlaf' }}</template>
-                  <template v-else-if="entry.type === 'BEWEGUNG'"><svg class="w-3 h-3 inline-block align-[-2px] text-green-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="13.5" cy="4" r="2"/><path d="M9.9 19.4l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L5.9 8.3V13h2V9.6l1.8-.7-1.6 8.1-4.9-1-.4 2 7.1 1.4z"/></svg> {{ entry.subtype || 'Bewegung' }}</template>
-                  <template v-else-if="entry.type === 'BODYSOUL'"><span class="text-purple-500 font-normal">Body <svg class="w-3 h-3 inline-block align-[-2px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 20.5S3 15.2 3 8.8C3 5.8 5.3 4 8 4c1.8 0 3.4 1 4 2.5C12.6 5 14.2 4 16 4c2.7 0 5 1.8 5 4.8 0 6.4-9 11.7-9 11.7z"/></svg> Soul</span></template>
-                  <template v-else-if="entry.type === 'ZYKLUS'"><span class="text-pink-500">{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> · {{ entry.subtype }}</span></span></template>
-                  <template v-else>{{ typeLabel(entry.type) }}<span v-if="entry.subtype"> · {{ entry.subtype }}</span></template>
-                </span>
-              </div>
+          <button v-if="day.sleepReminder && protocolSelected.includes('SCHLAF')" @click="openSleepReminder(day.sleepReminder)" class="mb-1.5 w-full rounded-lg border-2 border-rose-300 bg-blue-50 px-2.5 py-2 text-left shadow-sm">
+            <div class="flex items-center gap-1 text-xs leading-5 text-rose-600"><span>{{ day.sleepReminder.dateLabel }}</span><span>·</span><span>{{ day.sleepReminder.timeLabel }}</span><span class="font-medium">{{ day.sleepReminder.title }}</span></div>
+            <div class="mt-0.5 text-xs text-rose-500">Eintrag fehlt · Zeit automatisch eingetragen · antippen zum Nachtragen</div>
+          </button>
 
-              <div class="protocol-card-detail text-xs text-slate-600 mt-0.5 leading-snug">
+          <div v-for="entry in day.items" :key="entry.id" class="mb-1.5 rounded-lg border border-slate-200 px-2.5 py-2 flex justify-between items-start shadow-sm" :class="typeCardStyle(entry.type)">
+            <div class="min-w-0 flex-1">
+              <div class="protocol-card-heading flex min-w-0 items-center gap-1 text-xs leading-5">
+                <span class="shrink-0 text-slate-400">{{ formatProtocolDate(entry.timestamp) }}</span>
+                <span class="shrink-0 text-slate-300" aria-hidden="true">·</span>
+                <span class="shrink-0 text-slate-400">{{ formatTime(entry.timestamp) }}</span>
+                <span v-if="entry.type === 'ADDON'" class="shrink-0 text-amber-500 font-bold">＋</span>
+                <svg v-else-if="entry.type === 'MAHLZEIT'" class="w-3 h-3 shrink-0 text-red-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 7h11l1 2v8l-1 2H6l-1-2V9l1-2zm12 4h2v4h-2v-4zM7 9v8h9V9H7zm2 2h4v4H9v-4z"/></svg>
+                <svg v-else-if="entry.type === 'SCHLAF'" class="w-3 h-3 shrink-0 text-blue-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.2 13.2A9.2 9.2 0 1 1 10.8 2.8a7.2 7.2 0 0 0 10.4 10.4z"/></svg>
+                <span class="min-w-0 truncate text-slate-700">{{ entry.type === 'MAHLZEIT' ? protocolMealHeading(entry) : protocolCardTitle(entry) }}</span>
+              </div>
+              <div v-if="protocolCardPreview(entry)" class="protocol-card-detail mt-0.5 truncate text-xs text-slate-500">{{ protocolCardPreview(entry) }}</div>
+
+              <div v-if="protocolEntryDetails[entry.id]" class="protocol-card-detail text-xs text-slate-600 mt-1 leading-snug">
                 <div v-if="entry.type === 'SCHLAF'">
                   <span v-if="entry.sleep_rating">{{ entry.sleep_rating }}</span>
                   <span v-if="entry.sleep_tiredness"><span v-if="entry.sleep_rating"> · </span>{{ entry.sleep_tiredness }}</span>
@@ -181,12 +196,11 @@
                 </div>
 
                 <div v-if="entry.type === 'MAHLZEIT'">
-                  {{ foodNamesPreview(entry) }} <button @click.stop="toggleProtocolMealDetails(entry.id)" class="ml-1 text-slate-400 underline">{{ protocolMealDetails[entry.id] ? 'weniger' : 'Details' }}</button>
-                  <div v-if="protocolMealDetails[entry.id]" class="mt-1 border-l-2 border-rose-200 pl-2 text-[10px] overflow-x-auto">
-                    <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pb-0.5 text-slate-400 border-b border-slate-200">
+                  <div class="mt-1 border-l-2 border-rose-200 pl-1.5 text-[9px]">
+                    <div class="grid grid-cols-[minmax(0,1fr)_2.1rem_1.7rem_1.7rem_1.7rem_2rem] gap-x-0.5 pb-0.5 text-slate-400 border-b border-slate-200">
                       <span>Lebensmittel · Menge</span><span>kcal</span><span>KH</span><span>P</span><span>F</span><span>Bal.</span>
                     </div>
-                    <div v-for="row in entryFoodRows(entry)" :key="row.name" class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 py-0.5">
+                    <div v-for="row in entryFoodRows(entry)" :key="row.name" class="grid grid-cols-[minmax(0,1fr)_2.1rem_1.7rem_1.7rem_1.7rem_2rem] gap-x-0.5 py-0.5">
                       <span class="truncate">{{ row.name }}<span v-if="row.portion"> · {{ row.portion }}</span></span>
                       <template v-if="row.hasMacros"><span>{{ displayMacro(row.macros.kcal,0) }}</span><span>{{ displayMacro(row.macros.kh) }}</span><span>{{ displayMacro(row.macros.protein) }}</span><span>{{ displayMacro(row.macros.fett) }}</span><span>{{ displayMacro(row.macros.ballaststoffe) }}</span></template>
                       <span v-else class="col-span-5 text-rose-500">Makros fehlen</span>
@@ -220,12 +234,14 @@
                   <span v-if="entry.subtype === 'Ende der Periode'">Ende der Periode</span>
                   <span v-if="entry.subtype === 'Zyklus-Tagesnotiz'">Tagesnotiz</span>
                 </div>
+                <div v-if="entry.details" class="mt-1 whitespace-pre-wrap">{{ entry.details }}</div>
               </div>
 
-              <div v-if="entry.note" class="text-xs italic text-slate-500 mt-1 border-l-2 border-indigo-200 pl-1.5">"{{ entry.note }}"</div>
+              <div v-if="protocolEntryDetails[entry.id] && entry.note" class="text-xs italic text-slate-500 mt-1 border-l-2 border-indigo-200 pl-1.5">"{{ entry.note }}"</div>
             </div>
 
             <div class="flex gap-1">
+              <button @click.stop="toggleProtocolEntryDetails(entry.id)" class="text-[11px] text-slate-500 underline underline-offset-2 px-1" :aria-expanded="!!protocolEntryDetails[entry.id]">{{ protocolEntryDetails[entry.id] ? 'weniger' : 'Details' }}</button>
               <button @click="editEntry(entry)" class="text-slate-400 hover:text-slate-600 p-1.5" aria-label="Eintrag bearbeiten">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 16.8V20h3.2L17 10.2 13.8 7 4 16.8zM19.7 7.5a1 1 0 0 0 0-1.4l-1.8-1.8a1 1 0 0 0-1.4 0l-1.4 1.4 3.2 3.2 1.4-1.3z"/></svg>
               </button>
@@ -234,17 +250,14 @@
               </button>
             </div>
           </div>
-          <button v-if="day.missingNightEnd" @click="addMissingNightEnd()" class="w-full px-2.5 py-2 border border-dashed border-amber-300 bg-amber-50 text-left text-xs text-amber-800 hover:bg-amber-100">
-            <strong>Nachtruhe Ende fehlt</strong> · antippen zum Nachtragen
-          </button>
         </div>
       </div>
     </section>
 
     <!-- EINSTELLUNGEN ANSICHT -->
-    <section v-if="viewMode === 'settings'" class="pt-2 space-y-4 max-h-[70vh] overflow-y-auto pr-1 flex flex-col">
-      <div class="order-0 border-b border-slate-200 pb-2">
-        <h2 class="text-base font-bold text-slate-700">Optionen & Daten</h2>
+    <section v-if="viewMode === 'settings'" class="pt-5 space-y-4 max-h-[70vh] overflow-y-auto pr-1 flex flex-col">
+      <div class="order-0">
+        <h2 class="section-title text-sm font-normal tracking-[0.12em] text-slate-700">OPTIONEN &amp; DATEN</h2>
       </div>
 
       <div class="order-1 flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -256,7 +269,7 @@
       </div>
       <div class="order-1 -mt-2 flex flex-col gap-1 px-3 text-[11px] text-slate-400"><span>1. Zeitfenster für Dunkel planen</span><span>2. Standortabhängig Sonnenauf/-untergang</span></div>
 
-      <div :class="foodManagementOpen ? 'border-2 border-slate-400' : 'border border-slate-200'" class="order-2 bg-slate-50 p-3 rounded-xl">
+      <div :class="foodManagementOpen ? 'food-management-active border-2 border-slate-400' : 'border border-slate-200'" class="order-2 bg-slate-50 p-3 rounded-xl">
         <button @click="foodManagementOpen = !foodManagementOpen" class="w-full flex items-center justify-between gap-3 text-left">
           <div>
             <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Lebensmittel verwalten</h3>
@@ -269,16 +282,21 @@
             <input v-model="foodSearch" @input="foodSearch = $event.target.value" @search="foodSearch = $event.target.value" type="search" autocomplete="off" enterkeyhint="search" placeholder="Lebensmittel suchen …" class="min-w-0 flex-1 px-2.5 py-2 border border-slate-200 rounded-lg text-xs bg-white text-slate-800">
             <button type="button" @click="openFoodStarter('settings')" class="shrink-0 px-2 py-2 text-xs text-slate-600 underline underline-offset-2" aria-label="Lebensmittel hinzufügen">+ Lebensmittel</button>
           </div>
-          <div v-for="food in filteredManagedFoods" :key="food.name" :class="openManagedFood === food.name ? (isManagedFoodDirty(food) ? 'border-2 border-rose-300 bg-rose-50' : 'border-2 border-slate-400 bg-white') : 'border border-slate-200 bg-white'" class="rounded-lg overflow-hidden">
+          <div v-for="food in filteredManagedFoods" :key="food.id" :class="openManagedFood === food.id ? (isManagedFoodDirty(food) ? 'managed-food-active border-2 border-rose-300 bg-rose-50' : 'managed-food-active border-2 border-slate-400 bg-white') : 'border border-slate-200 bg-white'" class="rounded-lg overflow-hidden">
             <div @click="toggleManagedFood(food)" class="w-full flex items-center justify-between gap-2 px-2.5 py-2 text-xs text-slate-700 cursor-pointer">
               <span class="min-w-0 flex-1 text-left">{{ food.name }}</span>
-              <div v-if="openManagedFood === food.name && isManagedFoodDirty(food)" class="flex items-center gap-2 shrink-0 text-[11px]">
+              <div v-if="openManagedFood === food.id && isManagedFoodDirty(food)" class="flex items-center gap-2 shrink-0 text-[11px]">
                 <button type="button" @click.stop="saveManagedFood(food)" class="text-rose-700 underline">Speichern</button>
                 <button type="button" @click.stop="cancelManagedFood(food)" class="text-slate-500 underline">Abbrechen</button>
               </div>
-              <span v-else class="shrink-0 text-slate-400" :aria-label="openManagedFood === food.name ? 'Lebensmittel schließen' : 'Lebensmittel öffnen'">{{ openManagedFood === food.name ? '−' : '+' }}</span>
+              <div v-else class="flex items-center shrink-0" @click.stop>
+                <button type="button" @click="toggleManagedFood(food)" class="flex h-6 w-6 items-center justify-center rounded text-lg leading-none text-slate-500 hover:bg-slate-100 hover:text-slate-700" :aria-label="openManagedFood === food.id ? 'Lebensmittel schließen' : 'Lebensmittel öffnen'">{{ openManagedFood === food.id ? '−' : '+' }}</button>
+                <span class="mx-1.5 h-4 w-px bg-slate-200" aria-hidden="true"></span>
+                <button type="button" @click="archiveManagedFood(food)" class="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Lebensmittel archivieren" title="Archivieren"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="0.5"/><path d="M3.5 8.5h17M7 12h10M7 16h10"/></svg></button>
+                <button type="button" @click="duplicateManagedFood(food)" class="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Lebensmittel duplizieren" title="Duplizieren"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h2zm2-2v2h4a2 2 0 0 1 2 2v4h2V5h-8zm4 4H6v8h8V9z"/></svg></button>
+              </div>
             </div>
-            <div v-if="openManagedFood === food.name" class="px-2.5 py-2 border-t border-slate-200 space-y-3 text-[11px] text-slate-600">
+            <div v-if="openManagedFood === food.id" class="px-2.5 py-2 border-t border-slate-200 space-y-3 text-[11px] text-slate-600">
               <input v-model="food.name" @input="managedFoodNameChanged(food)" type="text" aria-label="Lebensmittelname" :class="managedFieldChanged(food, 'name') ? 'text-rose-600 border-rose-200' : 'text-slate-700 border-slate-200'" class="w-full px-2 py-1.5 border rounded text-xs font-semibold bg-white">
               <textarea v-model="food.note" @input="markManagedFoodDirty" rows="2" placeholder="Füge hier nach Belieben Notizen hinzu …" :class="managedFieldChanged(food, 'note') ? 'text-rose-600 border-rose-200' : 'text-slate-700 border-slate-200'" class="w-full px-2 py-1.5 border rounded text-xs bg-white resize-y"></textarea>
               <div class="space-y-1.5">
@@ -298,7 +316,7 @@
               </div>
               <div class="border-t border-slate-200 pt-2 space-y-1.5">
                 <div class="flex items-center justify-between"><span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Portionen <span class="normal-case tracking-normal font-normal italic">(berechnet anhand der Basiswerte)</span></span><button @click="addManagedPortion(food)" class="text-[11px] text-slate-600 underline">+ Portion</button></div>
-                <div v-for="(portion, index) in managedFoodPortions(food)" :key="`${food.name}-${index}`" class="rounded border border-slate-200 bg-slate-50 p-1.5 space-y-1">
+                <div v-for="(portion, index) in managedFoodPortions(food)" :key="portion" class="rounded border border-slate-200 bg-slate-50 p-1.5 space-y-1">
                   <div class="flex gap-1">
                     <input v-model="portion.label" @input="markManagedFoodDirty" type="text" :placeholder="`Portion ${index + 1}`" :class="managedPortionChanged(food, index, 'label') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="min-w-0 flex-1 px-1.5 py-1 border rounded text-[11px] bg-white">
                     <input :value="managedPortionAmount(food, portion)" @change="setManagedPortionAmount(food, portion, $event.target.value)" type="number" min="0" step="0.1" inputmode="decimal" :placeholder="managedBaseUnit(food)" :class="managedPortionChanged(food, index, 'amount') ? 'text-rose-600 border-rose-200' : 'border-slate-200'" class="macro-input w-16 px-1.5 py-1 border rounded text-[11px] bg-white">
@@ -313,9 +331,6 @@
                     <label class="relative block min-w-0"><input :value="displayMacro(managedPortionMacros(food, portion).ballaststoffe)" readonly aria-label="Ballaststoffe, berechnet" class="min-w-0 w-full px-1.5 py-1 pr-6 border border-slate-200 rounded text-[10px] tabular-nums bg-white text-slate-600"><span class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">Bal.</span></label>
                   </div>
                 </div>
-              </div>
-              <div class="border-t border-slate-200 pt-2 text-right">
-                <button type="button" @click.stop="archiveManagedFood(food)" class="text-[11px] text-slate-500 underline underline-offset-2">Archivieren</button>
               </div>
             </div>
           </div>
@@ -428,16 +443,14 @@
             <div>
               <label class="block text-xs font-medium text-slate-500 mb-1">Eintrag</label>
               <div class="grid grid-cols-3 gap-1.5">
-                <button v-for="kind in ['Nachtruhe', 'Nickerchen', 'Aufgewacht']" :key="kind" @click="form.sleep_kind = kind; form.sleep_action = kind === 'Aufgewacht' ? 'Wach' : 'Start'"
-                  :class="form.sleep_kind === kind ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
-                  class="py-2 rounded-lg text-xs font-semibold border border-slate-200">
-                  {{ kind }}
-                </button>
+                <button @click="form.sleep_kind = 'Nachtruhe'; form.sleep_action = 'Start'" :class="form.sleep_kind === 'Nachtruhe' && form.sleep_action === 'Start' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'" class="py-2 rounded-lg text-[11px] font-semibold border border-slate-200">Zu Bett gegangen</button>
+                <button @click="form.sleep_kind = 'Aufgewacht'; form.sleep_action = 'Wach'" :class="form.sleep_kind === 'Aufgewacht' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'" class="py-2 rounded-lg text-[11px] font-semibold border border-slate-200">Nachts aufgewacht</button>
+                <button @click="form.sleep_kind = 'Nachtruhe'; form.sleep_action = 'Ende'" :class="form.sleep_kind === 'Nachtruhe' && form.sleep_action === 'Ende' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'" class="py-2 rounded-lg text-[11px] font-semibold border border-slate-200">Morgens aufgestanden</button>
               </div>
             </div>
 
-            <div v-if="form.sleep_kind !== 'Aufgewacht'">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Zeitpunkt</label>
+            <div v-if="form.sleep_kind === 'Nickerchen'">
+              <label class="block text-xs font-medium text-slate-500 mb-1">Nickerchen</label>
               <div class="grid grid-cols-2 gap-1.5">
                 <button v-for="action in ['Start', 'Ende']" :key="action" @click="form.sleep_action = action"
                   :class="form.sleep_action === action ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'"
@@ -446,6 +459,7 @@
                 </button>
               </div>
             </div>
+            <button v-else @click="form.sleep_kind = 'Nickerchen'; form.sleep_action = 'Start'" class="text-xs text-slate-500 underline">+ Nickerchen erfassen</button>
 
             <div v-if="form.sleep_action === 'Start'">
               <label class="block text-xs font-medium text-slate-500 mb-1">Gefühl</label>
@@ -500,7 +514,14 @@
               <div v-if="!selectedFoodList.length && !form.custom_foods.filter(f => f.name).length" class="py-1 text-slate-400">Noch keine Lebensmittel.</div>
               <div class="grid grid-cols-[minmax(7rem,1fr)_2.4rem_2rem_2rem_2rem_2.35rem] gap-x-1 pt-1 mt-0.5 border-t border-slate-200 font-semibold text-slate-700"><span>Summe</span><span>{{ displayMacro(mealMacros.kcal,0) }}</span><span>{{ displayMacro(mealMacros.kh) }}</span><span>{{ displayMacro(mealMacros.protein) }}</span><span>{{ displayMacro(mealMacros.fett) }}</span><span>{{ displayMacro(mealMacros.ballaststoffe) }}</span></div>
             </div>
-            <div class="pt-1">
+            <div v-if="config.foodCombos.length" class="pt-0.5">
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="mr-0.5 text-[10px] font-medium text-slate-500">Kombinationen</span>
+                <button v-for="combo in config.foodCombos" :key="combo.name" @click="applyFoodCombo(combo)" class="px-2 py-1 rounded border border-slate-300 bg-white text-[10px] font-semibold text-slate-600 hover:bg-slate-100 transition">+ {{ combo.name }}</button>
+              </div>
+            </div>
+
+            <div class="pt-0.5">
               <div class="mb-1 flex items-center justify-between gap-2"><label class="block text-xs font-medium text-slate-500">Lebensmittel</label><button @click="openFoodStarter('meal')" class="text-[11px] text-slate-600 hover:text-slate-900 underline underline-offset-2">+ Lebensmittel</button></div>
               <div class="flex flex-wrap gap-1">
                 <button v-for="group in foodGroups" :key="group.name" @click="group.variants.length > 1 ? toggleFoodGroup(group.name) : toggleFood(group.variants[0])"
@@ -514,16 +535,6 @@
                   :class="form.selected_foods.includes(food.name) ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 text-slate-700 border-slate-200'"
                   class="px-2 py-1 text-[11px] font-semibold border transition">
                   {{ food.variant }}
-                </button>
-              </div>
-            </div>
-
-            <div v-if="config.foodCombos.length" class="pt-1">
-              <label class="block text-xs font-medium text-slate-500 mb-1">Kombinationen</label>
-              <div class="flex flex-wrap gap-1.5">
-                <button v-for="combo in config.foodCombos" :key="combo.name" @click="applyFoodCombo(combo)"
-                  class="px-3 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 transition">
-                  + {{ combo.name }}
                 </button>
               </div>
             </div>
@@ -708,8 +719,8 @@
     </div>
 
     <!-- LEBENSMITTEL START -->
-    <div v-if="foodStarterOpen" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-start justify-center px-4 pt-[12vh] sm:pt-16">
-      <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-3 shadow-xl border">
+    <div v-if="foodStarterOpen" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-start justify-center overflow-y-auto px-4 py-4 sm:pt-16">
+      <div class="bg-white w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl p-5 space-y-3 shadow-xl border overscroll-contain">
         <div class="flex items-center justify-between gap-3 border-b pb-2"><h3 class="text-base font-bold text-slate-800">Lebensmittel hinzufügen</h3><button v-if="!newFoodModalOpen" type="button" @click="foodStarterOpen = false" class="text-xs text-slate-500 underline">Abbrechen</button></div>
         <div class="flex items-center gap-2"><button type="button" @click="startBlankFood" class="w-[42%] shrink-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100">Neues Lebensmittel</button><span class="text-xs text-slate-400">oder</span><input v-model="foodStarterSearch" type="search" placeholder="Bestehendes kopieren …" class="min-w-0 flex-1 px-2 py-2.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-800"></div>
         <div v-if="foodStarterSearch" class="space-y-1 max-h-56 overflow-y-auto"><button v-for="food in foodStarterCandidates" :key="food.name" type="button" @click="chooseStarterFood(food)" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-left text-xs text-slate-700 hover:bg-slate-50">{{ food.name }}</button><p v-if="!foodStarterCandidates.length" class="py-2 text-xs text-slate-400">Kein Lebensmittel gefunden.</p></div>
@@ -775,7 +786,10 @@
 
     // Bestehende Lebensmittel bleiben kompatibel; neue Lebensmittel speichern
     // ihre Nährwerte getrennt nach Referenzwert und Portion.
-    const macroFood = (name, category, base, macros, portions) => ({ name, category, base, macros, portions, frequency: 'Häufig' });
+    const createFoodId = () => (typeof crypto !== 'undefined' && crypto.randomUUID
+      ? `food_${crypto.randomUUID()}`
+      : `food_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
+    const macroFood = (name, category, base, macros, portions) => ({ id: createFoodId(), name, category, base, macros, portions, frequency: 'Häufig' });
 
     createApp({
       data() {
@@ -807,8 +821,10 @@
           mealDetailsOpen: false,
           portionDetailsOpen: {},
           protocolMealDetails: {},
+          protocolEntryDetails: {},
+          protocolRevision: 0,
           foodSearch: '',
-          openManagedFood: '',
+          openManagedFood: null,
           managedFoodDirty: false,
           managedFoodSnapshot: null,
           managedFoodOriginalName: '',
@@ -983,8 +999,10 @@
           return list;
         },
         groupedEntries() {
+          const refreshToken = this.protocolRevision;
           const filtered = this.entries.filter(e => this.protocolSelected.includes(e.type));
-
+          // refreshToken macht die Neuberechnung nach dem Speichern eines Schlaf-Eintrags explizit.
+          void refreshToken;
           return this.groupEntriesByNightEnd(filtered);
         },
         currentDayMovementMinutes() {
@@ -1292,7 +1310,7 @@
           if (this.config.foods.some(food => food.name.toLocaleLowerCase('de-AT') === name.toLocaleLowerCase('de-AT'))) { alert('Dieses Lebensmittel gibt es bereits.'); return; }
           const baseAmount = this.newFoodBaseAmount();
           const unit = this.newFoodUnitLabel;
-          const food = { name, category: 'Selten', frequency: 'Selten', note: String(draft.note || ''), base: `${baseAmount} ${unit}`, macros: { ...draft.macros }, portions: draft.portions.map((portion, index) => ({ label: String(portion.label || '').trim() || `Portion ${index + 1}`, f: (Number(portion.amount) || baseAmount) / baseAmount })) };
+          const food = { id: this.createFoodId(), name, category: 'Selten', frequency: 'Selten', note: String(draft.note || ''), base: `${baseAmount} ${unit}`, macros: { ...draft.macros }, portions: draft.portions.map((portion, index) => ({ label: String(portion.label || '').trim() || `Portion ${index + 1}`, f: (Number(portion.amount) || baseAmount) / baseAmount })) };
           this.config.foods.push(food);
           await this.saveFoods();
           if (this.newFoodOrigin === 'meal') {
@@ -1315,7 +1333,7 @@
               f: reference === 'Portion' ? 1 : ((Number(portion.amount) || baseAmount) / baseAmount)
             }));
             this.config.foods.push({
-              name: String(food.name).trim(), category: 'Selten', base: reference,
+              id: this.createFoodId(), name: String(food.name).trim(), category: 'Selten', base: reference,
               macros: { kcal: food.kcal || '', kh: food.kh || '', protein: food.protein || '', fett: food.fett || '', ballaststoffe: food.ballaststoffe || '' },
               portions: portions.length ? portions : [{ label: reference === 'Portion' ? 'Basisportion' : 'Portion 1', f: 1 }], frequency: 'Selten', note: ''
             });
@@ -1428,6 +1446,9 @@
         toggleProtocolMealDetails(id) {
           this.protocolMealDetails[id] = !this.protocolMealDetails[id];
         },
+        toggleProtocolEntryDetails(id) {
+          this.protocolEntryDetails[id] = !this.protocolEntryDetails[id];
+        },
         entryFoodRows(entry) {
           const rows = (entry.selected_foods || []).map(name => {
             const food = this.findFood(name);
@@ -1441,6 +1462,43 @@
         },
         protocolBodySoul(entry) {
           return [...(entry.body_symptoms || []), ...(entry.soul_symptoms || [])].join(', ');
+        },
+        protocolCardTitle(entry) {
+          if (entry.type === 'MAHLZEIT') return 'Mahlzeit';
+          if (entry.type === 'SCHLAF') return this.sleepDisplayTitle(entry);
+          if (entry.type === 'BEWEGUNG') return entry.subtype || 'Bewegung';
+          if (entry.type === 'ADDON') return 'AddOns';
+          if (entry.type === 'BODYSOUL') return 'Body & Soul';
+          if (entry.type === 'ZYKLUS') return entry.subtype ? `Zyklus · ${entry.subtype}` : 'Zyklus';
+          return entry.subtype || this.typeLabel(entry.type);
+        },
+        protocolMealHeading(entry) {
+          const coverage = this.foodMacroCoverage([entry]);
+          if (coverage === 0) return 'Makros fehlen';
+          const suffix = coverage < 100 ? ` · ${coverage} % erfasst` : '';
+          return `${this.entryKcal(entry)} kcal${suffix}`;
+        },
+        sleepDisplayTitle(entry) {
+          const kind = this.sleepKindFor(entry);
+          const action = this.sleepActionFor(entry);
+          if (kind === 'Nachtruhe' && action === 'Start') return 'Zu Bett gegangen';
+          if (kind === 'Nachtruhe' && action === 'Ende') return 'Morgens aufgestanden';
+          if (kind === 'Aufgewacht' || action === 'Wach') return 'Nachts aufgewacht';
+          if (kind === 'Nickerchen') return `Nickerchen ${action || ''}`.trim();
+          return entry.subtype || 'Schlaf';
+        },
+        protocolCardPreview(entry) {
+          if (entry.type === 'MAHLZEIT') {
+            const foods = this.foodNamesPreview(entry);
+            return foods || '';
+          }
+          if (entry.type === 'SCHLAF') {
+            return [entry.sleep_rating, entry.sleep_tiredness, entry.alarm_used === null || entry.alarm_used === undefined ? '' : (entry.alarm_used ? 'Mit Wecker' : 'Ohne Wecker'), ...(entry.wake_reasons || [])].filter(Boolean).join(' · ');
+          }
+          if (entry.type === 'ADDON') return Object.keys(entry.addon_quantities || {}).join(', ') || (entry.selected_addons || []).join(', ') || entry.addon_name || '';
+          if (entry.type === 'BEWEGUNG') return [entry.activity_duration ? `${entry.activity_duration} Min.` : '', entry.activity_distance ? `${entry.activity_distance} km` : '', entry.activity_intensity].filter(Boolean).join(' · ');
+          if (entry.type === 'BODYSOUL') return this.protocolBodySoul(entry);
+          return entry.details || entry.note || '';
         },
         formatDuration(minutes) {
           const safeMinutes = Math.max(0, Math.round(Number(minutes) || 0));
@@ -1467,15 +1525,19 @@
           if (this.toLocalDateString(date) === this.toLocalDateString(yesterday)) return 'GESTERN';
           return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
         },
+        calendarDayLabel(date) {
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+          if (this.toLocalDateString(date) === this.toLocalDateString(today)) return 'HEUTE';
+          if (this.toLocalDateString(date) === this.toLocalDateString(yesterday)) return 'GESTERN';
+          const weekday = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][date.getDay()];
+          return `${weekday} ${date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}`;
+        },
         sleepMinutesForDay(anchor, dayEntries) {
           let minutes = 0;
           if (anchor) {
-            const priorNightStart = this.entries
-              .filter(entry => new Date(entry.timestamp) < new Date(anchor.timestamp)
-                && entry.type === 'SCHLAF'
-                && this.sleepKindFor(entry) === 'Nachtruhe'
-                && this.sleepActionFor(entry) === 'Start')
-              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+            const priorNightStart = this.findBedtimeForMorning(anchor);
             if (priorNightStart) minutes += Math.max(0, new Date(anchor.timestamp) - new Date(priorNightStart.timestamp)) / 60000;
           }
 
@@ -1491,10 +1553,25 @@
           });
           return minutes;
         },
-        addMissingNightEnd() {
+        addMissingNightStart(day) {
+          this.openModal('SCHLAF');
+          this.form.sleep_kind = 'Nachtruhe';
+          this.form.sleep_action = 'Start';
+          if (day && day.anchor) {
+            const priorDay = new Date(day.anchor.timestamp);
+            priorDay.setDate(priorDay.getDate() - 1);
+            this.form.date = this.toLocalDateString(priorDay);
+          }
+        },
+        addMissingNightPart(day) {
+          if (day.missingNightStart) this.addMissingNightStart(day);
+          else this.addMissingNightEnd(day);
+        },
+        addMissingNightEnd(day) {
           this.openModal('SCHLAF');
           this.form.sleep_kind = 'Nachtruhe';
           this.form.sleep_action = 'Ende';
+          if (day && day.anchor) this.form.date = this.toLocalDateString(new Date(day.anchor.timestamp));
         },
         toggleFood(food) {
           const idx = this.form.selected_foods.indexOf(food.name);
@@ -1667,6 +1744,7 @@
             this.config.foods.unshift(macroFood('Wasser', 'Getränke', '100 ml', { kcal: 0, kh: 0, protein: 0, fett: 0, ballaststoffe: 0 }, [100, 200, 300, 500, 600].map(ml => ({ label: `${ml} ml`, f: ml / 100 }))));
             await db.settings.put({ key: 'foods', value: this.config.foods });
           }
+          await this.ensureFoodIds();
           const darkModeSetting = stored.find(item => item.key === 'darkMode');
           this.darkMode = !!(darkModeSetting && darkModeSetting.value);
           document.body.classList.toggle('dark-mode', this.darkMode);
@@ -1682,6 +1760,7 @@
         },
         async loadEntries() {
           this.entries = await db.entries.where('is_deleted').equals(0).toArray();
+          this.protocolRevision += 1;
         },
         async saveEntry() {
           try {
@@ -1861,6 +1940,22 @@
         async saveFoods() {
           await db.settings.put({ key: 'foods', value: JSON.parse(JSON.stringify(this.config.foods)) });
         },
+        createFoodId() {
+          return createFoodId();
+        },
+        async ensureFoodIds() {
+          const usedIds = new Set();
+          let changed = false;
+          (this.config.foods || []).forEach(food => {
+            const currentId = String(food && food.id || '');
+            if (!currentId || usedIds.has(currentId)) {
+              food.id = this.createFoodId();
+              changed = true;
+            }
+            usedIds.add(food.id);
+          });
+          if (changed) await this.saveFoods();
+        },
         async archiveManagedFood(food) {
           if (this.managedFoodDirty) {
             alert('Bitte zuerst Speichern oder Abbrechen wählen.');
@@ -1868,7 +1963,14 @@
           }
           food.archived = true;
           await this.saveFoods();
-          this.openManagedFood = '';
+          this.openManagedFood = null;
+        },
+        duplicateManagedFood(food) {
+          if (this.managedFoodDirty) {
+            alert('Bitte zuerst Speichern oder Abbrechen wählen.');
+            return;
+          }
+          this.openNewFoodModal('settings', food);
         },
         async restoreArchivedFood(food) {
           food.archived = false;
@@ -1878,18 +1980,18 @@
           return JSON.parse(JSON.stringify(food));
         },
         isManagedFoodDirty(food) {
-          return this.openManagedFood === food.name && this.managedFoodDirty;
+          return this.openManagedFood === food.id && this.managedFoodDirty;
         },
         toggleManagedFood(food) {
           if (this.managedFoodDirty) {
             alert('Bitte zuerst Speichern oder Abbrechen wählen.');
             return;
           }
-          if (this.openManagedFood === food.name) {
-            this.openManagedFood = '';
+          if (this.openManagedFood === food.id) {
+            this.openManagedFood = null;
             return;
           }
-          this.openManagedFood = food.name;
+          this.openManagedFood = food.id;
           this.managedFoodOriginalName = food.name;
           this.managedFoodSnapshot = this.cloneManagedFood(food);
           this.managedFoodDirty = false;
@@ -1919,7 +2021,6 @@
           return String(food.portions[index] && food.portions[index][key] || '') !== String(original[key] || '');
         },
         managedFoodNameChanged(food) {
-          this.openManagedFood = food.name;
           this.markManagedFoodDirty();
         },
         async saveManagedFood(food) {
@@ -1947,12 +2048,12 @@
                 entry.food_quantities[next] = entry.food_quantities[previous];
                 delete entry.food_quantities[previous];
               }
-              await db.entries.put(entry);
+              await db.entries.put(JSON.parse(JSON.stringify(entry)));
             }
             await db.settings.put({ key: 'foodCombos', value: this.config.foodCombos });
           }
           await this.saveFoods();
-          this.openManagedFood = '';
+          this.openManagedFood = null;
           this.managedFoodOriginalName = next;
           this.managedFoodSnapshot = this.cloneManagedFood(food);
           this.managedFoodDirty = false;
@@ -1961,7 +2062,7 @@
           if (!this.managedFoodSnapshot) return;
           Object.keys(food).forEach(key => delete food[key]);
           Object.assign(food, this.cloneManagedFood(this.managedFoodSnapshot));
-          this.openManagedFood = '';
+          this.openManagedFood = null;
           this.managedFoodOriginalName = food.name;
           this.managedFoodDirty = false;
         },
@@ -2042,59 +2143,134 @@
           this.protocolSelected = ['BEWEGUNG'];
           this.viewMode = 'protocol';
         },
+        isBedtimeEntry(entry) {
+          return entry.type === 'SCHLAF' && this.sleepKindFor(entry) === 'Nachtruhe' && this.sleepActionFor(entry) === 'Start';
+        },
+        isMorningEntry(entry) {
+          if (entry.type !== 'SCHLAF') return false;
+          if (this.sleepKindFor(entry) === 'Nachtruhe' && this.sleepActionFor(entry) === 'Ende') return true;
+          const label = String(entry.subtype || '').toLowerCase();
+          return label.includes('morgens aufgestanden') || label.includes('nachtruhe ende') || label.includes('aufstehen');
+        },
+        findBedtimeForMorning(morning) {
+          const morningDate = new Date(morning.timestamp);
+          const morningTime = morningDate.getTime();
+          const sameDay = this.toLocalDateString(morningDate);
+          const previousDay = new Date(morningDate);
+          previousDay.setDate(previousDay.getDate() - 1);
+          const previousDate = this.toLocalDateString(previousDay);
+          const previousMorning = this.entries
+            .filter(entry => this.isMorningEntry(entry) && new Date(entry.timestamp).getTime() < morningTime)
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0] || null;
+          const lowerBound = previousMorning ? new Date(previousMorning.timestamp).getTime() : -Infinity;
+          return this.entries
+            .filter(entry => this.isBedtimeEntry(entry))
+            .filter(entry => new Date(entry.timestamp).getTime() < morningTime && new Date(entry.timestamp).getTime() > lowerBound)
+            .filter(entry => [sameDay, previousDate].includes(this.toLocalDateString(new Date(entry.timestamp))))
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0] || null;
+        },
+        sleepReminderForStart(morning) {
+          const date = new Date(morning.timestamp);
+          date.setDate(date.getDate() - 1);
+          const key = this.toLocalDateString(date);
+          return { action: 'Start', date: key, time: '23:59', dateLabel: this.formatProtocolDate(`${key}T12:00:00`), timeLabel: '23:59', title: 'Zu Bett gegangen fehlt' };
+        },
+        sleepReminderForEnd(bedtime) {
+          const date = new Date(bedtime.timestamp);
+          if (date.getHours() >= 12) date.setDate(date.getDate() + 1);
+          const key = this.toLocalDateString(date);
+          return { action: 'Ende', date: key, time: '06:00', dateLabel: this.formatProtocolDate(`${key}T12:00:00`), timeLabel: '06:00', title: 'Morgens aufgestanden fehlt' };
+        },
+        findMorningForBedtime(bedtime) {
+          const reminder = this.sleepReminderForEnd(bedtime);
+          const bedtimeTime = new Date(bedtime.timestamp).getTime();
+          return this.entries
+            .filter(entry => this.isMorningEntry(entry))
+            .filter(entry => new Date(entry.timestamp).getTime() > bedtimeTime)
+            .filter(entry => this.toLocalDateString(new Date(entry.timestamp)) === reminder.date)
+            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))[0] || null;
+        },
+        hasRecordedMorningForReminder(reminder) {
+          return this.entries.some(entry => {
+            if (entry.type !== 'SCHLAF' || this.toLocalDateString(new Date(entry.timestamp)) !== reminder.date) return false;
+            return this.isMorningEntry(entry) || this.protocolCardTitle(entry) === 'Morgens aufgestanden';
+          });
+        },
+        openSleepReminder(reminder) {
+          this.openModal('SCHLAF');
+          this.form.sleep_kind = 'Nachtruhe';
+          this.form.sleep_action = reminder.action;
+          this.form.date = reminder.date;
+          this.form.time = reminder.time;
+        },
         groupEntriesByNightEnd(entries) {
+          this.protocolRevision;
           const visibleIds = new Set(entries.map(entry => entry.id));
-          // Die Grenzen kommen immer aus allen Einträgen. So bleiben sie auch
-          // bei einem Filter (z. B. nur Mahlzeiten) konsistent.
           const chronological = [...this.entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
           const groups = [];
-          let current = null;
-
+          let current = { anchor: null, items: [] };
           chronological.forEach(entry => {
-            const isNightEnd = entry.type === 'SCHLAF'
-              && this.sleepKindFor(entry) === 'Nachtruhe'
-              && this.sleepActionFor(entry) === 'Ende';
-            if (isNightEnd) {
-              if (current) groups.push(current);
+            const isMorning = this.isMorningEntry(entry);
+            if (isMorning) {
+              if (current.items.length) groups.push(current);
               current = { anchor: entry, items: [entry] };
             } else {
-              if (!current) current = { anchor: null, items: [] };
               current.items.push(entry);
             }
           });
-          if (current) groups.push(current);
+          if (current.items.length) {
+            const latestBedtime = [...current.items].reverse().find(entry => this.isBedtimeEntry(entry));
+            const reminder = latestBedtime ? this.sleepReminderForEnd(latestBedtime) : null;
+            const matchingMorning = latestBedtime ? (this.findMorningForBedtime(latestBedtime) || this.hasRecordedMorningForReminder(reminder)) : null;
+            if (latestBedtime && !matchingMorning) {
+              current.hasVirtualMorningAfter = true;
+              groups.push(current);
+              groups.push({ anchor: null, items: [], virtualDay: true, dayDate: reminder.date, sleepReminder: reminder });
+            } else {
+              groups.push(current);
+            }
+          }
 
-          return groups.reverse().map((group, index) => {
-            const nightStart = group.items.some(entry => entry.type === 'SCHLAF'
-              && this.sleepKindFor(entry) === 'Nachtruhe'
-              && this.sleepActionFor(entry) === 'Start');
-            const kcal = group.items
+          const chronologicalGroups = groups;
+          return [...chronologicalGroups].reverse().map((group, reverseIndex) => {
+            const items = group.items;
+            const isVirtualDay = !!group.virtualDay;
+            const kcal = items
               .filter(entry => entry.type === 'MAHLZEIT')
               .reduce((sum, entry) => {
                 const macros = entry.meal_macros || this.calculateFoodMacros(entry.selected_foods || [], entry.food_quantities || {}, entry.custom_foods || []);
                 return sum + (Number(macros.kcal) || 0);
               }, 0);
-            const macroCoverage = this.foodMacroCoverage(group.items.filter(entry => entry.type === 'MAHLZEIT'));
-            const movementMinutes = group.items
+            const macroCoverage = this.foodMacroCoverage(items.filter(entry => entry.type === 'MAHLZEIT'));
+            const movementMinutes = items
               .filter(entry => entry.type === 'BEWEGUNG')
               .reduce((sum, entry) => sum + (Number(entry.activity_duration) || 0), 0);
-            const sleepMinutes = this.sleepMinutesForDay(group.anchor, group.items);
+            const sleepMinutes = isVirtualDay ? 0 : this.sleepMinutesForDay(group.anchor, items);
+            const groupIndex = chronologicalGroups.indexOf(group);
+            const nextMorning = chronologicalGroups[groupIndex + 1]?.anchor || null;
+            const bedtimeForNextMorning = nextMorning ? this.findBedtimeForMorning(nextMorning) : null;
+            const latestBedtime = [...items].reverse().find(entry => this.isBedtimeEntry(entry));
+            const bedtimeForThisMorning = group.anchor ? this.findBedtimeForMorning(group.anchor) : null;
+            const sleepComplete = !isVirtualDay && !!group.anchor && !!bedtimeForThisMorning;
+            let sleepReminder = null;
+            if (nextMorning && !bedtimeForNextMorning) sleepReminder = this.sleepReminderForStart(nextMorning);
+            if (!nextMorning && latestBedtime && !group.hasVirtualMorningAfter) {
+              const endReminder = this.sleepReminderForEnd(latestBedtime);
+              if (!this.findMorningForBedtime(latestBedtime) && !this.hasRecordedMorningForReminder(endReminder)) sleepReminder = endReminder;
+            }
+            if (isVirtualDay) sleepReminder = group.sleepReminder;
             return {
-              key: `tag-${group.anchor ? group.anchor.id : index}`,
-              label: group.anchor
-                ? this.logicalDayLabel(group.anchor, index)
-                : 'Ohne Nachtruhe Ende',
+              key: `tag-${group.anchor ? group.anchor.id : (group.dayDate || reverseIndex)}`,
+              label: isVirtualDay ? this.calendarDayLabel(new Date(`${group.dayDate}T12:00:00`)) : (group.anchor ? this.calendarDayLabel(new Date(group.anchor.timestamp)) : this.calendarDayLabel(new Date(items[0].timestamp))),
               durationText: '',
               kcalText: macroCoverage === 0 ? 'Makros fehlen' : `${this.displayMacro(kcal, 0)} kcal`,
-              macroCoverage,
-              movementText: movementMinutes ? this.formatDurationShort(movementMinutes) : '',
-              sleepText: sleepMinutes ? this.formatDurationShort(sleepMinutes) : '',
-              missingNightEnd: index === 0 && nightStart,
-              items: group.items
-                .filter(entry => visibleIds.has(entry.id))
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+              macroCoverage: macroCoverage,
+              movementText: movementMinutes ? this.formatDurationShort(movementMinutes) : '0 Min.',
+              sleepText: sleepComplete ? this.formatDurationShort(sleepMinutes) : 'nicht vollständig',
+              sleepReminder,
+              items: items.filter(entry => visibleIds.has(entry.id)).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             };
-          }).filter(group => group.items.length > 0);
+          }).filter(group => group.items.length > 0 || (group.sleepReminder && this.protocolSelected.includes('SCHLAF')));
         },
         groupSleepEntries(entries) {
           const sorted = [...entries].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -2206,6 +2382,10 @@
         formatTime(iso) {
           if (!iso) return '';
           return new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        },
+        formatProtocolDate(iso) {
+          if (!iso) return '';
+          return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
         },
         formatDate(iso) {
           if (!iso) return '';

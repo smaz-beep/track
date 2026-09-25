@@ -83,6 +83,9 @@
     <header class="py-4 border-b border-slate-200">
       <div class="flex items-center justify-between gap-3">
         <h1 class="text-xl font-bold tracking-wide text-slate-800">Frau Sarah's Tracking <span class="text-xs font-semibold text-slate-400 align-middle">{{ appVersion }}</span></h1>
+        <button v-if="viewMode !== 'settings'" @click="openFeedbackModal" class="ml-auto shrink-0 p-2 text-slate-700 hover:text-slate-900 transition" aria-label="Idee oder Fehler erfassen" title="Idee oder Fehler erfassen">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.5 9.5 0 0 1-3.8-.9L3 21l1.7-4.7A8.4 8.4 0 1 1 21 11.5z"/><path d="M8 11h.01M12 11h.01M16 11h.01" stroke-linecap="round"/></svg>
+        </button>
         <button v-if="viewMode !== 'settings'" @click="viewMode = 'settings'" class="shrink-0 p-2 text-slate-700 hover:text-slate-900 transition" aria-label="Einstellungen">
           <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.2-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.8 1.7 1l.4 2.6c0 .3.2.4.5.4h4c.3 0 .5-.1.5-.4l.4-2.6c.6-.2 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
         </button>
@@ -413,6 +416,18 @@
         </div>
         </div>
       </div>
+      <div class="order-5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <button @click="feedbackOpen = !feedbackOpen" class="w-full flex items-center justify-between gap-3 text-left"><div><h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Feedback</h3><p class="text-xs text-slate-500 mt-0.5">Ideen und Fehler für die Weiterentwicklung</p></div><span class="text-xs text-slate-500">{{ feedbackOpen ? 'schließen' : 'öffnen' }}</span></button>
+        <div v-if="feedbackOpen" class="mt-3 space-y-2">
+          <div class="flex items-center justify-between gap-2 text-xs"><span class="text-slate-500">{{ feedbackEntries.length }} Einträge</span><button @click="feedbackSort = feedbackSort === 'desc' ? 'asc' : 'desc'" class="text-slate-600 underline">{{ feedbackSort === 'desc' ? 'Neu zuerst' : 'Alt zuerst' }}</button></div>
+          <div v-for="item in sortedFeedbackEntries" :key="item.id" class="rounded-lg border border-slate-200 bg-white p-2.5 space-y-2 text-xs text-slate-700">
+            <div class="flex items-start justify-between gap-2"><div><span v-if="item.type" class="mr-1.5 text-slate-500">{{ item.type }}</span><span class="text-slate-400">{{ formatDate(item.created_at) }}</span></div><button @click="deleteFeedback(item.id)" class="text-slate-400 hover:text-rose-500" aria-label="Feedback löschen">×</button></div>
+            <p class="whitespace-pre-wrap">{{ item.text }}</p>
+            <div class="flex flex-wrap items-center gap-2"><select v-model="item.status" @change="saveFeedbackStatus(item)" class="px-2 py-1 border border-slate-200 rounded bg-white text-xs"><option value="ARBEITSSPEICHER">Arbeitsspeicher</option><option value="TODO">To do</option><option value="WIP">WIP</option><option value="DONE">Done</option></select><select v-if="item.status === 'DONE'" v-model="item.completion_reason" @change="saveFeedbackStatus(item)" class="px-2 py-1 border border-slate-200 rounded bg-white text-xs"><option value="">Abschlussgrund …</option><option value="umgesetzt">umgesetzt</option><option value="verworfen">verworfen</option><option value="war doppelt">war doppelt</option></select></div>
+          </div>
+          <p v-if="!feedbackEntries.length" class="py-2 text-center text-xs text-slate-400">Noch kein Feedback erfasst.</p>
+        </div>
+      </div>
     </section>
 
 
@@ -719,6 +734,16 @@
       </div>
     </div>
 
+    <!-- FEEDBACK -->
+    <div v-if="feedbackModalOpen" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-xl border">
+        <div class="flex items-center justify-between gap-3 border-b pb-2"><h3 class="text-base font-bold text-slate-800">Idee oder Fehler</h3><button type="button" @click="closeFeedbackModal" class="text-xs text-slate-500 underline">Abbrechen</button></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Art <span class="font-normal text-slate-400">(optional)</span></label><div class="flex gap-2"><button type="button" @click="feedbackDraft.type = feedbackDraft.type === 'Idee' ? '' : 'Idee'" :class="feedbackDraft.type === 'Idee' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border">Idee</button><button type="button" @click="feedbackDraft.type = feedbackDraft.type === 'Fehler' ? '' : 'Fehler'" :class="feedbackDraft.type === 'Fehler' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'" class="px-3 py-1.5 rounded-lg text-xs font-semibold border">Fehler</button></div></div>
+        <div><label class="block text-xs font-medium text-slate-500 mb-1">Beschreibung</label><textarea v-model="feedbackDraft.text" rows="5" autofocus placeholder="Was ist dir aufgefallen oder welche Idee hast du?" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 resize-y"></textarea></div>
+        <button type="button" @click="saveFeedback" :disabled="!feedbackDraft.text.trim()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-300 text-white font-semibold rounded-xl text-sm">Feedback speichern</button>
+      </div>
+    </div>
+
     <!-- LEBENSMITTEL START -->
     <div v-if="foodStarterOpen" class="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex items-start justify-center overflow-y-auto px-4 py-4 sm:pt-16">
       <div class="bg-white w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl p-5 space-y-3 shadow-xl border overscroll-contain">
@@ -778,9 +803,10 @@
   <!-- VUE LOGIC -->
   <script>
     const db = new Dexie('TrackingDB');
-    db.version(3).stores({
+    db.version(4).stores({
       entries: 'id, type, subtype, timestamp, updated_at, created_at, is_deleted',
-      settings: 'key'
+      settings: 'key',
+      feedback: 'id, created_at, status, type, updated_at'
     });
 
     const { createApp } = Vue;
@@ -795,7 +821,7 @@
     createApp({
       data() {
         return {
-          appVersion: 'v016',
+          appVersion: 'v017',
           // Startseiten-Buttons: Farbe und Symbol stehen NUR hier.
           // Farbe = Tailwind-Klasse (z. B. text-blue-500, text-red-600, text-[#ff8800]).
           dashboardButtons: [
@@ -818,6 +844,11 @@
           protocolSelected: ['SCHLAF', 'MAHLZEIT', 'ADDON', 'BODYSOUL', 'BEWEGUNG', 'ZYKLUS', 'NOTIZ'],
           quickNote: '',
           quickNoteSaved: false,
+          feedbackModalOpen: false,
+          feedbackOpen: false,
+          feedbackSort: 'desc',
+          feedbackEntries: [],
+          feedbackDraft: { type: '', text: '' },
           activeModal: null,
           mealDetailsOpen: false,
           portionDetailsOpen: {},
@@ -1114,6 +1145,10 @@
         sortedEntries() {
           return [...this.entries].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         },
+        sortedFeedbackEntries() {
+          const multiplier = this.feedbackSort === 'asc' ? 1 : -1;
+          return [...this.feedbackEntries].sort((a, b) => multiplier * (new Date(a.created_at) - new Date(b.created_at)));
+        },
         currentCycleDayText() {
           const cycleStarts = this.entries
             .filter(e => e.type === 'ZYKLUS' && e.subtype === 'Start')
@@ -1142,6 +1177,7 @@
         await this.loadSettings();
         await this.seedV012();
         await this.loadEntries();
+        await this.loadFeedback();
       },
       methods: {
         normalizeSearch(value) {
@@ -1205,6 +1241,47 @@
             console.error('Schnellnotiz-Fehler:', error);
             alert('Die Notiz konnte nicht gespeichert werden: ' + error.message);
           }
+        },
+        openFeedbackModal() {
+          this.feedbackDraft = { type: '', text: '' };
+          this.feedbackModalOpen = true;
+        },
+        closeFeedbackModal() {
+          this.feedbackModalOpen = false;
+          this.feedbackDraft = { type: '', text: '' };
+        },
+        async loadFeedback() {
+          this.feedbackEntries = await db.feedback.toArray();
+        },
+        async saveFeedback() {
+          const text = String(this.feedbackDraft.text || '').trim();
+          if (!text) {
+            alert('Bitte beschreibe deine Idee oder den Fehler.');
+            return;
+          }
+          const now = new Date().toISOString();
+          await db.feedback.add({
+            id: `feedback_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`}`,
+            type: this.feedbackDraft.type || '',
+            text,
+            status: 'ARBEITSSPEICHER',
+            completion_reason: '',
+            created_at: now,
+            updated_at: now
+          });
+          await this.loadFeedback();
+          this.closeFeedbackModal();
+        },
+        async saveFeedbackStatus(item) {
+          if (item.status === 'DONE' && !item.completion_reason) return;
+          item.updated_at = new Date().toISOString();
+          await db.feedback.put(JSON.parse(JSON.stringify(item)));
+          await this.loadFeedback();
+        },
+        async deleteFeedback(id) {
+          if (!confirm('Feedback wirklich löschen?')) return;
+          await db.feedback.delete(id);
+          await this.loadFeedback();
         },
         findFood(reference) {
           return this.config.foods.find(f => f.id === reference) || this.config.foods.find(f => f.name === reference) || null;
@@ -1705,11 +1782,13 @@
           try {
             const entries = await db.entries.toArray();
             const settings = await db.settings.toArray();
+            const feedback = await db.feedback.toArray();
             const backupData = {
-              version: 14,
+              version: 17,
               exportDate: new Date().toISOString(),
               entries: entries,
-              settings: settings
+              settings: settings,
+              feedback: feedback
             };
             const jsonString = JSON.stringify(backupData, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
@@ -1743,10 +1822,13 @@
               if (confirm("Möchten Sie dieses Backup wirklich einspielen? Bestehende Daten werden aktualisiert.")) {
                 await db.entries.clear();
                 await db.settings.clear();
+                await db.feedback.clear();
                 if (backup.entries.length) await db.entries.bulkAdd(backup.entries);
                 if (backup.settings.length) await db.settings.bulkAdd(backup.settings);
+                if (Array.isArray(backup.feedback) && backup.feedback.length) await db.feedback.bulkAdd(backup.feedback);
                 await this.loadSettings();
                 await this.loadEntries();
+                await this.loadFeedback();
                 alert("Backup erfolgreich eingespielt!");
               }
             } catch (err) {
